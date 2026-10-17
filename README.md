@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Saeng House (แสง ตลาดน้อย)
 
-## Getting Started
+A demo homepage for a fictional 12-room hotel in a century-old shophouse in Talat Noi, Bangkok. It is a
+portfolio piece: the page tells one evening at the hotel, from 18:00 to 23:00, lit by red lanterns.
 
-First, run the development server:
+Stack: Next.js 15 (App Router), Tailwind CSS 4, GSAP ScrollTrigger, Lenis, Motion, and raw WebGL2 for the hero.
+
+## Run it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. `npm run build` makes a production build.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Where things live
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/content/site.ts` holds every word, price, room and photo the page shows. Change content there, not in the components.
+- `src/lib/cinemagraph.ts` is the hero. It marks the 18 lanterns in the photo, swings each around its hanging point, and relights the corridor from the pointer.
+- `src/components/Evening.tsx` owns page-wide behaviour: the evening clock, the darkening ground, the oxblood pointer glow, smooth scrolling and entrances.
+- `src/app/globals.css` is the stylesheet, ported from the approved mockup.
+- `public/images/` holds the web photos. They are generated, not edited by hand.
 
-## Learn More
+## Photos
 
-To learn more about Next.js, take a look at the following resources:
+The full-size sources live in `design/photos-src/` (kept out of git). Every photo except the hero gets the
+same warm night grade so pictures from different photographers read as one set. After changing a source:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+python scripts/export-photos.py
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Photo credits (all Unsplash License): Nicolas Spehler (lantern corridor), MChe Lee (the three rooms),
+Thai Nguyen Anh and Didi Paul (tea), Shane Hebzynski (lantern balcony), Bradrey Nassel (Yaowarat).
 
-## Deploy on Vercel
+## What's next
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [docs/IDEAS.md](docs/IDEAS.md) for the backlog: real booking, a demo mode for recording the Fastwork
+video, and the ideas that make the site stand out.
