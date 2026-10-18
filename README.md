@@ -41,13 +41,13 @@ video, and the ideas that make the site stand out.
 
 ## Hero lanterns
 
-The nine big front lanterns in the hero photo are cut out and swing over `public/images/hero-plate.jpg`, the same photo with them painted out. Their outlines live in `src/content/hero-lanterns.json`, which both the shader and the paint-out script read. After changing an outline or the photo, rebuild the plate (needs Python with numpy and Pillow):
+The nine big front lanterns in the hero photo are cut out and swing over `public/images/hero-plate.jpg`, the same photo with them painted out. Their edges come from `scripts/assets/hero-lanterns-cut.png` (cut in Photoshop, transparent elsewhere, same size as the photo); `src/content/hero-lanterns.json` holds each lantern's centre and size, which set where it hangs from and which lantern owns each cut pixel. After changing the cut, an outline or the photo, rebuild the mask and plate (needs Python with numpy and Pillow):
 
 ```bash
 python scripts/cut-lanterns.py --preview
 ```
 
-`--preview` also writes `scripts/.cache/plate-preview.png`, the outlines over the photo beside the result.
+`--preview` also writes `scripts/.cache/plate-preview.png`, each lantern's pixels tinted beside the plate.
 
 ## Walking map
 

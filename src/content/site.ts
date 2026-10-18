@@ -44,6 +44,8 @@ export const heroPhoto = {
   small: '/images/hero-lanterns-sm.jpg',
   // the same photo with the front lanterns painted out, for the cut-outs to swing over
   plate: '/images/hero-plate.jpg',
+  // which pixels belong to which front lantern (scripts/cut-lanterns.py)
+  mask: '/images/hero-cut-mask.png',
   alt: 'A narrow corridor hung with rows of glowing red paper lanterns at night',
 };
 
