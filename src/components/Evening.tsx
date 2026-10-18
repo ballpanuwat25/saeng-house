@@ -95,11 +95,11 @@ export default function Evening() {
       stopIntroWait = onHeroReady(() => intro.play());
       const enter = (sel: string, trigger: string, start = 'top 80%') =>
         gsap.from(sel, { y: 30, opacity: 0, duration: 1, stagger: 0.09, ease: 'power3.out', scrollTrigger: { trigger, start, once: true } });
-      enter('.arrive .say, .facts div', '.arrive');
+      enter('.arrive .say, .ledger div', '.arrive');
       enter('.rooms h2, .names li, .detail > *, .stage', '.rooms');
       enter('.tea .big, .tea .txt > *, .tea .small', '.tea');
-      enter('.walk .photo, .walk h2, .walk li, .walk .note', '.walk');
-      enter('.book > h2, .card', '.book', 'top 70%');
+      enter('.map, .walk h2, .walk li, .walk .note', '.walk');
+      enter('.book > h2, .ticket', '.book', 'top 70%');
       enter('.mark-big, .foot .cols p, .credits', '.foot', 'top 90%');
       // each picture opens from a slightly larger crop as it arrives
       gsap.utils.toArray<HTMLElement>('.photo:not(.stage) img').forEach((img) =>

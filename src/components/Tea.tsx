@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { tea } from '@/content/site';
+import Rich from '@/components/Rich';
 
 export default function Tea() {
   return (
@@ -10,7 +11,7 @@ export default function Tea() {
         </figure>
         <div className="txt">
           <h2 id="tea-h">
-            <time>{tea.time}</time> {tea.title}
+            <time>{tea.time}</time> <Rich text={tea.title} />
           </h2>
           <p>{tea.text}</p>
         </div>

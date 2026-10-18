@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { rooms } from '@/content/site';
+import { rooms, roomsSection } from '@/content/site';
+import Rich from '@/components/Rich';
 import { CHOOSE_ROOM } from '@/components/BookingCard';
 
 // the rooms take turns on their own while the section is on screen; a click picks one and stops the turns
@@ -40,9 +41,9 @@ export default function Rooms() {
       <div className="rooms-grid">
         <div className="pick">
           <h2 id="rooms-h">
-            <time>18:30</time> ขึ้นห้อง
+            <time>{roomsSection.time}</time> <Rich text={roomsSection.title} />
           </h2>
-          <ul className="names" role="tablist" aria-label="ห้องพัก">
+          <ul className="names" role="tablist" aria-label="Rooms">
             {rooms.map((r, i) => (
               <li key={r.id}>
                 <button type="button" role="tab" aria-selected={i === shown} onClick={() => choose(i)}>
@@ -56,7 +57,7 @@ export default function Rooms() {
             <p>{room.blurb}</p>
             <span className="spec">{room.spec}</span>
             <a className="link" href="#book" onClick={() => dispatchEvent(new CustomEvent(CHOOSE_ROOM, { detail: room.id }))}>
-              จองห้องนี้
+              {roomsSection.action}
             </a>
           </div>
         </div>

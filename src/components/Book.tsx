@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { booking } from '@/content/site';
+import Rich from '@/components/Rich';
 import BookingCard from '@/components/BookingCard';
 
 export default function Book() {
@@ -11,7 +12,7 @@ export default function Book() {
       <h2 id="book-h">
         <time>{booking.time}</time>
         <br />
-        {booking.title}
+        <Rich text={booking.title} />
       </h2>
       <BookingCard />
     </section>
