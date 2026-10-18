@@ -11,6 +11,24 @@ import { onHeroReady } from '@/lib/hero-load';
 // the ground, an oxblood lamp follows the pointer below the hero, smooth scrolling and entrances.
 const DUSK = [28, 17, 13], NIGHT = [8, 5, 5];
 const pad = (n: number) => String(n).padStart(2, '0');
+
+// an element's place on the page from layout alone, so an entrance animation's offset does not count
+function pageTop(el: HTMLElement) {
+  let y = 0;
+  for (let e: HTMLElement | null = el; e; e = e.offsetParent as HTMLElement | null) y += e.offsetTop;
+  return y;
+}
+
+// where to scroll so the booking heading and the whole ticket sit centred in the space under the header,
+// or, on a screen too short for both, so the whole ticket shows
+function bookingInView() {
+  const head = document.getElementById('top')!.offsetHeight;
+  const title = document.getElementById('book-h')!, ticket = document.querySelector<HTMLElement>('.ticket')!;
+  const top = pageTop(title), bottom = pageTop(ticket) + ticket.offsetHeight;
+  const room = innerHeight - head, block = bottom - top;
+  if (block <= room) return top - head - (room - block) / 2;
+  return Math.min(pageTop(ticket) - head - 12, bottom - innerHeight + 12);
+}
 const minutesOf = (hhmm: string) => +hhmm.slice(0, 2) * 60 + +hhmm.slice(3, 5);
 
 // the clock reads each section's own time (its data-time) as the section reaches the middle of the
@@ -89,9 +107,12 @@ export default function Evening() {
     const onAnchor = (ev: MouseEvent) => {
       const a = (ev.target as Element).closest('a[href^="#"]');
       const id = a?.getAttribute('href');
-      if (!lenis || !id || id.length < 2 || !document.querySelector(id)) return;
+      if (!id || id.length < 2 || !document.querySelector(id)) return;
+      const target = id === '#book' ? bookingInView() : null;
+      if (!lenis && target === null) return;
       ev.preventDefault();
-      lenis.scrollTo(id, { offset: id === '#home' ? 0 : -72 });
+      if (lenis) lenis.scrollTo(target ?? id, { offset: target === null && id !== '#home' ? -72 : 0 });
+      else scrollTo(0, target!);
     };
     // the sign over the door comes on as the footer arrives; with reduced motion it is simply on
     const sign = document.querySelector('.sign')!;
@@ -106,8 +127,8 @@ export default function Evening() {
       lenis.on('scroll', ScrollTrigger.update);
       gsap.ticker.add(raf2);
       gsap.ticker.lagSmoothing(0);
-      document.addEventListener('click', onAnchor);
     }
+    document.addEventListener('click', onAnchor);
 
     const ctx = gsap.context(() => {
       if (reduce) return;
