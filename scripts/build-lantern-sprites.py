@@ -8,13 +8,15 @@
 import json
 from pathlib import Path
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 SPRITES = ['big', 'mid']  # file stems in scripts/assets/lanterns, in atlas order
 PAD = 4
 # the biggest lantern never shows wider than about 350 px, even on a 2x screen
 SCALE = 0.6
+# how many pixels in from the outline the lantern counts as pure colour; the rest is unmixed from the green
+EDGE = 2
 
 
 def key(path):
@@ -23,19 +25,24 @@ def key(path):
     rgb = np.asarray(im).astype(np.float32)
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     spill = g - np.maximum(r, b)
-    alpha = 1 - np.clip((spill - 18) / 50, 0, 1)
-    # take the green the screen threw onto the lantern's edges back out
-    rgb[..., 1] = np.minimum(g, np.maximum(r, b) + 6)
-    # and on the soft edge, where that still leaves an olive rim, pull green down to the blue
-    edge = alpha < 0.95
-    rgb[..., 1][edge] = np.minimum(rgb[..., 1], b + 8)[edge]
-    return np.dstack([bleed(rgb, alpha > 0.9), alpha * 255]).clip(0, 255).astype(np.uint8)
+    screen = np.median(rgb[spill > 100], 0)
+    lantern = spill < 18
+    # the lantern's core, safely inside its outline, keeps its own colour and is fully opaque
+    core = np.asarray(Image.fromarray(lantern.astype(np.uint8) * 255).filter(ImageFilter.MinFilter(2 * EDGE + 1))) > 0
+    # the pixels around the outline are a mix of lantern and green screen. Take the lantern's colour from just
+    # inside, and from how much green is left work out how much of the pixel is lantern: that is its opacity.
+    # Keyed any other way, these mixed pixels turn olive-brown, a dark ring round every lantern under the lamp
+    fg = bleed(rgb, core)
+    mixed = ~core
+    share = np.clip((screen[1] - g) / np.maximum(screen[1] - fg[..., 1], 1), 0, 1)
+    alpha = np.where(core, 1.0, np.where(lantern | (spill < 60), share, 0.0))
+    rgb = np.where(mixed[..., None], fg, rgb)
+    return np.dstack([rgb, alpha * 255]).clip(0, 255).astype(np.uint8)
 
 
 def bleed(rgb, solid, rings=16):
-    # carry the lantern's own colour out into the soft and clear pixels around it, ring by ring. The GPU
-    # blends neighbouring pixels when it scales the sheet; left dark, they drew a thin dark outline round
-    # every lantern that showed whenever the pointer lamp lit the ceiling behind it
+    # carry the lantern's own colour out from its solid pixels, ring by ring, into the mixed edge and the clear
+    # pixels around it, so the GPU never blends a dark or green pixel into the outline when it scales the sheet
     rgb, known = rgb.copy(), solid.copy()
     for _ in range(rings):
         acc = np.zeros_like(rgb); n = np.zeros(known.shape, np.float32)
