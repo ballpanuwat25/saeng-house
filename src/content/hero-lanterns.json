@@ -1,0 +1,20 @@
+{
+  "about": "Lanterns in /images/hero-lanterns.jpg, measured on an 800 x 1200 copy: centre x, centre y, half width, half height of the paper ball, and the lowest point of the tassel. Front lanterns are cut out and swing over /images/hero-plate.jpg (made by scripts/cut-lanterns.py); back lanterns are too small and tangled to cut, so they turn in place. Nearest first.",
+  "size": [800, 1200],
+  "front": [
+    [133, 36, 118, 106, 280],
+    [409, 14, 82, 82, 170],
+    [661, 46, 112, 106, 290],
+    [230, 234, 72, 68, 330],
+    [596, 242, 74, 69, 340],
+    [414, 220, 54, 58, 330],
+    [274, 343, 54, 53, 420],
+    [544, 351, 55, 53, 420],
+    [403, 330, 42, 42, 380]
+  ],
+  "back": [
+    [304, 405, 42, 36, 450], [516, 412, 42, 36, 470], [407, 392, 33, 27, 425],
+    [318, 445, 35, 28, 480], [500, 450, 36, 30, 495], [406, 436, 28, 20, 460],
+    [328, 478, 28, 22, 510], [484, 478, 28, 22, 515], [405, 465, 24, 16, 485]
+  ]
+}

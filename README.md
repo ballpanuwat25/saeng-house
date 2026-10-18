@@ -39,6 +39,16 @@ Thai Nguyen Anh and Didi Paul (tea), Shane Hebzynski (lantern balcony), Bradrey 
 See [docs/IDEAS.md](docs/IDEAS.md) for the backlog: real booking, a demo mode for recording the Fastwork
 video, and the ideas that make the site stand out.
 
+## Hero lanterns
+
+The nine big front lanterns in the hero photo are cut out and swing over `public/images/hero-plate.jpg`, the same photo with them painted out. Their outlines live in `src/content/hero-lanterns.json`, which both the shader and the paint-out script read. After changing an outline or the photo, rebuild the plate (needs Python with numpy and Pillow):
+
+```bash
+python scripts/cut-lanterns.py --preview
+```
+
+`--preview` also writes `scripts/.cache/plate-preview.png`, the outlines over the photo beside the result.
+
 ## Walking map
 
 The Talat Noi map is drawn from OpenStreetMap. `npm run map` rebuilds `src/content/talat-noi-map.ts` from the places in `src/content/site.ts`, routing and timing each walk along real streets. Add `-- --refresh` to download the streets again.
