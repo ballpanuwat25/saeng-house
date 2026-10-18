@@ -1,67 +1,124 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { hotel } from '@/content/site';
-import { finishHero, useHeroLoad } from '@/lib/hero-load';
+import { finishHero, openHero, useHeroLoad } from '@/lib/hero-load';
 
-// One paper lantern on a dark screen, rendered in the server HTML so it is the very first thing
-// a visitor sees. Its light follows the real download of the hero photo; when the photo is ready
-// the light opens outward and reveals the page.
-const REVEAL_MS = 1200;
+// A dark field of small paper lanterns. The unlit field is a CSS background pattern in the server
+// HTML, so it shows on the first frame; a canvas lights the lanterns from the centre outward as the
+// hero photo downloads. When every lantern is lit the field fades into the page.
+const CELL_W = 56;
+const CELL_H = 72;
+const FADE_MS = 900;
+// how far past its threshold a lantern takes to reach full light, in progress units
+const RAMP = 0.12;
+
+function drawLit(g: CanvasRenderingContext2D, x: number, y: number, a: number) {
+  const cx = x + 28, cy = y + 29;
+  g.globalAlpha = a;
+  const halo = g.createRadialGradient(cx, cy, 0, cx, cy, 34);
+  halo.addColorStop(0, 'rgba(242, 110, 60, .38)');
+  halo.addColorStop(1, 'rgba(196, 24, 43, 0)');
+  g.fillStyle = halo;
+  g.fillRect(cx - 34, cy - 34, 68, 68);
+  const paper = g.createRadialGradient(cx, cy - 2, 1, cx, cy, 13);
+  paper.addColorStop(0, '#ffe1b8');
+  paper.addColorStop(0.5, '#e8472f');
+  paper.addColorStop(1, '#7a1418');
+  g.fillStyle = paper;
+  g.beginPath();
+  g.ellipse(cx, cy, 10, 12, 0, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = '#c08a2c';
+  g.fillRect(x + 22, y + 14, 12, 3);
+  g.fillRect(x + 22, y + 41, 12, 3);
+  g.fillStyle = '#d0262f';
+  g.fillRect(x + 27, y + 44, 2, 10);
+  g.globalAlpha = 1;
+}
 
 export default function LanternLoader() {
   const { phase, progress } = useHeroLoad();
-  const [shown, setShown] = useState(0);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const note = useRef<HTMLSpanElement>(null);
+  const live = useRef({ phase, progress });
+  live.current = { phase, progress };
 
-  // ease the displayed value toward the real one so the light rises smoothly between network chunks
+  // one drawing loop for the loader's whole life; it reads the latest phase and progress from the ref
   useEffect(() => {
-    let raf = 0;
-    const step = () => {
-      setShown((s) => (Math.abs(progress - s) < 0.002 ? progress : s + (progress - s) * 0.12));
-      raf = requestAnimationFrame(step);
+    const el = canvas.current;
+    if (!el) return;
+    const g = el.getContext('2d')!;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let thresholds: Float32Array = new Float32Array(0), cols = 0, rows = 0;
+
+    const layout = () => {
+      const dpr = Math.min(devicePixelRatio, 2);
+      el.width = innerWidth * dpr;
+      el.height = innerHeight * dpr;
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cols = Math.ceil(innerWidth / CELL_W);
+      rows = Math.ceil(innerHeight / CELL_H);
+      // light spreads from the centre of the screen outward, with a little noise so it feels hand-lit
+      const mx = innerWidth / 2, my = innerHeight / 2, far = Math.hypot(mx, my);
+      thresholds = new Float32Array(cols * rows);
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++) {
+          const d = Math.hypot(c * CELL_W + 28 - mx, r * CELL_H + 29 - my) / far;
+          const noise = (Math.sin(c * 12.9898 + r * 78.233) * 43758.5453) % 1;
+          thresholds[r * cols + c] = Math.min(1 - RAMP, d * 0.8 + Math.abs(noise) * 0.1);
+        }
     };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [progress]);
+    layout();
+    addEventListener('resize', layout);
+
+    let shown = 0, raf = 0;
+    const frame = (now: number) => {
+      const { phase: p, progress: target } = live.current;
+      if (p === 'done') return;
+      shown += (target - shown) * 0.1;
+      if (Math.abs(target - shown) < 0.002) shown = target;
+      // the photo is ready and the last lantern is fully lit: fade into the page
+      if (p === 'lit' && shown >= 1) openHero();
+      if (note.current) note.current.textContent = `${Math.round(shown * 100)}%`;
+      g.clearRect(0, 0, innerWidth, innerHeight);
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++) {
+          const lit = Math.min(1, Math.max(0, (shown - thresholds[r * cols + c]) / RAMP));
+          if (lit <= 0) continue;
+          const flicker = reduce ? 1 : 0.9 + 0.1 * Math.sin(now / 420 + c * 1.7 + r * 2.3);
+          drawLit(g, c * CELL_W, r * CELL_H, lit * flicker);
+        }
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(raf);
+      removeEventListener('resize', layout);
+    };
+  }, []);
+
+  // the drawing loop opens the page once the last lantern is lit; this timer opens it anyway in case
+  // animation frames are paused (background tab, power saving, some in-app browsers)
+  useEffect(() => {
+    if (phase !== 'lit') return;
+    const id = setTimeout(openHero, 1500);
+    return () => clearTimeout(id);
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== 'opening') return;
     document.documentElement.classList.remove('is-loading');
-    const id = setTimeout(finishHero, matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : REVEAL_MS);
+    const id = setTimeout(finishHero, matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : FADE_MS);
     return () => clearTimeout(id);
   }, [phase]);
 
   if (phase === 'done') return null;
-  const lit = 0.15 + 0.85 * shown;
   return (
-    <div className={`loader${phase === 'opening' ? ' open' : ''}`} style={{ '--lit': lit } as React.CSSProperties} role="status" aria-live="polite">
-      <div className="loader-lamp">
-        <div className="loader-halo" />
-        <svg className="loader-lantern" viewBox="0 0 120 200" aria-hidden="true">
-          <defs>
-            <radialGradient id="paper" cx="50%" cy="48%" r="60%">
-              <stop offset="0" stopColor="#ffd9a8" />
-              <stop offset=".45" stopColor="#e2452f" />
-              <stop offset="1" stopColor="#5a0c12" />
-            </radialGradient>
-          </defs>
-          <rect x="59" y="0" width="2" height="30" fill="#3a2a24" />
-          <rect x="42" y="28" width="36" height="9" rx="3" fill="#8a6420" />
-          <ellipse cx="60" cy="86" rx="47" ry="51" fill="#4a0a10" />
-          <ellipse className="loader-paper" cx="60" cy="86" rx="47" ry="51" fill="url(#paper)" />
-          <g fill="none" stroke="#3a0608" strokeOpacity=".35" strokeWidth="1.4">
-            <ellipse cx="60" cy="86" rx="35" ry="51" />
-            <ellipse cx="60" cy="86" rx="21" ry="51" />
-            <ellipse cx="60" cy="86" rx="7" ry="51" />
-          </g>
-          <rect x="42" y="134" width="36" height="9" rx="3" fill="#8a6420" />
-          <rect x="56" y="143" width="8" height="6" rx="2" fill="#8a6420" />
-          <rect x="57.5" y="149" width="5" height="40" rx="2" fill="#b3121f" />
-        </svg>
-      </div>
-      <p className="loader-name">{hotel.name}</p>
+    <div className={`loader${phase === 'opening' ? ' open' : ''}`} role="status" aria-live="polite">
+      <canvas ref={canvas} aria-hidden="true" />
       <p className="loader-note">
-        กำลังจุดโคม <span>{Math.round(shown * 100)}%</span>
+        {hotel.name} <span ref={note}>0%</span>
       </p>
     </div>
   );

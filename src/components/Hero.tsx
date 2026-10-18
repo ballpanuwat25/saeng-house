@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import { heroPhoto, hotel } from '@/content/site';
 import { startCinemagraph } from '@/lib/cinemagraph';
 import { loadImage } from '@/lib/load-image';
-import { openHero, setHeroProgress } from '@/lib/hero-load';
+import { heroPhotoReady, setHeroProgress } from '@/lib/hero-load';
 
 // how the photo is shown once loaded: the WebGL cinemagraph, or a plain image where WebGL2 is missing
 type Look = 'cinemagraph' | 'still';
 
 // the loader stays at least this long, so a cached photo still gets its lantern moment
-const MIN_LOADER_MS = 1100;
+const MIN_LOADER_MS = 1600;
 
 export default function Hero() {
   const host = useRef<HTMLElement>(null);
@@ -27,7 +27,7 @@ export default function Hero() {
     let blobUrl = '';
     let timer = 0;
     const open = () => {
-      timer = window.setTimeout(openHero, Math.max(0, MIN_LOADER_MS - (performance.now() - started)));
+      timer = window.setTimeout(heroPhotoReady, Math.max(0, MIN_LOADER_MS - (performance.now() - started)));
     };
 
     // phones and tablets get the 1600px photo; the 3200px one is only worth it on wide screens
