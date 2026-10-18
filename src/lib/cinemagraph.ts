@@ -206,10 +206,9 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
   host.addEventListener('pointermove', onPointer);
 
   const angles = new Float32Array(N), glows = new Float32Array(N);
-  let ready = false, announced = false, visible = true, last = performance.now(), raf = 0;
+  let ready = false, visible = true, last = performance.now(), raf = 0;
 
-  const frame = (now: number) => {
-    if (!visible || !ready) return;
+  const draw = (now: number) => {
     const dt = Math.min((now - last) / 1000, 0.05);
     last = now;
     const t = now / 1000;
@@ -238,11 +237,11 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
     gl.uniform1fv(u.ang, angles);
     gl.uniform1fv(u.glow, glows);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-    // the first drawn frame is the moment the photo is really on screen
-    if (!announced) {
-      announced = true;
-      onReady();
-    }
+  };
+  // animates only while the hero is on screen
+  const frame = (now: number) => {
+    if (!visible || !ready) return;
+    draw(now);
     raf = requestAnimationFrame(frame);
   };
 
@@ -263,7 +262,10 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
       if (cancelled) return bitmap.close();
       imgSize = upload(gl, bitmap);
       ready = true;
-      raf = requestAnimationFrame(frame);
+      // draw once now, on screen or not, so the photo is in place the moment the loader opens
+      draw(performance.now());
+      onReady();
+      if (visible) raf = requestAnimationFrame(frame);
     })
     .catch((err) => {
       console.error(err);

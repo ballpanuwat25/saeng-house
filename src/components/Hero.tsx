@@ -22,13 +22,18 @@ export default function Hero() {
 
   useEffect(() => {
     setTouch(matchMedia('(hover: none)').matches);
+    // the page is one evening told from the top; a reload starts it again rather than mid-story
+    history.scrollRestoration = 'manual';
+    scrollTo(0, 0);
     const abort = new AbortController();
     let stop: (() => void) | null = null;
     let blobUrl = '';
     let creep = 0;
+    let safety = 0;
 
     const showStill = (url: string) => {
       clearInterval(creep);
+      clearTimeout(safety);
       setLook('still');
       setStillSrc(url);
       heroPhotoReady();
@@ -41,6 +46,11 @@ export default function Hero() {
         // decoding and the GPU upload report no progress of their own, so ease toward 99% meanwhile
         let p = DOWNLOAD_SHARE;
         creep = window.setInterval(() => setHeroProgress((p += (0.99 - p) * 0.08)), 60);
+        // never leave a visitor at 99%: if preparing the photo stalls, open the page anyway
+        safety = window.setTimeout(() => {
+          clearInterval(creep);
+          heroPhotoReady();
+        }, 6000);
         blobUrl = URL.createObjectURL(photo);
         stop = startCinemagraph({
           host: host.current!,
@@ -48,6 +58,7 @@ export default function Hero() {
           photo,
           onReady: () => {
             clearInterval(creep);
+            clearTimeout(safety);
             heroPhotoReady();
           },
           onFail: () => showStill(blobUrl),
@@ -63,6 +74,7 @@ export default function Hero() {
     return () => {
       abort.abort();
       clearInterval(creep);
+      clearTimeout(safety);
       stop?.();
       if (blobUrl) URL.revokeObjectURL(blobUrl);
     };
