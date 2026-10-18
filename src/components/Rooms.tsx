@@ -37,11 +37,11 @@ export default function Rooms() {
   const room = rooms[shown];
 
   return (
-    <section ref={section} className="rooms wrap" id="rooms" aria-labelledby="rooms-h">
+    <section ref={section} className="rooms wrap" id="rooms" aria-labelledby="rooms-h" data-time={roomsSection.time}>
       <div className="rooms-grid">
         <div className="pick">
           <h2 id="rooms-h">
-            <time>{roomsSection.time}</time> <Rich text={roomsSection.title} />
+            <Rich text={roomsSection.title} />
           </h2>
           <ul className="names" role="tablist" aria-label="Rooms">
             {rooms.map((r, i) => (

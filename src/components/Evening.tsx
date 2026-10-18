@@ -11,6 +11,22 @@ import { onHeroReady } from '@/lib/hero-load';
 // the ground, an oxblood lamp follows the pointer below the hero, smooth scrolling and entrances.
 const DUSK = [28, 17, 13], NIGHT = [8, 5, 5];
 const pad = (n: number) => String(n).padStart(2, '0');
+const minutesOf = (hhmm: string) => +hhmm.slice(0, 2) * 60 + +hhmm.slice(3, 5);
+
+// the clock reads each section's own time (its data-time) as the section reaches the middle of the
+// screen, and runs evenly between them
+function clockAt(y: number, max: number) {
+  const marks: [number, number][] = [[0, evening.startHour * 60]];
+  for (const el of document.querySelectorAll<HTMLElement>('[data-time]')) {
+    const at = Math.min(max, el.getBoundingClientRect().top + scrollY - innerHeight / 2);
+    if (at > marks.at(-1)![0]) marks.push([at, minutesOf(el.dataset.time!)]);
+  }
+  if (max > marks.at(-1)![0]) marks.push([max, evening.endHour * 60]);
+  const i = marks.findIndex(([at]) => at >= y);
+  if (i <= 0) return marks[Math.max(0, i)][1];
+  const [[a, ma], [b, mb]] = [marks[i - 1], marks[i]];
+  return Math.round(ma + ((y - a) / (b - a)) * (mb - ma));
+}
 
 export default function Evening() {
   useEffect(() => {
@@ -21,12 +37,11 @@ export default function Evening() {
     const clockT = document.getElementById('clock-t')!;
     const glow = document.getElementById('glow')!;
     const root = document.documentElement;
-    const span = (evening.endHour - evening.startHour) * 60;
 
     const onScroll = () => {
       const max = root.scrollHeight - innerHeight;
       const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
-      const mins = Math.round(evening.startHour * 60 + p * span);
+      const mins = clockAt(Math.min(scrollY, max), max);
       clockT.textContent = `${pad(Math.floor(mins / 60))}:${pad(mins % 60)}`;
       const ground = `rgb(${DUSK.map((v, i) => Math.round(v + (NIGHT[i] - v) * p))})`;
       document.body.style.backgroundColor = ground;
@@ -77,6 +92,10 @@ export default function Evening() {
       ev.preventDefault();
       lenis.scrollTo(id, { offset: id === '#home' ? 0 : -72 });
     };
+    // the sign over the door comes on as the footer arrives; with reduced motion it is simply on
+    const sign = document.querySelector('.sign')!;
+    const lightSign = ScrollTrigger.create({ trigger: '.foot', start: 'top 75%', once: true, onEnter: () => sign.classList.add('lit') });
+
     let stopIntroWait = () => {};
     let stopScrollWait = () => {};
     if (!reduce) {
@@ -95,12 +114,13 @@ export default function Evening() {
       stopIntroWait = onHeroReady(() => intro.play());
       const enter = (sel: string, trigger: string, start = 'top 80%') =>
         gsap.from(sel, { y: 30, opacity: 0, duration: 1, stagger: 0.09, ease: 'power3.out', scrollTrigger: { trigger, start, once: true } });
-      enter('.arrive .say, .ledger div', '.arrive');
+      enter('.arrive .say, .facade, .front .fact', '.arrive');
+      gsap.from('.facade .win', { opacity: 0, duration: 0.5, stagger: { each: 0.07, from: 'random' }, delay: 0.5, scrollTrigger: { trigger: '.front', start: 'top 75%', once: true } });
       enter('.rooms h2, .names li, .detail > *, .stage', '.rooms');
       enter('.tea .big, .tea .txt > *, .tea .small', '.tea');
       enter('.map, .walk h2, .walk li, .walk .note', '.walk');
       enter('.book > h2, .ticket', '.book', 'top 70%');
-      enter('.mark-big, .foot .cols p, .credits', '.foot', 'top 90%');
+      enter('.foot .cols p, .credits', '.foot', 'top 90%');
       // each picture opens from a slightly larger crop as it arrives
       gsap.utils.toArray<HTMLElement>('.photo:not(.stage) img').forEach((img) =>
         gsap.fromTo(img, { scale: 1.12 }, { scale: 1, ease: 'none', scrollTrigger: { trigger: img.closest('.photo'), start: 'top bottom', end: 'center center', scrub: true } }),
@@ -117,6 +137,7 @@ export default function Evening() {
       stopIntroWait();
       stopScrollWait();
       ctx.revert();
+      lightSign.kill();
       gsap.ticker.remove(raf2);
       lenis?.destroy();
     };

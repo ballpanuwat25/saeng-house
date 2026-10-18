@@ -36,7 +36,6 @@ img { display: block; max-width: 100%; }
 h1, h2 { font-family: var(--serif); font-weight: 400; }
 h2 { font-size: clamp(2.5rem, 1.6rem + 3vw, 4.4rem); line-height: 1.02; letter-spacing: -0.012em; margin: 0; text-wrap: balance; }
 h1 em, h2 em { font-style: italic; color: #f4d9c2; }
-h2 time { color: var(--ember); font-variant-numeric: lining-nums; margin-right: .18em; }
 .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 24px; border: 0; border-radius: 999px; background: var(--lantern); color: var(--lantern-ink); text-decoration: none; font-weight: 500; cursor: pointer; transition: transform .2s ease, background-color .2s ease; }
 .btn:hover { transform: translateY(-2px); background: #d6213a; }
 .btn:active { transform: scale(.97); }
@@ -87,10 +86,27 @@ html.is-loading { overflow: hidden; }
 /* 18:10 arrival */
 .arrive { padding-block: clamp(120px, 15vw, 220px) clamp(80px, 10vw, 140px); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(32px, 6vw, 120px); align-items: end; }
 .arrive .say { margin: 0; font-size: clamp(1.5rem, 1.1rem + 1.3vw, 2.25rem); line-height: 1.38; font-weight: 300; max-width: 25em; }
-.ledger { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 28px; }
-.ledger dt { font-family: var(--serif); font-size: clamp(2.6rem, 1.8rem + 2.4vw, 4.2rem); line-height: 1; color: var(--ink); font-variant-numeric: lining-nums; }
-.ledger dt small { font-family: var(--face); font-size: var(--s-small); color: var(--ember); margin-left: 6px; letter-spacing: .02em; }
-.ledger dd { margin: 10px 0 0; color: var(--muted); font-size: var(--s-small); max-width: 18ch; }
+/* the facts written beside a drawing of the warehouse front, each level with the part it is about */
+.front { --fw: 50%; --lead: 26px; --dt: clamp(1.75rem, 1.3rem + 1.2vw, 2.6rem); display: grid; grid-template-columns: var(--fw) minmax(0, 1fr); column-gap: var(--lead); }
+.facade { grid-area: 1 / 1; width: 100%; height: auto; display: block; overflow: visible; }
+.facade .wall { fill: #2b1c16; stroke: #4a3128; stroke-width: 1.5; }
+.facade .trim { fill: none; stroke: #5a3d31; stroke-width: 2; }
+.facade .year { font-family: var(--serif); font-size: 21px; fill: #f4d9c2; letter-spacing: .04em; }
+.facade .win { fill: #f2a35e; stroke: #120b09; stroke-width: 1.5; filter: drop-shadow(0 0 6px rgba(242, 163, 94, .55)); }
+.facade .slat { fill: #3d2a22; }
+.facade .lamp rect { fill: #5a3d31; }
+.facade .lamp ellipse { fill: var(--lantern); filter: drop-shadow(0 0 8px rgba(196, 24, 43, .9)); }
+.ledger { grid-area: 1 / 2; position: relative; margin: 0; }
+/* the figure's middle sits level with its part of the front; the label hangs below it */
+.ledger .fact { position: absolute; left: 0; right: 0; transform: translateY(calc(var(--dt) / -2)); }
+.ledger .fact::before { content: ""; position: absolute; top: calc(var(--dt) / 2); right: calc(100% + 6px); width: calc(var(--lead) + 18px); border-top: 1px dashed rgba(244, 217, 194, .45); }
+.front dt { font-family: var(--serif); font-size: var(--dt); line-height: 1; color: var(--ink); font-variant-numeric: lining-nums; }
+.front dt small { font-family: var(--face); font-size: var(--s-small); color: var(--ember); margin-left: 6px; letter-spacing: .02em; }
+.front dd { margin: 6px 0 0; color: var(--muted); font-size: var(--s-small); line-height: 1.4; max-width: 22ch; }
+.road { grid-column: 1 / -1; margin: 0; padding-top: 18px; border-top: 2px solid #4a3128; }
+.road .fact { display: flex; align-items: baseline; gap: 14px; }
+.road dt::after { content: "→"; font-family: var(--face); font-size: var(--s-small); color: var(--ember); margin-left: 10px; }
+.road dd { margin: 0; max-width: none; }
 
 /* 18:30 rooms: big names on the left choose the picture on the right */
 .rooms { padding-block: clamp(60px, 8vw, 120px) clamp(120px, 14vw, 200px); }
@@ -192,8 +208,21 @@ html.is-loading { overflow: hidden; }
 
 /* 23:00 */
 .foot { padding-block: clamp(60px, 8vw, 120px) 96px; display: grid; gap: 40px; }
-.mark-big { font-family: var(--thai); font-size: clamp(8rem, 34vw, 32rem); line-height: .82; font-weight: 500; letter-spacing: -0.05em; margin: 0; color: var(--ink); }
-.mark-gloss { margin: 18px 0 0; font-family: var(--serif); font-style: italic; font-size: clamp(1.4rem, 1rem + 1.2vw, 2.2rem); color: #f4d9c2; }
+/* the neon shop sign: dark glass tubes until the footer arrives, then they sputter on and one letter keeps buzzing */
+.sign { --tube: #4a2522; justify-self: start; position: relative; margin-top: 56px; padding: clamp(18px, 2.4vw, 34px) clamp(26px, 3.6vw, 52px) clamp(14px, 2vw, 26px); border: 3px solid var(--tube); border-radius: 22px; background: #0d0606; text-align: center; transition: border-color .2s ease, box-shadow .2s ease; }
+.sign::before, .sign::after { content: ""; position: absolute; bottom: 100%; width: 2px; height: 56px; background: #3a2a24; }
+.sign::before { left: 18%; }
+.sign::after { right: 18%; }
+.neon { margin: 0; font-family: var(--thai); font-weight: 500; font-size: clamp(5.5rem, 20vw, 15rem); line-height: 1; letter-spacing: .02em; color: var(--tube); }
+.neon span { transition: color .2s ease, text-shadow .2s ease; }
+.neon-gloss { margin: 10px 0 0; font-family: var(--serif); font-style: italic; font-size: clamp(1.1rem, .9rem + .8vw, 1.7rem); color: #3a2a24; transition: color .4s ease .9s, text-shadow .4s ease .9s; }
+.sign.lit { --tube: #ff9a8a; border-color: #ffd2c8; box-shadow: 0 0 6px #ff6b5e, 0 0 22px rgba(228, 40, 60, .75), inset 0 0 18px rgba(228, 40, 60, .45), 0 0 120px rgba(196, 24, 43, .35); animation: sputter 1.3s steps(1) both; }
+.sign.lit .neon span { color: #ffe9e4; text-shadow: 0 0 3px #fff, 0 0 10px #ff6b5e, 0 0 26px #e3283c, 0 0 60px #c4182b, 0 0 110px rgba(196, 24, 43, .7); animation: sputter 1.3s steps(1) both; }
+.sign.lit .neon span:nth-child(2) { animation-delay: .25s; }
+.sign.lit .neon span:last-child { animation: sputter 1.3s steps(1) .5s both, buzz 7s steps(1) 2.4s infinite; }
+.sign.lit .neon-gloss { color: #f4d9c2; text-shadow: 0 0 12px rgba(242, 163, 94, .6); }
+@keyframes sputter { 0%, 12%, 30%, 44% { opacity: .12; } 8%, 22%, 38%, 60%, 100% { opacity: 1; } }
+@keyframes buzz { 0%, 61%, 64%, 66%, 100% { opacity: 1; } 62%, 65% { opacity: .2; } }
 /* the lamp behind everything below the hero: an oxblood glow at the pointer */
 .glow { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .8s ease; background: radial-gradient(680px circle at var(--gx, 50%) var(--gy, 50%), rgba(128, 22, 30, .5), rgba(110, 18, 26, .24) 35%, rgba(90, 14, 20, .07) 60%, transparent 75%); }
 .glow.on { opacity: 1; }
@@ -220,10 +249,13 @@ main > .hero { z-index: 2; }
   .seal { right: 18px; bottom: 18px; }
   .msg { padding-right: 80px; }
   .foot .cols { grid-template-columns: 1fr; }
+  .front { --fw: 54%; --lead: 16px; --dt: 1.75rem; }
+  .front dd { font-size: 13px; }
+  .sign { justify-self: stretch; }
   .hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .loader { transition: opacity .3s ease; }
   body, .btn, .photo img, .walk li button, .top, .clock { transition: none; }
-  .seal, .map .route { animation: none; stroke-dashoffset: 0; }
+  .seal, .map .route, .sign.lit, .sign.lit .neon span, .sign.lit .neon span:last-child { animation: none; stroke-dashoffset: 0; }
 }

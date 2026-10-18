@@ -1,10 +1,19 @@
 import { closing, credits, hotel } from '@/content/site';
 
+const letters = [...new Intl.Segmenter('th', { granularity: 'grapheme' }).segment(hotel.wordmark)].map((s) => s.segment);
+
 export default function Footer() {
   return (
-    <footer className="foot wrap">
-      <p className="mark-big" aria-hidden="true">{hotel.wordmark}</p>
-      <p className="mark-gloss">{hotel.wordmarkGloss}</p>
+    <footer className="foot wrap" data-time={closing.time}>
+      {/* a shop sign in the manner of the neon over Yaowarat; it sputters on at 23:00 and one letter never settles */}
+      <div className="sign" aria-hidden="true">
+        <p className="neon">
+          {letters.map((l, i) => (
+            <span key={i}>{l}</span>
+          ))}
+        </p>
+        <p className="neon-gloss">{hotel.wordmarkGloss}</p>
+      </div>
       <div className="cols">
         <p>
           <strong>{hotel.name}</strong>

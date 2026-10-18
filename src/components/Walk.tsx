@@ -16,7 +16,7 @@ export default function Walk() {
   const [hx, hy] = map.hotel;
 
   return (
-    <section className="walk wrap" id="walk" aria-labelledby="walk-h">
+    <section className="walk wrap" id="walk" aria-labelledby="walk-h" data-time={walk.time}>
       <figure className="map" aria-label={`Map: ${spot.minutes} minutes on foot to ${place.name}`}>
         <svg viewBox={`0 0 ${map.width} ${map.height}`} role="img" aria-hidden="true">
           <path d={map.river} className="river" />
@@ -56,7 +56,7 @@ export default function Walk() {
       </figure>
       <div className="list">
         <h2 id="walk-h">
-          <time>{walk.time}</time> <Rich text={walk.title} />
+          <Rich text={walk.title} />
         </h2>
         <ol>
           {walk.places.map((p, i) => (

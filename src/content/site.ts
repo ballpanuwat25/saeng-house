@@ -16,7 +16,8 @@ export type LatLon = readonly [lat: number, lon: number];
 // `at` is where the walk ends; scripts/build-map.mjs routes it along real streets and times it
 export type Place = { name: string; note: string; at: LatLon };
 
-export type Fact = { figure: string; unit?: string; label: string };
+// `part` is the piece of the warehouse front the fact is written beside
+export type Fact = { figure: string; unit?: string; label: string; part: 'gable' | 'rooms' | 'door' | 'street' };
 
 export const hotel = {
   wordmark: 'แสง',
@@ -47,12 +48,13 @@ export const arrival =
   'You come in through the folding doors, walk the corridor of lanterns and climb the teak stairs. The building went up in 1922 to store spices for traders from Shantou. Today it keeps twelve rooms and one long table for tea.';
 
 export const facts: Fact[] = [
-  { figure: '12', label: 'rooms over four floors' },
-  { figure: '1922', label: 'built as a spice warehouse' },
-  { figure: '6', unit: 'min', label: 'on foot to Si Phraya pier' },
-  { figure: '14:00', label: 'check-in, check-out at noon' },
+  { figure: '1922', label: 'built as a spice warehouse', part: 'gable' },
+  { figure: '12', label: 'rooms above the tea hall', part: 'rooms' },
+  { figure: '14:00', label: 'check-in at the folding doors, out by noon', part: 'door' },
+  { figure: '6', unit: 'min', label: 'on foot to Si Phraya pier', part: 'street' },
 ];
 
+// each section's `time` is what the header clock reads when that section reaches the middle of the screen
 export const roomsSection = { time: '18:30', title: 'Up to your *room*', action: 'Book this room' };
 
 export const rooms: Room[] = [

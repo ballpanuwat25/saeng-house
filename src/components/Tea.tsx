@@ -4,14 +4,14 @@ import Rich from '@/components/Rich';
 
 export default function Tea() {
   return (
-    <section className="tea wrap" id="tea" aria-labelledby="tea-h">
+    <section className="tea wrap" id="tea" aria-labelledby="tea-h" data-time={tea.time}>
       <div className="tea-grid">
         <figure className="photo big">
           <Image src={tea.main.src} alt={tea.main.alt} fill sizes="(max-width: 860px) 100vw, 65vw" />
         </figure>
         <div className="txt">
           <h2 id="tea-h">
-            <time>{tea.time}</time> <Rich text={tea.title} />
+            <Rich text={tea.title} />
           </h2>
           <p>{tea.text}</p>
         </div>
