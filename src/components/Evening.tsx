@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { evening } from '@/content/site';
+import { onHeroReady } from '@/lib/hero-load';
 
 // Page-wide behaviour of the one-evening story: scroll moves the clock from 18:00 to 23:00 and darkens
 // the ground, an oxblood lamp follows the pointer below the hero, smooth scrolling and entrances.
@@ -76,8 +77,12 @@ export default function Evening() {
       ev.preventDefault();
       lenis.scrollTo(id, { offset: id === '#home' ? 0 : -72 });
     };
+    let stopIntroWait = () => {};
+    let stopScrollWait = () => {};
     if (!reduce) {
       lenis = new Lenis({ lerp: 0.09 });
+      lenis.stop();
+      stopScrollWait = onHeroReady(() => lenis?.start());
       lenis.on('scroll', ScrollTrigger.update);
       gsap.ticker.add(raf2);
       gsap.ticker.lagSmoothing(0);
@@ -86,7 +91,8 @@ export default function Evening() {
 
     const ctx = gsap.context(() => {
       if (reduce) return;
-      gsap.from('.hero h1 span, .hero p, .hero .btn', { y: 26, opacity: 0, duration: 1.2, stagger: 0.09, ease: 'power3.out', delay: 0.3 });
+      const intro = gsap.from('.hero h1 span, .hero p, .hero .btn', { y: 26, opacity: 0, duration: 1.2, stagger: 0.09, ease: 'power3.out', delay: 0.55, paused: true });
+      stopIntroWait = onHeroReady(() => intro.play());
       const enter = (sel: string, trigger: string, start = 'top 80%') =>
         gsap.from(sel, { y: 30, opacity: 0, duration: 1, stagger: 0.09, ease: 'power3.out', scrollTrigger: { trigger, start, once: true } });
       enter('.arrive .say, .facts div', '.arrive');
@@ -108,6 +114,8 @@ export default function Evening() {
       removeEventListener('pointermove', onPointer);
       document.removeEventListener('click', onAnchor);
       cancelAnimationFrame(raf);
+      stopIntroWait();
+      stopScrollWait();
       ctx.revert();
       gsap.ticker.remove(raf2);
       lenis?.destroy();

@@ -21,8 +21,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="th" className={anuphan.variable}>
-      <body>{children}</body>
+    // is-loading holds the page still under the lantern loader until the hero photo is ready
+    <html lang="th" className={`${anuphan.variable} is-loading`}>
+      <body>
+        <noscript>
+          <style>{'.loader { display: none; } html.is-loading { overflow: auto; }'}</style>
+        </noscript>
+        {children}
+      </body>
     </html>
   );
 }

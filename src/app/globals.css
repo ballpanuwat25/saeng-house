@@ -61,7 +61,23 @@ h2 time { color: var(--ember); font-variant-numeric: tabular-nums; }
 .hero { position: relative; height: 100svh; min-height: 600px; overflow: hidden; background: #0a0605; }
 .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
 .hero .still { position: absolute !important; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 31%; opacity: .6; }
-.hero.gl-on .still { display: none; }
+.hero.look-still canvas { display: none; }
+
+/* loader: one lantern brightening with the hero photo's download, then its light opens onto the page */
+html.is-loading { overflow: hidden; }
+@property --hole { syntax: "<length>"; inherits: false; initial-value: 0px; }
+.loader { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; justify-items: center; gap: 10px; background: #0a0605; color: var(--ink); --hole: 0px; -webkit-mask: radial-gradient(circle at 50% 40%, transparent var(--hole), #000 calc(var(--hole) + 2px)); mask: radial-gradient(circle at 50% 40%, transparent var(--hole), #000 calc(var(--hole) + 2px)); }
+.loader.open { --hole: 150vmax; transition: --hole 1.2s cubic-bezier(.65, 0, .25, 1); }
+.loader-lamp { position: relative; width: 120px; height: 200px; transform-origin: 60px 0; animation: lantern-sway 3.4s ease-in-out infinite alternate; }
+@keyframes lantern-sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+.loader-lantern { position: relative; display: block; width: 120px; height: 200px; }
+.loader-paper { opacity: var(--lit); transition: opacity .2s linear; }
+.loader-halo { position: absolute; left: 50%; top: 86px; width: 440px; height: 440px; margin: -220px 0 0 -220px; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(242, 110, 60, .55), rgba(196, 24, 43, .22) 38%, transparent 70%); opacity: var(--lit); transition: opacity .2s linear, transform .9s ease; }
+.loader.open .loader-halo { transform: scale(1.6); opacity: 1; }
+.loader-name { margin: 22px 0 0; font-size: 1.75rem; font-weight: 500; letter-spacing: -0.01em; }
+.loader-note { margin: 0; font-size: var(--s-small); color: var(--muted); }
+.loader-note span { font-variant-numeric: tabular-nums; color: var(--ember); }
+.loader.open .loader-name, .loader.open .loader-note { opacity: 0; transition: opacity .3s ease; }
 .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(10, 6, 5, .55) 0%, rgba(10, 6, 5, .2) 40%, rgba(10, 6, 5, 0) 60%), linear-gradient(0deg, rgba(10, 6, 5, .55) 0%, rgba(10, 6, 5, 0) 35%); }
 .hero .copy, .hero .hint { z-index: 1; }
 .hero .copy { position: absolute; left: max(var(--m), env(safe-area-inset-left, 0px)); right: max(var(--m), env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(48px, 12vh, 140px)); display: grid; gap: 22px; justify-items: start; max-width: 640px; pointer-events: none; }
@@ -176,5 +192,7 @@ main > .hero { z-index: 2; }
   .hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .loader-lamp { animation: none; }
+  .loader.open { --hole: 0px; opacity: 0; transition: opacity .3s ease; }
   body, .btn, .photo img, .walk li, .top, .clock { transition: none; }
 }
