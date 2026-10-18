@@ -127,12 +127,13 @@ html.is-loading { overflow: hidden; }
 .names { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .names button { width: 100%; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border: 0; background: none; padding: 10px 0; cursor: pointer; text-align: left; color: var(--muted); transition: color .35s ease; }
 .names .n { font-family: var(--serif); font-size: clamp(2.1rem, 1.3rem + 2.4vw, 3.8rem); font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; display: flex; align-items: center; gap: 16px; }
-/* the chosen room is marked with the house lantern, the same one as the header clock and the map */
-.names .n::before { content: ""; width: 14px; height: 16px; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 32'><rect x='13' width='2' height='6' fill='%235a3d31'/><rect x='7' y='6' width='14' height='4' rx='1.5' fill='%23c08a2c'/><ellipse cx='14' cy='19' rx='11' ry='10' fill='%23ff6a3d'/><rect x='7' y='28' width='14' height='4' rx='1.5' fill='%23c08a2c'/></svg>") center / contain no-repeat; filter: drop-shadow(0 0 6px rgba(242, 110, 60, .8)); transform: scale(0); transform-origin: 50% 0; transition: transform .35s ease; flex: none; }
+/* the chosen room is marked with the house lantern, the same one as the header clock and the map; its glow is
+   drawn into the picture, since mobile browsers clip a drop-shadow on a scaled element and leave traces of it */
+.names .n::before { content: ""; width: 30px; height: 30px; margin: 0 -7px; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'><defs><radialGradient id='g'><stop offset='0' stop-color='%23ff6a3d' stop-opacity='.55'/><stop offset='1' stop-color='%23ff6a3d' stop-opacity='0'/></radialGradient></defs><circle cx='22' cy='23' r='21' fill='url(%23g)'/><g transform='translate(15 7) scale(.5)'><rect x='13' width='2' height='6' fill='%235a3d31'/><rect x='7' y='6' width='14' height='4' rx='1.5' fill='%23c08a2c'/><ellipse cx='14' cy='19' rx='11' ry='10' fill='%23ff6a3d'/><rect x='7' y='28' width='14' height='4' rx='1.5' fill='%23c08a2c'/></g></svg>") center / contain no-repeat; opacity: 0; transform: translateY(-4px); transition: opacity .35s ease, transform .35s ease; flex: none; }
 .names .p { font-variant-numeric: tabular-nums; font-size: var(--s-body); }
 .names button:hover { color: var(--ink); }
 .names button[aria-selected="true"] { color: var(--ink); }
-.names button[aria-selected="true"] .n::before { transform: scale(1); }
+.names button[aria-selected="true"] .n::before { opacity: 1; transform: none; }
 .detail { display: grid; gap: 14px; max-width: 42ch; }
 .detail p { margin: 0; }
 .detail[hidden] { display: none; }

@@ -57,6 +57,16 @@ python scripts/cut-lanterns.py --preview
 
 The first keys the green out of the lanterns into `public/images/hero-lantern-sprites.webp`. The second writes `public/images/hero-plate.webp` and `public/images/hero-cut-mask.png`; `--preview` also writes `scripts/.cache/plate-preview.png`.
 
+## Share image and icons
+
+`src/app/opengraph-image.png` is the picture link previews show. It is a screenshot of the live hero with the name set in the site's own fonts; remake it after the hero changes, with the site running:
+
+```bash
+node scripts/make-share-image.mjs http://localhost:3000
+```
+
+The browser icon is `src/app/icon.svg` and the home-screen icon `src/app/apple-icon.png`, both the house lantern.
+
 ## Walking map
 
 The Talat Noi map is drawn from OpenStreetMap. `npm run map` rebuilds `src/content/talat-noi-map.ts` from the places in `src/content/site.ts`, routing and timing each walk along real streets. Add `-- --refresh` to download the streets again.
