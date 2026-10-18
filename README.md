@@ -41,7 +41,7 @@ video, and the ideas that make the site stand out.
 
 ## Hero lanterns
 
-The nine big front lanterns in the hero photo are cut out and swing over `public/images/hero-plate.jpg`, the same photo with them painted out. Their edges come from `scripts/assets/hero-lanterns-cut.png` (cut in Photoshop, transparent elsewhere, same size as the photo); `src/content/hero-lanterns.json` holds each lantern's centre and size, which set where it hangs from and which lantern owns each cut pixel. After changing the cut, an outline or the photo, rebuild the mask and plate (needs Python with numpy and Pillow):
+Every lantern in the hero photo is a cut-out swinging over the ceiling with the lanterns removed. Both come from Photoshop, in `scripts/assets`: `hero-lanterns-cut.png` (every lantern, transparent elsewhere, same size as the photo) and `hero-plate.jpg` (the photo with the lanterns removed and the ceiling drawn in). `src/content/hero-lanterns.json` holds each lantern's centre and size, which set where it hangs from and which lantern owns each cut pixel. After changing either file or an outline, rebuild `public/images/hero-cut-mask.png` and `public/images/hero-plate.jpg` (needs Python with numpy and Pillow):
 
 ```bash
 python scripts/cut-lanterns.py --preview

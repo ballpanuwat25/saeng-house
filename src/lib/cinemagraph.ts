@@ -1,56 +1,46 @@
 // The lantern corridor photograph as a cinemagraph: each lantern swings around the point it hangs
 // from, its paper keeps glowing, and the pointer is a lamp that lights the rest of the corridor.
-// The big front lanterns are cut out (their edges from a Photoshop cut, via scripts/cut-lanterns.py) and
-// swing over a copy of the photo with them painted out; the small ones at the back turn in place. Returns a stop function, or
-// null when WebGL2 is unavailable.
+// Every lantern is a cut-out (scripts/cut-lanterns.py, from a Photoshop cut) drawn over the ceiling with
+// the lanterns removed, so nothing behind them bends. Returns a stop function, or null when WebGL2 is
+// unavailable.
 import spec from '@/content/hero-lanterns.json';
 
 type Mark = readonly [cx: number, cy: number, rx: number, ry: number, lowest: number];
 
 const [IW, IH] = spec.size;
-const FRONT = spec.front as unknown as Mark[];
-const BACK = spec.back as unknown as Mark[];
-const NF = FRONT.length, NB = BACK.length, N = NF + NB;
-// size of /images/hero-cut-mask.png (scripts/cut-lanterns.py)
+const NF = spec.front.length;
+const MARKS = [...spec.front, ...spec.back] as unknown as Mark[];
+const N = MARKS.length;
+// /images/hero-cut-mask.png: its size, and the step its green channel counts lantern owners in;
+// owner N + 1 is the still layer of tiny lanterns at the far end. Must match scripts/cut-lanterns.py
 const MASK_SIZE = [1200, 1800] as const;
-// a cut-out lantern can swing further than one turned in place, whose surroundings bend past about 0.065 rad;
-// past about 0.09 the crescent of painted-in corridor it leaves behind starts to show
-const LIMIT = { front: 0.09, back: 0.065 };
+const ID_STEP = 12;
+// past about 0.09 rad the strip of drawn-in ceiling a lantern uncovers starts to show
+const LIMIT = 0.09;
 
 // image uv, y up: where the photo's focus sits on tall screens, and where its centre sits across wide ones
 const FOCUS = [0.5, 0.55] as const;
 const WIDE_CENTRE_X = 0.68;
 
-type Lantern = { angle: number; velocity: number; amp: number; omega: number; phase: number; limit: number };
+type Lantern = { angle: number; velocity: number; amp: number; omega: number; phase: number };
 
 function lanternGeometry() {
-  const front = new Float32Array(NF * 4), frontPiv = new Float32Array(NF * 2);
-  const ell = new Float32Array(NB * 4), piv = new Float32Array(NB * 2), body = new Float32Array(N * 4);
-  const lanterns: Lantern[] = [...FRONT, ...BACK].map(([cx, cy, rx, ry, low], i) => {
-    const cut = i < NF;
-    const top = cy - ry;
-    if (cut) {
-      front.set([cx, cy, rx, ry], i * 4);
-      frontPiv.set([cx, top - ry * 0.7], i * 2);
-    } else {
-      const j = i - NF;
-      const t = Math.max(0, top), bottom = Math.max(low, cy + ry);
-      ell.set([cx / IW, 1 - (t + bottom) / 2 / IH, (rx * 1.18) / IW, (((bottom - t) / 2) * 1.08) / IH], j * 4);
-      piv.set([cx / IW, 1 - (t - ry * 0.7) / IH], j * 2);
-    }
+  const marks = new Float32Array(N * 4), hangs = new Float32Array(N * 2), body = new Float32Array(N * 4);
+  const lanterns: Lantern[] = MARKS.map(([cx, cy, rx, ry], i) => {
+    marks.set([cx, cy, rx, ry], i * 4);
+    hangs.set([cx, cy - ry * 1.7], i * 2);
     body.set([cx / IW, 1 - cy / IH, rx / IW, ry / IH], i * 4);
     const depth = Math.min(1, Math.max(0, (cy - 30) / 450)); // 0 at the front, 1 at the back
     return {
       angle: 0,
       velocity: 0,
-      // the cut-out front lanterns carry most of the visible swing; the small ones at the back follow
-      amp: cut ? 1.5 : 0.42 + 0.58 * Math.pow(depth, 0.8),
+      // the big front lanterns carry most of the visible swing; the small ones at the back follow
+      amp: i < NF ? 1.5 : 0.55 + 0.75 * Math.pow(depth, 0.8),
       omega: 1.4 + depth * 2.1,
       phase: depth * 2.2 + (cx < 330 ? 0 : cx > 470 ? 0.5 : 0.25),
-      limit: cut ? LIMIT.front : LIMIT.back,
     };
   });
-  return { front, frontPiv, ell, piv, body, lanterns };
+  return { marks, hangs, body, lanterns };
 }
 
 const VS = `#version 300 es
@@ -59,15 +49,12 @@ void main() { uv = p * .5 + .5; gl_Position = vec4(p, 0., 1.); }`;
 
 const FS = `#version 300 es
 precision highp float;
-#define NF ${NF}
-#define NB ${NB}
 #define N ${N}
 in vec2 uv; out vec4 o;
 uniform sampler2D uTex, uPlate, uMask;
 uniform vec2 uRes, uImg, uMouse, uFocus;
 uniform float uTime;
-uniform vec4 uFront[NF]; uniform vec2 uFrontPiv[NF]; uniform float uFrontAng[NF];
-uniform vec4 uEll[NB]; uniform vec2 uPiv[NB]; uniform float uAng[NB];
+uniform vec4 uMark[N]; uniform vec2 uHang[N]; uniform float uAng[N];
 uniform vec4 uBody[N]; uniform float uGlow[N];
 const vec2 PX = vec2(${IW}., ${IH}.), MASK = vec2(${MASK_SIZE[0]}., ${MASK_SIZE[1]}.);
 // tall screens: cover. wide screens: the whole corridor as a tall picture right of centre,
@@ -84,9 +71,10 @@ vec2 place(vec2 q) {
 float lum(vec3 c) { return dot(c, vec3(.299, .587, .114)); }
 vec2 toPx(vec2 q) { return vec2(q.x, 1. - q.y) * PX; }
 vec2 toUv(vec2 p) { return vec2(p.x / PX.x, 1. - p.y / PX.y); }
-// how much of front lantern i is at p (pixels of the measured copy), read from the cut mask: red holds
-// the cut's opacity, green which lantern owns the pixel, blue where the plate takes over. Filtered by hand so lanterns never bleed together.
-float cut(vec2 p, int i) {
+float idOf(vec4 m) { return floor(m.g * 255. / ${ID_STEP}. + .5); }
+// how much of lantern id is at p (pixels of the measured copy): red holds the cut's opacity, green which
+// lantern owns the pixel. Filtered by hand so neighbouring lanterns never bleed into each other.
+float cut(vec2 p, float id) {
   vec2 t = toUv(p) * MASK - .5;
   vec2 f = fract(t);
   ivec2 b = ivec2(floor(t));
@@ -95,50 +83,34 @@ float cut(vec2 p, int i) {
     ivec2 o = ivec2(k & 1, k >> 1);
     vec4 m = texelFetch(uMask, clamp(b + o, ivec2(0), ivec2(MASK) - 1), 0);
     float w = (o.x == 1 ? f.x : 1. - f.x) * (o.y == 1 ? f.y : 1. - f.y);
-    a += w * m.r * step(abs(m.g * 255. / 20. - float(i + 1)), .5);
+    a += w * m.r * step(abs(idOf(m) - id), .5);
   }
   return a;
 }
-// where the painted-out corridor replaces the photo: the whole cut and a little more
-float cover(vec2 p) { return texture(uMask, toUv(p)).b; }
-// which lantern owns p in the photo: 1 for the nearest, 0 for none
-float ownerAt(vec2 p) { return floor(texelFetch(uMask, clamp(ivec2(toUv(p) * MASK), ivec2(0), ivec2(MASK) - 1), 0).g * 255. / 20. + .5); }
+vec4 maskAt(vec2 p) { return texelFetch(uMask, clamp(ivec2(toUv(p) * MASK), ivec2(0), ivec2(MASK) - 1), 0); }
 void main() {
   vec2 q = place(uv);
   float inside = smoothstep(0., .12, q.x) * smoothstep(0., .12, 1. - q.x);
+  vec2 p = toPx(q), sq = q;
 
-  // the small back lanterns turn in place, each with its tassel as one rigid piece
-  vec2 shift = vec2(0.); float wsum = 0.;
-  for (int i = 0; i < NB; i++) {
-    vec4 B = uBody[NF + i];
-    vec2 b = (q - B.xy) / B.zw;
-    float below = B.y - q.y, tail = B.y - (uEll[i].y - uEll[i].w);
-    float tassel = (1. - smoothstep(.3, .75, abs(q.x - B.x) / B.z)) * step(0., below) * (1. - smoothstep(tail, tail + B.w * .3, below));
-    float w = max(1. - smoothstep(1., 1.5, length(b)), tassel);
-    if (w <= 0.) continue;
-    vec2 r = (q - uPiv[i]) * uImg;
-    float c = cos(-uAng[i]), s = sin(-uAng[i]);
-    vec2 src = vec2(c * r.x - s * r.y, s * r.x + c * r.y) / uImg + uPiv[i];
-    shift += w * (src - q); wsum += w;
-  }
-  if (wsum > 1.) shift /= wsum;
-  vec2 sq = q + shift;
-  vec3 c = texture(uTex, sq).rgb;
-
-  // where the front lanterns hang, the corridor behind them; then each lantern, back to front, at its swing
-  vec2 p = toPx(q);
-  c = mix(c, texture(uPlate, q).rgb, cover(p));
-  for (int i = NF - 1; i >= 0; i--) {
-    vec2 r = p - uFrontPiv[i];
-    float cs = cos(-uFrontAng[i]), sn = sin(-uFrontAng[i]);
-    vec2 src = vec2(cs * r.x - sn * r.y, sn * r.x + cs * r.y) + uFrontPiv[i];
-    float a = cut(src, i);
+  // the ceiling without its lanterns (blue: where it takes over from the photo), the still far lanterns,
+  // then every lantern from the back of the corridor to the front, each at its own swing
+  vec3 c = mix(texture(uTex, q).rgb, texture(uPlate, q).rgb, texture(uMask, q).b);
+  c = mix(c, texture(uTex, q).rgb, cut(p, float(N + 1)));
+  for (int i = N - 1; i >= 0; i--) {
+    vec2 r = p - uHang[i];
+    float cs = cos(-uAng[i]), sn = sin(-uAng[i]);
+    vec2 src = vec2(cs * r.x - sn * r.y, sn * r.x + cs * r.y) + uHang[i];
+    float id = float(i + 1);
+    float a = cut(src, id);
     // a nearer lantern hid part of this one in the photo; that part is the mirror of its other side
-    float owner = ownerAt(src);
-    if (owner > 0. && owner < float(i + 1)) {
-      vec2 m = vec2(2. * uFront[i].x - src.x, src.y);
-      float am = cut(m, i);
+    float owner = idOf(maskAt(src));
+    if (owner > 0. && owner < id) {
+      vec2 m = vec2(2. * uMark[i].x - src.x, src.y);
+      float am = cut(m, id);
       if (am > a) { a = am; src = m; }
+      // where the mirror is hidden too, keep the photo there inside the outline: it is lantern paper either way
+      else a = max(a, 1. - smoothstep(.9, 1., length((src - uMark[i].xy) / uMark[i].zw)));
     }
     if (a <= 0.) continue;
     vec2 su = toUv(src);
@@ -238,16 +210,14 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
   gl.useProgram(program);
 
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const { front, frontPiv, ell, piv, body, lanterns } = lanternGeometry();
+  const { marks, hangs, body, lanterns } = lanternGeometry();
   const U = (name: string) => gl.getUniformLocation(program, name);
-  const u = { res: U('uRes'), img: U('uImg'), mouse: U('uMouse'), focus: U('uFocus'), time: U('uTime'), ang: U('uAng'), frontAng: U('uFrontAng'), glow: U('uGlow') };
+  const u = { res: U('uRes'), img: U('uImg'), mouse: U('uMouse'), focus: U('uFocus'), time: U('uTime'), ang: U('uAng'), glow: U('uGlow') };
   gl.uniform1i(U('uTex'), 0);
   gl.uniform1i(U('uPlate'), 1);
   gl.uniform1i(U('uMask'), 2);
-  gl.uniform4fv(U('uFront'), front);
-  gl.uniform2fv(U('uFrontPiv'), frontPiv);
-  gl.uniform4fv(U('uEll'), ell);
-  gl.uniform2fv(U('uPiv'), piv);
+  gl.uniform4fv(U('uMark'), marks);
+  gl.uniform2fv(U('uHang'), hangs);
   gl.uniform4fv(U('uBody'), body);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -294,7 +264,7 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
       // a breeze that travels down the corridor, so neighbours move together
       const breeze = reduce ? 0 : 0.042 * Math.sin(t * 0.9 - l.phase) + 0.016 * Math.sin(t * 2.1 - l.phase * 1.7);
       l.velocity += (-l.omega * l.omega * (l.angle - breeze * l.amp) - 1.6 * l.velocity) * dt;
-      l.angle = Math.max(-l.limit, Math.min(l.limit, l.angle + l.velocity * dt));
+      l.angle = Math.max(-LIMIT, Math.min(LIMIT, l.angle + l.velocity * dt));
       angles[i] = l.angle;
       glows[i] = reduce ? 0.6 : 0.58 + 0.1 * Math.sin(t * 1.1 + i * 1.7) + 0.04 * Math.sin(t * 2.3 + i * 2.9);
     });
@@ -305,8 +275,7 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
     gl.uniform2fv(u.focus, FOCUS);
     gl.uniform2f(u.mouse, lamp.x, lamp.y);
     gl.uniform1f(u.time, t);
-    gl.uniform1fv(u.frontAng, angles.subarray(0, NF));
-    gl.uniform1fv(u.ang, angles.subarray(NF));
+    gl.uniform1fv(u.ang, angles);
     gl.uniform1fv(u.glow, glows);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };

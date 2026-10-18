@@ -1,5 +1,5 @@
 {
-  "about": "Lanterns in /images/hero-lanterns.jpg, measured on an 800 x 1200 copy: centre x, centre y, half width, half height of the paper ball, and the lowest point of the tassel. Front lanterns swing around a point above their centre; their exact edges come from scripts/assets/hero-lanterns-cut.png and these outlines only decide which lantern owns which pixel (scripts/cut-lanterns.py). Back lanterns are too small and tangled to cut, so they turn in place. Nearest first.",
+  "about": "Lanterns in /images/hero-lanterns.jpg, measured on an 800 x 1200 copy: centre x, centre y, half width, half height of the paper ball, and the lowest point of the tassel. Every lantern swings around a point above its centre; its exact edge comes from scripts/assets/hero-lanterns-cut.png, and these outlines decide which lantern owns each cut pixel (scripts/cut-lanterns.py). Front lanterns swing furthest. Nearest first, so a pixel two lanterns could claim goes to the nearer one.",
   "size": [800, 1200],
   "front": [
     [133, 36, 118, 106, 280],
