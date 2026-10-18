@@ -14,7 +14,7 @@ OUT = ROOT / 'public' / 'images'
 
 # name: (source, exact crop size or None, max width when not cropped, crop focus, graded)
 PHOTOS = {
-    'hero-lanterns':    ('hero-lanterns.jpg', None, 3200, None, False),
+    'hero-lanterns':    ('hero-lanterns.jpg', None, 2400, None, False),
     'hero-lanterns-sm': ('hero-lanterns.jpg', None, 1600, None, False),
     'room-lattice':     ('room-lattice.jpg', (1200, 1500), None, (.5, .5), True),
     'room-moon':        ('room-moon.jpg', (1200, 1500), None, (.5, .5), True),

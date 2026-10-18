@@ -52,7 +52,7 @@ precision highp float;
 in vec2 uv; out vec4 o;
 uniform sampler2D uTex;
 uniform vec2 uRes, uImg, uMouse, uFocus;
-uniform float uTime, uFade;
+uniform float uTime;
 uniform vec4 uEll[N]; uniform vec4 uBody[N]; uniform vec2 uPiv[N]; uniform float uAng[N]; uniform float uGlow[N];
 // tall screens: cover. wide screens: the whole corridor as a tall picture right of centre,
 // with its own blurred, darkened colour filling the sides
@@ -115,7 +115,7 @@ void main() {
 
   col *= mix(.6, 1., smoothstep(.0, .55, uv.x));
   col *= mix(.55, 1., smoothstep(.0, .45, uv.y));
-  o = vec4(col * uFade, 1.);
+  o = vec4(col, 1.);
 }`;
 
 function compile(gl: WebGL2RenderingContext): WebGLProgram | null {
@@ -135,22 +135,26 @@ function compile(gl: WebGL2RenderingContext): WebGLProgram | null {
   return gl.getProgramParameter(program, gl.LINK_STATUS) ? program : null;
 }
 
-function upload(gl: WebGL2RenderingContext, img: HTMLImageElement): [number, number] {
-  let source: TexImageSource = img;
-  let size: [number, number] = [img.naturalWidth, img.naturalHeight];
+// Decodes the photo off the main thread, already flipped for WebGL and no larger than the GPU allows.
+async function decode(gl: WebGL2RenderingContext, photo: Blob): Promise<ImageBitmap> {
   const max = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
-  if (img.naturalWidth > max || img.naturalHeight > max) {
-    const k = max / Math.max(img.naturalWidth, img.naturalHeight);
-    const scaled = document.createElement('canvas');
-    scaled.width = Math.floor(img.naturalWidth * k);
-    scaled.height = Math.floor(img.naturalHeight * k);
-    scaled.getContext('2d')!.drawImage(img, 0, 0, scaled.width, scaled.height);
-    source = scaled;
-    size = [scaled.width, scaled.height];
+  const probe = await createImageBitmap(photo);
+  const k = Math.min(1, max / Math.max(probe.width, probe.height));
+  if (k === 1) {
+    probe.close();
+    return createImageBitmap(photo, { imageOrientation: 'flipY' });
   }
+  const opts: ImageBitmapOptions = { imageOrientation: 'flipY', resizeWidth: Math.floor(probe.width * k), resizeHeight: Math.floor(probe.height * k), resizeQuality: 'high' };
+  probe.close();
+  return createImageBitmap(photo, opts);
+}
+
+function upload(gl: WebGL2RenderingContext, bitmap: ImageBitmap): [number, number] {
   gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+  const size: [number, number] = [bitmap.width, bitmap.height];
+  bitmap.close();
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -159,8 +163,8 @@ function upload(gl: WebGL2RenderingContext, img: HTMLImageElement): [number, num
   return size;
 }
 
-export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasElement; src: string; onReady: () => void }) {
-  const { host, canvas, src, onReady } = opts;
+export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasElement; photo: Blob; onReady: () => void; onFail: () => void }) {
+  const { host, canvas, photo, onReady, onFail } = opts;
   const gl = canvas.getContext('webgl2', { antialias: false });
   if (!gl) return null;
   const program = compile(gl);
@@ -170,7 +174,7 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const { ell, piv, body, lanterns } = lanternGeometry();
   const U = (name: string) => gl.getUniformLocation(program, name);
-  const u = { res: U('uRes'), img: U('uImg'), mouse: U('uMouse'), focus: U('uFocus'), time: U('uTime'), fade: U('uFade'), ang: U('uAng'), glow: U('uGlow') };
+  const u = { res: U('uRes'), img: U('uImg'), mouse: U('uMouse'), focus: U('uFocus'), time: U('uTime'), ang: U('uAng'), glow: U('uGlow') };
   gl.uniform4fv(U('uEll'), ell);
   gl.uniform4fv(U('uBody'), body);
   gl.uniform2fv(U('uPiv'), piv);
@@ -202,7 +206,7 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
   host.addEventListener('pointermove', onPointer);
 
   const angles = new Float32Array(N), glows = new Float32Array(N);
-  let ready = false, visible = true, fade = 0, last = performance.now(), raf = 0;
+  let ready = false, announced = false, visible = true, last = performance.now(), raf = 0;
 
   const frame = (now: number) => {
     if (!visible || !ready) return;
@@ -225,17 +229,20 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
       glows[i] = reduce ? 0.6 : 0.58 + 0.1 * Math.sin(t * 1.1 + i * 1.7) + 0.04 * Math.sin(t * 2.3 + i * 2.9);
     });
 
-    fade += (1 - fade) * (reduce ? 1 : 0.05);
     gl.viewport(0, 0, W, H);
     gl.uniform2f(u.res, W, H);
     gl.uniform2fv(u.img, imgSize);
     gl.uniform2fv(u.focus, FOCUS);
     gl.uniform2f(u.mouse, lamp.x, lamp.y);
     gl.uniform1f(u.time, t);
-    gl.uniform1f(u.fade, fade);
     gl.uniform1fv(u.ang, angles);
     gl.uniform1fv(u.glow, glows);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+    // the first drawn frame is the moment the photo is really on screen
+    if (!announced) {
+      announced = true;
+      onReady();
+    }
     raf = requestAnimationFrame(frame);
   };
 
@@ -249,20 +256,25 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
   });
   io.observe(host);
 
-  const img = new Image();
-  img.onload = () => {
-    imgSize = upload(gl, img);
-    ready = true;
-    onReady();
-    raf = requestAnimationFrame(frame);
-  };
-  img.src = src;
+  // decode off the main thread first, so the loader keeps animating while the photo is prepared
+  let cancelled = false;
+  decode(gl, photo)
+    .then((bitmap) => {
+      if (cancelled) return bitmap.close();
+      imgSize = upload(gl, bitmap);
+      ready = true;
+      raf = requestAnimationFrame(frame);
+    })
+    .catch((err) => {
+      console.error(err);
+      if (!cancelled) onFail();
+    });
 
   return () => {
+    cancelled = true;
     cancelAnimationFrame(raf);
     io.disconnect();
     removeEventListener('resize', resize);
     host.removeEventListener('pointermove', onPointer);
-    img.onload = null;
   };
 }

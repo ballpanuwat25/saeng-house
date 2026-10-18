@@ -9,8 +9,9 @@ import { heroPhotoReady, setHeroProgress } from '@/lib/hero-load';
 // how the photo is shown once loaded: the WebGL cinemagraph, or a plain image where WebGL2 is missing
 type Look = 'cinemagraph' | 'still';
 
-// the loader stays at least this long, so a cached photo still gets its lantern moment
-const MIN_LOADER_MS = 1600;
+// share of the loader's 0–100% that is the download; the rest is decoding the photo and handing it
+// to the GPU, so 100% means the page is ready to show
+const DOWNLOAD_SHARE = 0.85;
 
 export default function Hero() {
   const host = useRef<HTMLElement>(null);
@@ -21,38 +22,47 @@ export default function Hero() {
 
   useEffect(() => {
     setTouch(matchMedia('(hover: none)').matches);
-    const started = performance.now();
     const abort = new AbortController();
     let stop: (() => void) | null = null;
     let blobUrl = '';
-    let timer = 0;
-    const open = () => {
-      timer = window.setTimeout(heroPhotoReady, Math.max(0, MIN_LOADER_MS - (performance.now() - started)));
+    let creep = 0;
+
+    const showStill = (url: string) => {
+      clearInterval(creep);
+      setLook('still');
+      setStillSrc(url);
+      heroPhotoReady();
     };
 
-    // phones and tablets get the 1600px photo; the 3200px one is only worth it on wide screens
+    // phones and tablets get the 1600px photo; the 2400px one is only worth it on wide screens
     const src = innerWidth > 1000 ? heroPhoto.large : heroPhoto.small;
-    loadImage(src, setHeroProgress, abort.signal)
-      .then((url) => {
-        blobUrl = url;
-        stop = startCinemagraph({ host: host.current!, canvas: canvas.current!, src: url, onReady: open });
-        if (!stop) {
-          setLook('still');
-          setStillSrc(url);
-          open();
-        }
+    loadImage(src, (p) => setHeroProgress(p * DOWNLOAD_SHARE), abort.signal)
+      .then((photo) => {
+        // decoding and the GPU upload report no progress of their own, so ease toward 99% meanwhile
+        let p = DOWNLOAD_SHARE;
+        creep = window.setInterval(() => setHeroProgress((p += (0.99 - p) * 0.08)), 60);
+        blobUrl = URL.createObjectURL(photo);
+        stop = startCinemagraph({
+          host: host.current!,
+          canvas: canvas.current!,
+          photo,
+          onReady: () => {
+            clearInterval(creep);
+            heroPhotoReady();
+          },
+          onFail: () => showStill(blobUrl),
+        });
+        if (!stop) showStill(blobUrl);
       })
       .catch((err) => {
         if (abort.signal.aborted) return;
         console.error(err);
-        setLook('still');
-        setStillSrc(src);
-        open();
+        showStill(src);
       });
 
     return () => {
       abort.abort();
-      clearTimeout(timer);
+      clearInterval(creep);
       stop?.();
       if (blobUrl) URL.revokeObjectURL(blobUrl);
     };

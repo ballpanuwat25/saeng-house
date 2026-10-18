@@ -10,6 +10,7 @@ import { finishHero, openHero, useHeroLoad } from '@/lib/hero-load';
 const CELL_W = 56;
 const CELL_H = 72;
 const FADE_MS = 900;
+const MIN_SWEEP_MS = 1400;
 // how far past its threshold a lantern takes to reach full light, in progress units
 const RAMP = 0.12;
 
@@ -73,10 +74,14 @@ export default function LanternLoader() {
     addEventListener('resize', layout);
 
     let shown = 0, raf = 0;
+    const born = performance.now();
     const frame = (now: number) => {
-      const { phase: p, progress: target } = live.current;
+      const { phase: p, progress } = live.current;
       if (p === 'done') return;
-      shown += (target - shown) * 0.1;
+      // never sweep faster than MIN_SWEEP_MS, so a fast connection still sees the lanterns light;
+      // on a slow one the real progress is the limit and 100% arrives the moment the photo is ready
+      const target = Math.min(progress, (now - born) / MIN_SWEEP_MS);
+      shown += (target - shown) * 0.16;
       if (Math.abs(target - shown) < 0.002) shown = target;
       // the photo is ready and the last lantern is fully lit: fade into the page
       if (p === 'lit' && shown >= 1) openHero();
@@ -102,7 +107,7 @@ export default function LanternLoader() {
   // animation frames are paused (background tab, power saving, some in-app browsers)
   useEffect(() => {
     if (phase !== 'lit') return;
-    const id = setTimeout(openHero, 1500);
+    const id = setTimeout(openHero, MIN_SWEEP_MS + 600);
     return () => clearTimeout(id);
   }, [phase]);
 

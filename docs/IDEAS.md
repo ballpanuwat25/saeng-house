@@ -52,4 +52,4 @@ These are what make a site read as AI-made.
 - Replace every photo with the hotel's own. The current ones are Unsplash pictures of other places, and
   the moon-window "room" is really a hall.
 - Confirm the address, phone, prices and room facts; all of them are invented.
-- The hero photo is 2.2 MB at 3200px; consider AVIF for the large size.
+- The hero photo is 1.4 MB at 2400px; AVIF could roughly halve it.

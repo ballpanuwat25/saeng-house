@@ -1,6 +1,6 @@
-// Downloads an image while reporting real progress (0 to 1), and hands back a blob URL so the
-// WebGL texture and the <img> fallback reuse the same bytes instead of downloading twice.
-export async function loadImage(url: string, onProgress: (p: number) => void, signal: AbortSignal): Promise<string> {
+// Downloads an image while reporting real progress (0 to 1). Returns the bytes, so the WebGL hero
+// can decode them and the <img> fallback can show them without downloading twice.
+export async function loadImage(url: string, onProgress: (p: number) => void, signal: AbortSignal): Promise<Blob> {
   const res = await fetch(url, { signal });
   if (!res.ok || !res.body) throw new Error(`could not load ${url}: ${res.status}`);
   const total = Number(res.headers.get('content-length')) || 0;
@@ -12,9 +12,9 @@ export async function loadImage(url: string, onProgress: (p: number) => void, si
     if (done) break;
     chunks.push(value);
     received += value.length;
-    // without a length header, approach 90% so the lantern still brightens while it waits
+    // without a length header, approach 90% so the lanterns still brighten while it waits
     onProgress(total ? received / total : 1 - Math.exp(-received / 1.5e6) * 0.9);
   }
   onProgress(1);
-  return URL.createObjectURL(new Blob(chunks as BlobPart[], { type: res.headers.get('content-type') ?? 'image/jpeg' }));
+  return new Blob(chunks as BlobPart[], { type: res.headers.get('content-type') ?? 'image/jpeg' });
 }
