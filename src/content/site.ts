@@ -4,7 +4,7 @@
 export type Photo = { src: string; width: number; height: number; alt: string };
 
 export type Room = {
-  id: 'lattice' | 'moon' | 'carved';
+  id: 'lattice' | 'moon' | 'roof';
   name: string;
   pricePerNight: number;
   blurb: string;
@@ -69,25 +69,25 @@ export const rooms: Room[] = [
     id: 'lattice',
     name: 'The Lattice Room',
     pricePerNight: 4800,
-    blurb: 'A full wall of carved teak lattice. Morning light comes through it and lays the pattern across the floorboards.',
+    blurb: 'A full wall of carved teak lattice. At night a lamp behind it lays the pattern across the floorboards and the bed.',
     spec: '28 m² · king bed · second floor',
-    photo: { src: '/images/room-lattice.jpg', width: 1200, height: 1500, alt: 'Carved Chinese lattice windows with potted plants in a wooden room' },
+    photo: { src: '/images/room-lattice.jpg', width: 1200, height: 1500, alt: 'A low bed beside a wall of carved teak lattice, its shadow pattern across the floorboards, lamps lit at night' },
   },
   {
     id: 'moon',
     name: 'The Moon Window',
     pricePerNight: 6900,
-    blurb: 'A round window as wide as the bed, facing the river. Red carpet, and the carved cabinets the warehouse always had.',
+    blurb: 'A round window as wide as the bed, facing the river and the lights of the far bank. A red carpet, and the carved cabinets the warehouse always had.',
     spec: '36 m² · king bed · third floor',
-    photo: { src: '/images/room-moon.jpg', width: 1200, height: 1500, alt: 'A Chinese-style room with a large round window and a red carpet' },
+    photo: { src: '/images/room-moon.jpg', width: 1200, height: 1500, alt: 'A bed under a paper lantern in front of a large round window onto the river at night, carved cabinets and a red carpet' },
   },
   {
-    id: 'carved',
-    name: 'The Carved Bed',
+    id: 'roof',
+    name: 'The Roof Room',
     pricePerNight: 9500,
-    blurb: 'A lacquered and gilded canopy bed in the old Chinese manner, a red cabinet beside it, and a terrace of your own on the roof.',
-    spec: '42 m² · canopy bed and sofa bed · fourth floor',
-    photo: { src: '/images/room-carved.jpg', width: 1200, height: 1500, alt: 'A carved red and gold Chinese canopy bed beside a red cabinet' },
+    blurb: 'Old carved doors from a Teochew shrine behind the bed, and a terrace of your own on the roof, lanterns lit, the river beyond.',
+    spec: '42 m² · king bed and sofa bed · fourth floor, private roof terrace',
+    photo: { src: '/images/room-roof.jpg', width: 1200, height: 1500, alt: 'A bed against old carved shrine doors, timber doors open onto a lantern-lit roof terrace over the river' },
   },
 ];
 
@@ -131,4 +131,4 @@ export const evening = { startHour: 18, endHour: 23 } as const;
 export const closing = { time: '23:00', text: 'The corridor dims to the one lantern outside your door.' };
 
 export const credits =
-  'A fictional hotel made for a portfolio. Photographs from Unsplash: Nicolas Spehler (lantern corridor), MChe Lee (all three rooms), Thai Nguyen Anh and Didi Paul (tea), Bradrey Nassel (Yaowarat). Map data © OpenStreetMap contributors.';
+  'A fictional hotel made for a portfolio. Photographs from Unsplash: Nicolas Spehler (lantern corridor), Thai Nguyen Anh and Didi Paul (tea), Bradrey Nassel (Yaowarat). The rooms and the hero lanterns were generated with Google Gemini. Map data © OpenStreetMap contributors.';

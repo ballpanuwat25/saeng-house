@@ -3,22 +3,26 @@
 Every photo except the hero gets the same warm night grade and an exact crop for its slot,
 so pictures from different photographers read as one set. Rerun after changing a source:
 
-    python scripts/export-photos.py
+    python scripts/export-photos.py               every photo
+    python scripts/export-photos.py room-moon     just the photos named
 """
+import sys
 from pathlib import Path
 from PIL import Image, ImageEnhance, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'design' / 'photos-src'
 OUT = ROOT / 'public' / 'images'
+ROOMS = ROOT / 'scripts' / 'assets' / 'rooms'
 
 # name: (source, exact crop size or None, max width when not cropped, crop focus, graded)
 PHOTOS = {
     'hero-lanterns':    ('hero-lanterns.jpg', None, 2400, None, False),
     'hero-lanterns-sm': ('hero-lanterns.jpg', None, 1600, None, False),
-    'room-lattice':     ('room-lattice.jpg', (1200, 1500), None, (.5, .5), True),
-    'room-moon':        ('room-moon.jpg', (1200, 1500), None, (.5, .5), True),
-    'room-carved':      ('room-carved.jpg', (1200, 1500), None, (.3, .5), True),
+    # the rooms are generated (Google Gemini) and kept in the repo, not in design/photos-src
+    'room-lattice':     (ROOMS / 'lattice.png', (1200, 1500), None, (.5, .5), True),
+    'room-moon':        (ROOMS / 'moon.png', (1200, 1500), None, (.5, .5), True),
+    'room-roof':        (ROOMS / 'roof.png', (1200, 1500), None, (.5, .5), True),
     'tea-pour':         ('tea-pour.jpg', (1600, 1200), None, (.5, .5), True),
     'tea-set':          ('tea-set.jpg', (900, 1200), None, (.5, .5), True),
     'balcony':          ('balcony.jpg', (1200, 1500), None, (.5, .5), True),
@@ -56,6 +60,9 @@ def export(name, spec):
 
 if __name__ == '__main__':
     OUT.mkdir(parents=True, exist_ok=True)
+    only = sys.argv[1:]
     for name, spec in PHOTOS.items():
+        if only and name not in only:
+            continue
         path, size = export(name, spec)
         print(f'{path.relative_to(ROOT)}  {size[0]}x{size[1]}  {path.stat().st_size // 1024} KB')

@@ -24,15 +24,16 @@ Open http://localhost:3000. `npm run build` makes a production build.
 
 ## Photos
 
-The full-size sources live in `design/photos-src/` (kept out of git). Every photo except the hero gets the
+The full-size sources live in `design/photos-src/` (kept out of git), except the generated rooms in `scripts/assets/rooms`. Every photo except the hero gets the
 same warm night grade so pictures from different photographers read as one set. After changing a source:
 
 ```bash
 python scripts/export-photos.py
 ```
 
-Photo credits (all Unsplash License): Nicolas Spehler (lantern corridor), MChe Lee (the three rooms),
-Thai Nguyen Anh and Didi Paul (tea), Shane Hebzynski (lantern balcony), Bradrey Nassel (Yaowarat).
+Photo credits (all Unsplash License): Nicolas Spehler (lantern corridor), Thai Nguyen Anh and Didi Paul (tea),
+Shane Hebzynski (lantern balcony), Bradrey Nassel (Yaowarat). The three rooms and the hero lanterns were
+generated with Google Gemini; the room sources are in `scripts/assets/rooms`.
 
 ## What's next
 
