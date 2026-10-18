@@ -38,3 +38,7 @@ Thai Nguyen Anh and Didi Paul (tea), Shane Hebzynski (lantern balcony), Bradrey 
 
 See [docs/IDEAS.md](docs/IDEAS.md) for the backlog: real booking, a demo mode for recording the Fastwork
 video, and the ideas that make the site stand out.
+
+## Walking map
+
+The Talat Noi map is drawn from OpenStreetMap. `npm run map` rebuilds `src/content/talat-noi-map.ts` from the places in `src/content/site.ts`, routing and timing each walk along real streets. Add `-- --refresh` to download the streets again.

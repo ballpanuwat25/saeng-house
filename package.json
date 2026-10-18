@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "map": "node --no-warnings scripts/build-map.mjs"
   },
   "dependencies": {
     "gsap": "^3.12.5",

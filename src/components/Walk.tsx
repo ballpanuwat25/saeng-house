@@ -1,57 +1,48 @@
 'use client';
 
 import { useState } from 'react';
-import { walk, type MapPoint } from '@/content/site';
+import { walk } from '@/content/site';
+import { talatNoiMap as map } from '@/content/talat-noi-map';
 import Rich from '@/components/Rich';
 
-// A hand-drawn plan of Talat Noi, not to scale. Pointing at a place in the list draws the walk
-// from the hotel door to it.
-const ROADS = [
-  { d: 'M600 30 C 520 190 430 360 392 720', label: 'Charoen Krung Rd', at: [478, 300], angle: -64 },
-  { d: 'M170 132 C 232 214 300 236 446 178', label: 'Song Wat Rd', at: [262, 246], angle: 14 },
-  { d: 'M352 18 C 420 78 500 108 600 122', label: 'Yaowarat Rd', at: [520, 92], angle: 9 },
-  { d: 'M150 432 C 228 422 300 406 402 396', label: 'Soi Wanit 2', at: [214, 448], angle: -6 },
-  { d: 'M186 304 C 260 312 330 326 398 336' },
-  { d: 'M164 566 C 250 580 320 596 388 604' },
-] as const;
-const RIVER = 'M0 0 H160 C 136 128 112 250 142 360 C 172 470 124 596 156 720 H0 Z';
+const spotOf = (name: string) => map.places[name as keyof typeof map.places];
 
-// a gentle bow from the door to the place, so the route reads as a walk rather than a ruler line
-function route([x1, y1]: MapPoint, [x2, y2]: MapPoint) {
-  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-  const nx = -(y2 - y1) * 0.18, ny = (x2 - x1) * 0.18;
-  return `M${x1} ${y1} Q ${mx + nx} ${my + ny} ${x2} ${y2}`;
-}
-
+// Talat Noi drawn from OpenStreetMap. Pointing at a place in the list draws the walk from the
+// hotel door to it along the real streets.
 export default function Walk() {
   const [active, setActive] = useState(0);
   const place = walk.places[active];
-  const [hx, hy] = walk.hotelAt;
+  const spot = spotOf(place.name);
+  const [hx, hy] = map.hotel;
 
   return (
     <section className="walk wrap" id="walk" aria-labelledby="walk-h">
-      <figure className="map" aria-label={`Map: ${place.walkMinutes} minutes on foot to ${place.name}`}>
-        <svg viewBox="0 0 600 720" role="img" aria-hidden="true">
-          <path d={RIVER} className="river" />
-          <text className="river-name" x="64" y="420" transform="rotate(-90 64 420)">Chao Phraya</text>
-          {ROADS.map((r) => (
-            <path key={r.d} d={r.d} className="road" />
-          ))}
-          {ROADS.map((r) =>
-            'label' in r ? (
-              <text key={r.label} className="road-name" x={r.at[0]} y={r.at[1]} transform={`rotate(${r.angle} ${r.at[0]} ${r.at[1]})`}>
-                {r.label}
+      <figure className="map" aria-label={`Map: ${spot.minutes} minutes on foot to ${place.name}`}>
+        <svg viewBox={`0 0 ${map.width} ${map.height}`} role="img" aria-hidden="true">
+          <path d={map.river} className="river" />
+          <text className="river-name" x="58" y="300" transform="rotate(-78 58 300)">Chao Phraya</text>
+          <path d={map.roads.lane} className="road lane" />
+          <path d={map.roads.street} className="road street" />
+          <path d={map.roads.major} className="road major" />
+          {map.labels.map((l) => (
+            <g key={l.id}>
+              <path id={l.id} d={l.d} fill="none" />
+              <text className="road-name" dy="3.5">
+                <textPath href={`#${l.id}`} startOffset={l.at} textAnchor="middle">{l.text}</textPath>
               </text>
-            ) : null,
-          )}
-          <path key={place.name} d={route(walk.hotelAt, place.at)} pathLength={1} className="route" />
-          {walk.places.map((p, i) => (
-            <g key={p.name} className={`spot${i === active ? ' on' : ''}`}>
-              <circle cx={p.at[0]} cy={p.at[1]} r={i === active ? 9 : 6} />
             </g>
           ))}
-          <text className="spot-name" x={place.at[0] + 16} y={place.at[1] + 5}>
-            {place.name} · {place.walkMinutes} min
+          <path key={place.name} d={spot.route} pathLength={1} className="route" />
+          {walk.places.map((p, i) => {
+            const [x, y] = spotOf(p.name).at;
+            return (
+              <g key={p.name} className={`spot${i === active ? ' on' : ''}`}>
+                <circle cx={x} cy={y} r={i === active ? 9 : 6} />
+              </g>
+            );
+          })}
+          <text className="spot-name" x={spot.at[0] + 16} y={spot.at[1] + 5}>
+            {place.name} · {spot.minutes} min
           </text>
           <g className="home" transform={`translate(${hx - 14} ${hy - 26})`}>
             <rect x="13" y="0" width="2" height="6" />
@@ -61,6 +52,7 @@ export default function Walk() {
           </g>
           <text className="home-name" x={hx + 18} y={hy + 2}>Saeng House</text>
         </svg>
+        <figcaption className="map-credit">© OpenStreetMap contributors</figcaption>
       </figure>
       <div className="list">
         <h2 id="walk-h">
@@ -77,7 +69,7 @@ export default function Walk() {
                 onMouseEnter={() => setActive(i)}
               >
                 <b>{p.name}</b>
-                <span>{p.walkMinutes} min</span>
+                <span>{spotOf(p.name).minutes} min</span>
                 <small>{p.note}</small>
               </button>
             </li>

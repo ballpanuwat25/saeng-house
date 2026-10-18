@@ -12,14 +12,16 @@ export type Room = {
   photo: Photo;
 };
 
-// x, y on the walking map's 600 × 720 drawing
-export type MapPoint = readonly [x: number, y: number];
-export type Place = { name: string; walkMinutes: number; note: string; at: MapPoint };
+export type LatLon = readonly [lat: number, lon: number];
+// `at` is where the walk ends; scripts/build-map.mjs routes it along real streets and times it
+export type Place = { name: string; note: string; at: LatLon };
 
 export type Fact = { figure: string; unit?: string; label: string };
 
 export const hotel = {
   wordmark: 'แสง',
+  // for visitors who cannot read the Thai mark
+  wordmarkGloss: 'saeng · light',
   name: 'Saeng House',
   rooms: 12,
   fromPrice: 4800,
@@ -91,14 +93,15 @@ export const tea = {
 export const walk = {
   time: '21:00',
   title: 'Out the *door*',
-  note: 'Walking times from the front door, give or take a minute. Map not to scale.',
-  hotelAt: [318, 402] as MapPoint,
+  note: 'Walking times from the front door at an easy pace.',
+  // a real point on Soi Wanit 2; the hotel itself is invented
+  hotelAt: [13.7331, 100.5131] as LatLon,
   places: [
-    { name: 'So Heng Tai Mansion', walkMinutes: 2, note: 'A Hokkien courtyard house, more than two hundred years old', at: [250, 452] },
-    { name: 'Chow Sue Kong Shrine', walkMinutes: 3, note: 'A riverside shrine, lit until nine', at: [196, 520] },
-    { name: 'Si Phraya Pier', walkMinutes: 6, note: 'Cross-river ferries until 23:00', at: [262, 640] },
-    { name: 'Song Wat Road', walkMinutes: 8, note: 'Small bars in old spice warehouses', at: [318, 214] },
-    { name: 'Yaowarat', walkMinutes: 12, note: 'Street food until one in the morning', at: [478, 108] },
+    { name: 'So Heng Tai Mansion', note: 'A Hokkien courtyard house, more than two hundred years old', at: [13.73362, 100.51211] },
+    { name: 'Chow Sue Kong Shrine', note: 'A riverside shrine, lit until nine', at: [13.73442, 100.51171] },
+    { name: 'Si Phraya Pier', note: 'Cross-river ferries until 23:00', at: [13.72943, 100.51294] },
+    { name: 'Song Wat Road', note: 'Small bars in old spice warehouses', at: [13.73669, 100.51009] },
+    { name: 'Yaowarat', note: 'Street food until one in the morning', at: [13.73832, 100.51253] },
   ] satisfies Place[],
 };
 
@@ -119,4 +122,4 @@ export const evening = { startHour: 18, endHour: 23 } as const;
 export const closing = { time: '23:00', text: 'The corridor dims to the one lantern outside your door.' };
 
 export const credits =
-  'A fictional hotel made for a portfolio. Photographs from Unsplash: Nicolas Spehler (lantern corridor), MChe Lee (all three rooms), Thai Nguyen Anh and Didi Paul (tea), Bradrey Nassel (Yaowarat).';
+  'A fictional hotel made for a portfolio. Photographs from Unsplash: Nicolas Spehler (lantern corridor), MChe Lee (all three rooms), Thai Nguyen Anh and Didi Paul (tea), Bradrey Nassel (Yaowarat). Map data © OpenStreetMap contributors.';

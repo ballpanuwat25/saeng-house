@@ -45,3 +45,6 @@ next-env.d.ts
 /design/mockups/
 /design/_scratch/
 /.next-dev/
+
+# OpenStreetMap download for scripts/build-map.mjs
+/scripts/.cache/

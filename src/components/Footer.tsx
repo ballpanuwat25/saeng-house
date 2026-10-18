@@ -4,6 +4,7 @@ export default function Footer() {
   return (
     <footer className="foot wrap">
       <p className="mark-big" aria-hidden="true">{hotel.wordmark}</p>
+      <p className="mark-gloss">{hotel.wordmarkGloss}</p>
       <div className="cols">
         <p>
           <strong>{hotel.name}</strong>
