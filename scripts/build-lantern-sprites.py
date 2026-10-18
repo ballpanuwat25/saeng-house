@@ -29,7 +29,23 @@ def key(path):
     # and on the soft edge, where that still leaves an olive rim, pull green down to the blue
     edge = alpha < 0.95
     rgb[..., 1][edge] = np.minimum(rgb[..., 1], b + 8)[edge]
-    return np.dstack([rgb, alpha * 255]).clip(0, 255).astype(np.uint8)
+    return np.dstack([bleed(rgb, alpha > 0.9), alpha * 255]).clip(0, 255).astype(np.uint8)
+
+
+def bleed(rgb, solid, rings=16):
+    # carry the lantern's own colour out into the soft and clear pixels around it, ring by ring. The GPU
+    # blends neighbouring pixels when it scales the sheet; left dark, they drew a thin dark outline round
+    # every lantern that showed whenever the pointer lamp lit the ceiling behind it
+    rgb, known = rgb.copy(), solid.copy()
+    for _ in range(rings):
+        acc = np.zeros_like(rgb); n = np.zeros(known.shape, np.float32)
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                k = np.roll(known, (dy, dx), (0, 1)); acc += np.roll(rgb, (dy, dx), (0, 1)) * k[..., None]; n += k
+        ring = ~known & (n > 0)
+        rgb[ring] = acc[ring] / n[ring, None]
+        known |= ring
+    return rgb
 
 
 tiles, meta = [], []
