@@ -34,7 +34,7 @@ function lanternGeometry() {
       angle: 0,
       velocity: 0,
       // big front lanterns swing less and slower; the small ones at the back keep their motion
-      amp: 0.3 + 0.7 * Math.pow(depth, 0.8),
+      amp: 0.42 + 0.58 * Math.pow(depth, 0.8),
       omega: 1.4 + depth * 2.1,
       phase: depth * 2.2 + (cx < 330 ? 0 : cx > 470 ? 0.5 : 0.25),
     };
@@ -71,14 +71,16 @@ void main() {
   float inside = smoothstep(0., .12, q.x) * smoothstep(0., .12, 1. - q.x);
   vec2 shift = vec2(0.); float wsum = 0.; float glow = 0.; float spill = 0.;
   for (int i = 0; i < N; i++) {
-    vec2 d = (q - uEll[i].xy) / uEll[i].zw;
-    float w = 1. - smoothstep(.55, 1., length(d));
+    // the paper ball and the tassel under it turn as one rigid piece; only the background around them gives
+    vec2 b = (q - uBody[i].xy) / uBody[i].zw;
+    float below = uBody[i].y - q.y, tail = uBody[i].y - (uEll[i].y - uEll[i].w);
+    float tassel = (1. - smoothstep(.3, .75, abs(q.x - uBody[i].x) / uBody[i].z)) * step(0., below) * (1. - smoothstep(tail, tail + uBody[i].w * .3, below));
+    float w = max(1. - smoothstep(1., 1.5, length(b)), tassel);
     if (w <= 0.) continue;
     vec2 r = (q - uPiv[i]) * uImg;
     float c = cos(-uAng[i]), s = sin(-uAng[i]);
     vec2 src = vec2(c * r.x - s * r.y, s * r.x + c * r.y) / uImg + uPiv[i];
     shift += w * (src - q); wsum += w;
-    vec2 b = (q - uBody[i].xy) / uBody[i].zw;
     glow += (1. - smoothstep(.55, 1.05, length(b))) * uGlow[i];
   }
   for (int i = 0; i < N; i++) {
@@ -221,9 +223,10 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
 
     lanterns.forEach((l, i) => {
       // a breeze that travels down the corridor, so neighbours move together
-      const breeze = reduce ? 0 : 0.022 * Math.sin(t * 0.9 - l.phase) + 0.01 * Math.sin(t * 2.1 - l.phase * 1.7);
+      const breeze = reduce ? 0 : 0.042 * Math.sin(t * 0.9 - l.phase) + 0.016 * Math.sin(t * 2.1 - l.phase * 1.7);
       l.velocity += (-l.omega * l.omega * (l.angle - breeze * l.amp) - 1.6 * l.velocity) * dt;
-      l.angle = Math.max(-0.09, Math.min(0.09, l.angle + l.velocity * dt));
+      // past about 0.065 rad the background around a lantern starts to bend visibly
+      l.angle = Math.max(-0.065, Math.min(0.065, l.angle + l.velocity * dt));
       angles[i] = l.angle;
       glows[i] = reduce ? 0.6 : 0.58 + 0.1 * Math.sin(t * 1.1 + i * 1.7) + 0.04 * Math.sin(t * 2.3 + i * 2.9);
     });
