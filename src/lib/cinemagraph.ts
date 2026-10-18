@@ -1,9 +1,10 @@
 // The lantern corridor photograph as a cinemagraph: each lantern swings around the point it hangs
 // from, its paper keeps glowing, and the pointer is a lamp that lights the rest of the corridor.
-// Every lantern is a cut-out (scripts/cut-lanterns.py, from a Photoshop cut) drawn over the ceiling with
-// the lanterns removed, so nothing behind them bends. Returns a stop function, or null when WebGL2 is
+// Every lantern is drawn whole from a sheet of generated lanterns (scripts/build-lantern-sprites.py) over
+// the ceiling with the lanterns removed, so nothing behind them bends and none is ever missing a piece. Returns a stop function, or null when WebGL2 is
 // unavailable.
 import spec from '@/content/hero-lanterns.json';
+import sheet from '@/content/hero-lantern-sprites.json';
 
 type Mark = readonly [cx: number, cy: number, rx: number, ry: number, lowest: number];
 
@@ -15,8 +16,12 @@ const N = MARKS.length;
 // owner N + 1 is the still layer of tiny lanterns at the far end. Must match scripts/cut-lanterns.py
 const MASK_SIZE = [1200, 1800] as const;
 const ID_STEP = 12;
-// past about 0.09 rad the strip of drawn-in ceiling a lantern uncovers starts to show
-const LIMIT = 0.09;
+// whole lanterns over a whole ceiling can swing as far as looks natural
+const LIMIT = 0.12;
+// the first lanterns take the big red sprite, the rest the pale one
+const SPRITES = [sheet.sprites.big, sheet.sprites.mid];
+const BIG = 3;
+const glslVec = (n: number[]) => `vec${n.length}(${n.map((v) => v.toFixed(1)).join(', ')})`;
 
 // image uv, y up: where the photo's focus sits on tall screens, and where its centre sits across wide ones
 const FOCUS = [0.5, 0.55] as const;
@@ -25,11 +30,14 @@ const WIDE_CENTRE_X = 0.68;
 type Lantern = { angle: number; velocity: number; amp: number; omega: number; phase: number };
 
 function lanternGeometry() {
-  const marks = new Float32Array(N * 4), hangs = new Float32Array(N * 2), body = new Float32Array(N * 4);
+  const marks = new Float32Array(N * 4), hangs = new Float32Array(N * 2), body = new Float32Array(N * 4), sprite = new Float32Array(N * 4);
   const lanterns: Lantern[] = MARKS.map(([cx, cy, rx, ry], i) => {
     marks.set([cx, cy, rx, ry], i * 4);
     hangs.set([cx, cy - ry * 1.7], i * 2);
     body.set([cx / IW, 1 - cy / IH, rx / IW, ry / IH], i * 4);
+    // scale from sheet to photo, which sprite, mirrored or not, and a touch of brightness so no two match
+    const k = i < BIG ? 0 : 1;
+    sprite.set([rx / SPRITES[k].half, k, i % 2 ? -1 : 1, 1 + 0.07 * Math.sin(i * 2.3)], i * 4);
     const depth = Math.min(1, Math.max(0, (cy - 30) / 450)); // 0 at the front, 1 at the back
     return {
       angle: 0,
@@ -40,7 +48,7 @@ function lanternGeometry() {
       phase: depth * 2.2 + (cx < 330 ? 0 : cx > 470 ? 0.5 : 0.25),
     };
   });
-  return { marks, hangs, body, lanterns };
+  return { marks, hangs, body, sprite, lanterns };
 }
 
 const VS = `#version 300 es
@@ -51,12 +59,15 @@ const FS = `#version 300 es
 precision highp float;
 #define N ${N}
 in vec2 uv; out vec4 o;
-uniform sampler2D uTex, uPlate, uMask;
+uniform sampler2D uTex, uPlate, uMask, uSprites;
 uniform vec2 uRes, uImg, uMouse, uFocus;
 uniform float uTime;
-uniform vec4 uMark[N]; uniform vec2 uHang[N]; uniform float uAng[N];
+uniform vec4 uMark[N]; uniform vec2 uHang[N]; uniform float uAng[N]; uniform vec4 uSprite[N];
 uniform vec4 uBody[N]; uniform float uGlow[N];
-const vec2 PX = vec2(${IW}., ${IH}.), MASK = vec2(${MASK_SIZE[0]}., ${MASK_SIZE[1]}.);
+const vec2 PX = vec2(${IW}., ${IH}.), MASK = vec2(${MASK_SIZE[0]}., ${MASK_SIZE[1]}.), ATLAS = ${glslVec(sheet.size)};
+// per sprite: its rectangle in the sheet, and its ball centre and cord x
+const vec4 SPR_RECT[2] = vec4[2](${SPRITES.map((s) => glslVec(s.rect)).join(', ')});
+const vec3 SPR_BALL[2] = vec3[2](${SPRITES.map((s) => glslVec([...s.ball, s.cord])).join(', ')});
 // tall screens: cover. wide screens: the whole corridor as a tall picture right of centre,
 // with its own blurred, darkened colour filling the sides
 vec2 place(vec2 q) {
@@ -87,35 +98,39 @@ float cut(vec2 p, float id) {
   }
   return a;
 }
-vec4 maskAt(vec2 p) { return texelFetch(uMask, clamp(ivec2(toUv(p) * MASK), ivec2(0), ivec2(MASK) - 1), 0); }
 void main() {
   vec2 q = place(uv);
   float inside = smoothstep(0., .12, q.x) * smoothstep(0., .12, 1. - q.x);
   vec2 p = toPx(q), sq = q;
 
   // the ceiling without its lanterns (blue: where it takes over from the photo), the still far lanterns,
-  // then every lantern from the back of the corridor to the front, each at its own swing
+  // a red glow that follows each lantern, then every lantern from the back of the corridor to the front
   vec3 c = mix(texture(uTex, q).rgb, texture(uPlate, q).rgb, texture(uMask, q).b);
   c = mix(c, texture(uTex, q).rgb, cut(p, float(N + 1)));
-  for (int i = N - 1; i >= 0; i--) {
+  vec2 src[N];
+  float aura = 0.;
+  for (int i = 0; i < N; i++) {
     vec2 r = p - uHang[i];
     float cs = cos(-uAng[i]), sn = sin(-uAng[i]);
-    vec2 src = vec2(cs * r.x - sn * r.y, sn * r.x + cs * r.y) + uHang[i];
-    float id = float(i + 1);
-    float a = cut(src, id);
-    // a nearer lantern hid part of this one in the photo; that part is the mirror of its other side
-    float owner = idOf(maskAt(src));
-    if (owner > 0. && owner < id) {
-      vec2 m = vec2(2. * uMark[i].x - src.x, src.y);
-      float am = cut(m, id);
-      if (am > a) { a = am; src = m; }
-      // where the mirror is hidden too, keep the photo there inside the outline: it is lantern paper either way
-      else a = max(a, 1. - smoothstep(.9, 1., length((src - uMark[i].xy) / uMark[i].zw)));
-    }
-    if (a <= 0.) continue;
-    vec2 su = toUv(src);
-    c = mix(c, texture(uTex, su).rgb, a);
-    if (a > .5) sq = su;
+    src[i] = vec2(cs * r.x - sn * r.y, sn * r.x + cs * r.y) + uHang[i];
+    vec2 f = (src[i] - uMark[i].xy) / (uMark[i].zw * 2.3);
+    aura += exp(-dot(f, f) * 1.4) * uGlow[i];
+  }
+  c += vec3(.62, .1, .06) * min(aura, 1.6) * .32;
+  float onLantern = 0.;
+  for (int i = N - 1; i >= 0; i--) {
+    vec4 s = uSprite[i];
+    int k = int(s.y);
+    vec2 d = (src[i] - uMark[i].xy) / s.x;
+    d.x *= s.z;
+    vec2 a = SPR_BALL[k].xy + d;
+    vec4 rect = SPR_RECT[k];
+    // the cord runs on up past the top of the picture, to the ceiling it hangs from
+    if (a.y < rect.y + 3. && abs(a.x - SPR_BALL[k].z) < 4.) a.y = rect.y + 3.;
+    if (a.x < rect.x || a.x > rect.x + rect.z || a.y < rect.y || a.y > rect.y + rect.w) continue;
+    vec4 t = texture(uSprites, vec2(a.x / ATLAS.x, 1. - a.y / ATLAS.y));
+    c = mix(c, t.rgb * s.w, t.a);
+    onLantern = max(onLantern, t.a);
   }
 
   float glow = 0.; float spill = 0.;
@@ -134,7 +149,7 @@ void main() {
   vec2 e = 1.5 / uImg;
   float dx = lum(texture(uTex, sq + vec2(e.x, 0.)).rgb) - lum(texture(uTex, sq - vec2(e.x, 0.)).rgb);
   float dy = lum(texture(uTex, sq + vec2(0., e.y)).rgb) - lum(texture(uTex, sq - vec2(0., e.y)).rgb);
-  vec3 n = normalize(vec3(-dx * 5., -dy * 5., 1.));
+  vec3 n = normalize(mix(vec3(-dx * 5., -dy * 5., 1.), vec3(0., 0., 1.), onLantern));
   vec2 dm = (uv - uMouse) * vec2(uRes.x / uRes.y, 1.);
   float flick = .95 + .03 * sin(uTime * 1.3) + .02 * sin(uTime * 2.9 + 1.3);
   float r2 = .085;
@@ -201,8 +216,8 @@ function upload(gl: WebGL2RenderingContext, bitmap: ImageBitmap, unit: number): 
   return size;
 }
 
-export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasElement; photo: Blob; plate: string; mask: string; onReady: () => void; onFail: () => void }) {
-  const { host, canvas, photo, plate, mask, onReady, onFail } = opts;
+export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasElement; photo: Blob; plate: string; mask: string; sprites: string; onReady: () => void; onFail: () => void }) {
+  const { host, canvas, photo, plate, mask, sprites, onReady, onFail } = opts;
   const gl = canvas.getContext('webgl2', { antialias: false });
   if (!gl) return null;
   const program = compile(gl);
@@ -210,12 +225,14 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
   gl.useProgram(program);
 
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const { marks, hangs, body, lanterns } = lanternGeometry();
+  const { marks, hangs, body, sprite, lanterns } = lanternGeometry();
   const U = (name: string) => gl.getUniformLocation(program, name);
   const u = { res: U('uRes'), img: U('uImg'), mouse: U('uMouse'), focus: U('uFocus'), time: U('uTime'), ang: U('uAng'), glow: U('uGlow') };
   gl.uniform1i(U('uTex'), 0);
   gl.uniform1i(U('uPlate'), 1);
   gl.uniform1i(U('uMask'), 2);
+  gl.uniform1i(U('uSprites'), 3);
+  gl.uniform4fv(U('uSprite'), sprite);
   gl.uniform4fv(U('uMark'), marks);
   gl.uniform2fv(U('uHang'), hangs);
   gl.uniform4fv(U('uBody'), body);
@@ -300,11 +317,12 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
   let cancelled = false;
   // the mask holds data, not colour, so the browser must not convert or premultiply it
   const fetchBitmap = (url: string, opts: ImageBitmapOptions) => fetch(url).then((r) => r.blob()).then((b) => createImageBitmap(b, { imageOrientation: 'flipY', ...opts }));
-  Promise.all([decode(gl, photo), fetchBitmap(plate, {}), fetchBitmap(mask, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })])
-    .then(([bitmap, corridor, cuts]) => {
-      if (cancelled) return [bitmap, corridor, cuts].forEach((b) => b.close());
+  Promise.all([decode(gl, photo), fetchBitmap(plate, {}), fetchBitmap(mask, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }), fetchBitmap(sprites, { premultiplyAlpha: 'none' })])
+    .then(([bitmap, corridor, cuts, sheetBitmap]) => {
+      if (cancelled) return [bitmap, corridor, cuts, sheetBitmap].forEach((b) => b.close());
       upload(gl, corridor, 1);
       upload(gl, cuts, 2);
+      upload(gl, sheetBitmap, 3);
       imgSize = upload(gl, bitmap, 0);
       ready = true;
       // draw once now, on screen or not, so the photo is in place the moment the loader opens

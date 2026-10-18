@@ -59,6 +59,7 @@ export default function Hero() {
           photo,
           plate: heroPhoto.plate,
           mask: heroPhoto.mask,
+          sprites: heroPhoto.sprites,
           onReady: () => {
             clearInterval(creep);
             clearTimeout(safety);

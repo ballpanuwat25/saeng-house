@@ -41,13 +41,20 @@ video, and the ideas that make the site stand out.
 
 ## Hero lanterns
 
-Every lantern in the hero photo is a cut-out swinging over the ceiling with the lanterns removed. Both come from Photoshop, in `scripts/assets`: `hero-lanterns-cut.png` (every lantern, transparent elsewhere, same size as the photo) and `hero-plate.jpg` (the photo with the lanterns removed and the ceiling drawn in). `src/content/hero-lanterns.json` holds each lantern's centre and size, which set where it hangs from and which lantern owns each cut pixel. After changing either file or an outline, rebuild `public/images/hero-cut-mask.png` and `public/images/hero-plate.jpg` (needs Python with numpy and Pillow):
+The hero lanterns are drawn whole and swing over the ceiling with the lanterns removed. The sources live in `scripts/assets`:
+
+- `hero-plate.jpg` is the photo with every lantern removed and the ceiling drawn in (Photoshop).
+- `lanterns/big-1.png` and `lanterns/mid-1.png` are single generated lanterns on flat green (Gemini). The big red one hangs at the front, the pale one everywhere else.
+- `hero-lanterns-cut.png` is the original lanterns cut from the photo (Photoshop). Only the tiny ones at the far end of the corridor are still taken from it, and they stay still.
+
+`src/content/hero-lanterns.json` holds each lantern's centre and size in the photo, which set where each drawn lantern goes, how big it is and where it hangs from. After changing any source, rebuild (needs Python with numpy and Pillow):
 
 ```bash
+python scripts/build-lantern-sprites.py
 python scripts/cut-lanterns.py --preview
 ```
 
-`--preview` also writes `scripts/.cache/plate-preview.png`, each lantern's pixels tinted beside the plate.
+The first keys the green out of the lanterns into `public/images/hero-lantern-sprites.png`. The second writes `public/images/hero-plate.jpg` and `public/images/hero-cut-mask.png`; `--preview` also writes `scripts/.cache/plate-preview.png`.
 
 ## Walking map
 
