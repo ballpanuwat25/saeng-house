@@ -83,6 +83,7 @@ vec2 place(vec2 q) {
   return (q * uRes - off) / size;
 }
 float lum(vec3 c) { return dot(c, vec3(.299, .587, .114)); }
+float surface(vec2 s) { return mix(lum(texture(uTex, s).rgb), lum(texture(uPlate, s).rgb), texture(uMask, s).b); }
 vec2 toPx(vec2 q) { return vec2(q.x, 1. - q.y) * PX; }
 vec2 toUv(vec2 p) { return vec2(p.x / PX.x, 1. - p.y / PX.y); }
 float idOf(vec4 m) { return floor(m.g * 255. / ${ID_STEP}. + .5); }
@@ -109,7 +110,8 @@ void main() {
   // the ceiling without its lanterns (blue: where it takes over from the photo), the still far lanterns,
   // a red glow that follows each lantern, then every lantern from the back of the corridor to the front
   vec3 c = mix(texture(uTex, q).rgb, texture(uPlate, q).rgb, texture(uMask, q).b);
-  c = mix(c, texture(uTex, q).rgb, cut(p, float(N + 1)));
+  float still = cut(p, float(N + 1));
+  c = mix(c, texture(uTex, q).rgb, still);
   vec2 src[N];
   float aura = 0.;
   for (int i = 0; i < N; i++) {
@@ -120,7 +122,8 @@ void main() {
     aura += exp(-dot(f, f) * 1.4) * uGlow[i];
   }
   c += vec3(.62, .1, .06) * min(aura, 1.6) * .32;
-  float onLantern = 0.;
+  // how much of this pixel is lantern paper, and how brightly that lantern burns
+  float onLantern = still, burn = .6;
   for (int i = N - 1; i >= 0; i--) {
     vec4 s = uSprite[i];
     int k = int(s.y);
@@ -133,13 +136,12 @@ void main() {
     if (a.x < rect.x || a.x > rect.x + rect.z || a.y < rect.y || a.y > rect.y + rect.w) continue;
     vec4 t = texture(uSprites, vec2(a.x / ATLAS.x, 1. - a.y / ATLAS.y));
     c = mix(c, t.rgb * s.w, t.a);
-    onLantern = max(onLantern, t.a);
+    onLantern = mix(onLantern, 1., t.a);
+    burn = mix(burn, uGlow[i], t.a);
   }
 
-  float glow = 0.; float spill = 0.;
+  float spill = 0.;
   for (int i = 0; i < N; i++) {
-    vec2 b = (q - uBody[i].xy) / uBody[i].zw;
-    glow += (1. - smoothstep(.55, 1.05, length(b))) * uGlow[i];
     vec2 f = (q - uBody[i].xy) / (uBody[i].zw * 3.2);
     spill += exp(-dot(f, f) * 2.2) * uGlow[i];
   }
@@ -149,9 +151,11 @@ void main() {
     c = mix(ext, c, inside);
   }
 
+  // the lamp picks out the relief of the walls and ceiling; under the ceiling that relief is read from the
+  // plate, since the photo there still holds the original lanterns and the lamp would trace their outlines
   vec2 e = 1.5 / uImg;
-  float dx = lum(texture(uTex, sq + vec2(e.x, 0.)).rgb) - lum(texture(uTex, sq - vec2(e.x, 0.)).rgb);
-  float dy = lum(texture(uTex, sq + vec2(0., e.y)).rgb) - lum(texture(uTex, sq - vec2(0., e.y)).rgb);
+  float dx = surface(sq + vec2(e.x, 0.)) - surface(sq - vec2(e.x, 0.));
+  float dy = surface(sq + vec2(0., e.y)) - surface(sq - vec2(0., e.y));
   vec3 n = normalize(mix(vec3(-dx * 5., -dy * 5., 1.), vec3(0., 0., 1.), onLantern));
   vec2 dm = (uv - uMouse) * vec2(uRes.x / uRes.y, 1.);
   float flick = .95 + .03 * sin(uTime * 1.3) + .02 * sin(uTime * 2.9 + 1.3);
@@ -164,9 +168,10 @@ void main() {
   vec3 col = c * (vec3(.3, .27, .27) + vec3(.55, .2, .18) * min(spill, 1.4) + warm * (fall * (.45 + 1.05 * diff) + halo) * 1.5);
   col += warm * pow(max(dot(reflect(-L, n), vec3(0., 0., 1.)), 0.), 26.) * fall * .3;
 
-  // lanterns are light sources: their paper stays lit whatever the pointer does
+  // lanterns are light sources: their paper stays lit whatever the pointer does. Only lantern pixels count,
+  // wherever the lantern has swung to; a fixed circle around each would catch the lit ceiling as a ring
   float paper = smoothstep(.22, .55, lum(c));
-  col = mix(col, c * (1.08 + .25 * glow), clamp(glow, 0., 1.) * paper);
+  col = mix(col, c * (1.08 + .25 * burn), onLantern * paper);
 
   col *= mix(.6, 1., smoothstep(.0, .55, uv.x));
   col *= mix(.55, 1., smoothstep(.0, .45, uv.y));
