@@ -16,8 +16,11 @@ const N = MARKS.length;
 // owner N + 1 is the still layer of tiny lanterns at the far end. Must match scripts/cut-lanterns.py
 const MASK_SIZE = [1200, 1800] as const;
 const ID_STEP = 12;
-// whole lanterns over a whole ceiling can swing as far as looks natural
-const LIMIT = 0.12;
+// whole lanterns over a whole ceiling can swing as far as a push sends them; the breeze stays well inside it
+const LIMIT = 0.18;
+// a pointer sweep pushes a lantern in proportion to how far it moved past it, scaled down for sweeps slower
+// than SWEEP_SPEED measured pixels a second, so resting or slow pointers leave the lanterns to the breeze
+const PUSH = 0.3, SWEEP_SPEED = 1500;
 // the first lanterns take the big red sprite, the rest the pale one
 const SPRITES = [sheet.sprites.big, sheet.sprites.mid];
 const BIG = 3;
@@ -43,7 +46,7 @@ function lanternGeometry() {
       angle: 0,
       velocity: 0,
       // the big front lanterns carry most of the visible swing; the small ones at the back follow
-      amp: i < NF ? 1.5 : 0.55 + 0.75 * Math.pow(depth, 0.8),
+      amp: i < NF ? 1.1 : 0.55 + 0.75 * Math.pow(depth, 0.8),
       omega: 1.4 + depth * 2.1,
       phase: depth * 2.2 + (cx < 330 ? 0 : cx > 470 ? 0.5 : 0.25),
     };
@@ -253,13 +256,39 @@ export function startCinemagraph(opts: { host: HTMLElement; canvas: HTMLCanvasEl
   resize();
   addEventListener('resize', resize);
 
-  // the pointer only moves the light; the lanterns answer to the breeze alone
+  // where a point of the canvas (uv, y up) falls on the photo, in measured pixels; the same placing as the shader's
+  const onPhoto = (ux: number, uy: number) => {
+    const [iw, ih] = imgSize;
+    const k = Math.min(Math.max(W / iw, H / ih), Math.max((H / ih) * 1.1, (W * 0.42) / iw));
+    const sw = iw * k, sh = ih * k;
+    const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+    const ox = sw >= W ? clamp(W * 0.5 - FOCUS[0] * sw, W - sw, 0) : clamp(W * WIDE_CENTRE_X - sw * 0.5, 0, W - sw);
+    const oy = clamp(H * 0.5 - FOCUS[1] * sh, H - sh, 0);
+    return [((ux * W - ox) / sw) * IW, (1 - (uy * H - oy) / sh) * IH];
+  };
+
+  // the pointer is a lamp; swept quickly past a lantern it also nudges it, like the air of someone walking by
   const lamp = { x: 0.62, y: 0.55, tx: 0.62, ty: 0.55, moved: 0 };
+  let swept: { x: number; t: number } | null = null;
   const onPointer = (e: PointerEvent) => {
     const r = host.getBoundingClientRect();
     lamp.tx = (e.clientX - r.left) / r.width;
     lamp.ty = 1 - (e.clientY - r.top) / r.height;
     lamp.moved = performance.now();
+    if (reduce || !ready) return;
+    const [px, py] = onPhoto(lamp.tx, lamp.ty);
+    const was = swept;
+    swept = { x: px, t: lamp.moved };
+    const dt = was ? (lamp.moved - was.t) / 1000 : 0;
+    if (!was || dt <= 0 || dt > 0.1) return;
+    const dx = px - was.x;
+    const pace = Math.min(1, Math.abs(dx / dt) / SWEEP_SPEED);
+    MARKS.forEach(([cx, cy, rx, ry], i) => {
+      const near = Math.exp(-(((px - cx) / (rx * 1.8)) ** 2) - ((py - cy) / (ry * 2.2)) ** 2);
+      if (near < 0.02) return;
+      // a lantern's bottom swings the way the air goes, which is a negative angle for a push to the right
+      lanterns[i].velocity -= (dx / (ry * 1.7)) * near * pace * PUSH;
+    });
   };
   host.addEventListener('pointermove', onPointer);
 
