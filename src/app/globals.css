@@ -56,9 +56,12 @@ h1 em, h2 em { font-style: italic; color: #f4d9c2; }
 
 /* the evening clock */
 .brand { display: flex; align-items: center; gap: 18px; }
-.clock { display: flex; align-items: center; gap: 8px; font-size: var(--s-small); font-variant-numeric: tabular-nums; color: var(--muted); opacity: 0; transform: translateX(-6px); transition: opacity .4s ease, transform .4s ease; }
+.clock { --lit: 0; display: flex; align-items: center; gap: 8px; font-size: var(--s-small); font-variant-numeric: tabular-nums; color: var(--muted); opacity: 0; transform: translateX(-6px); transition: opacity .4s ease, transform .4s ease; }
 .clock.on { opacity: 1; transform: none; }
-.clock i { width: 8px; height: 8px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 12px 3px rgba(242, 163, 94, .45); }
+.clock-lamp { width: 12px; height: 14px; overflow: visible; margin-top: -2px; }
+.clock-lamp rect { fill: #5a3d31; }
+.clock-lamp .cap { fill: #c08a2c; }
+.clock-lamp .paper { fill: color-mix(in srgb, #ff6a3d calc(35% + 65% * var(--lit)), #6a2420); filter: drop-shadow(0 0 calc(1px + 7px * var(--lit)) rgba(242, 110, 60, calc(.3 + .6 * var(--lit)))); }
 .clock b { color: var(--ink); font-weight: 500; }
 
 /* hero */

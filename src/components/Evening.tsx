@@ -43,6 +43,7 @@ export default function Evening() {
       const p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
       const mins = clockAt(Math.min(scrollY, max), max);
       clockT.textContent = `${pad(Math.floor(mins / 60))}:${pad(mins % 60)}`;
+      clock.style.setProperty('--lit', String((mins - evening.startHour * 60) / ((evening.endHour - evening.startHour) * 60)));
       const ground = `rgb(${DUSK.map((v, i) => Math.round(v + (NIGHT[i] - v) * p))})`;
       document.body.style.backgroundColor = ground;
       root.style.setProperty('--ground', ground);
