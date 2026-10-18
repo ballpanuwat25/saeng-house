@@ -92,7 +92,12 @@ html.is-loading { overflow: hidden; }
 .facade .wall { fill: #2b1c16; stroke: #4a3128; stroke-width: 1.5; }
 .facade .trim { fill: none; stroke: #5a3d31; stroke-width: 2; }
 .facade .year { font-family: var(--serif); font-size: 21px; fill: #f4d9c2; letter-spacing: .04em; }
-.facade .win { fill: #f2a35e; stroke: #120b09; stroke-width: 1.5; filter: drop-shadow(0 0 6px rgba(242, 163, 94, .55)); }
+.facade .pane { stroke: #120b09; stroke-width: 1.5; }
+.facade .frame { fill: none; stroke: #2b1c16; stroke-width: 2; }
+.facade .lit .pane { fill: #f2a35e; filter: drop-shadow(0 0 6px rgba(242, 163, 94, .55)); }
+.facade .dim .pane { fill: #8a4a2c; }
+.facade .shut .pane { fill: #4a3128; }
+.facade .shut .frame { stroke: #2b1c16; stroke-width: 1.5; }
 .facade .slat { fill: #3d2a22; }
 .facade .lamp rect { fill: #5a3d31; }
 .facade .lamp ellipse { fill: var(--lantern); filter: drop-shadow(0 0 8px rgba(196, 24, 43, .9)); }
@@ -104,7 +109,8 @@ html.is-loading { overflow: hidden; }
 .front dt small { font-family: var(--face); font-size: var(--s-small); color: var(--ember); margin-left: 6px; letter-spacing: .02em; }
 .front dd { margin: 6px 0 0; color: var(--muted); font-size: var(--s-small); line-height: 1.4; max-width: 22ch; }
 .road { grid-column: 1 / -1; margin: 0; padding-top: 18px; border-top: 2px solid #4a3128; }
-.road .fact { display: flex; align-items: baseline; gap: 14px; }
+/* the walk sits at the far end of the street, pointing on toward the pier */
+.road .fact { display: flex; flex-direction: row-reverse; align-items: baseline; gap: 14px; }
 .road dt::after { content: "→"; font-family: var(--face); font-size: var(--s-small); color: var(--ember); margin-left: 10px; }
 .road dd { margin: 0; max-width: none; }
 

@@ -115,7 +115,7 @@ export default function Evening() {
       const enter = (sel: string, trigger: string, start = 'top 80%') =>
         gsap.from(sel, { y: 30, opacity: 0, duration: 1, stagger: 0.09, ease: 'power3.out', scrollTrigger: { trigger, start, once: true } });
       enter('.arrive .say, .facade, .front .fact', '.arrive');
-      gsap.from('.facade .win', { opacity: 0, duration: 0.5, stagger: { each: 0.07, from: 'random' }, delay: 0.5, scrollTrigger: { trigger: '.front', start: 'top 75%', once: true } });
+      gsap.from('.facade .win:not(.shut) .pane', { opacity: 0, duration: 0.5, stagger: { each: 0.07, from: 'random' }, delay: 0.5, scrollTrigger: { trigger: '.front', start: 'top 75%', once: true } });
       enter('.rooms h2, .names li, .detail > *, .stage', '.rooms');
       enter('.tea .big, .tea .txt > *, .tea .small', '.tea');
       enter('.map, .walk h2, .walk li, .walk .note', '.walk');

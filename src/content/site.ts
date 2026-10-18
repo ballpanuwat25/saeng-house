@@ -23,6 +23,7 @@ export const hotel = {
   wordmark: 'แสง',
   // for visitors who cannot read the Thai mark
   wordmarkGloss: 'saeng · light',
+  built: '1922',
   name: 'Saeng House',
   rooms: 12,
   fromPrice: 4800,
@@ -48,7 +49,7 @@ export const arrival =
   'You come in through the folding doors, walk the corridor of lanterns and climb the teak stairs. The building went up in 1922 to store spices for traders from Shantou. Today it keeps twelve rooms and one long table for tea.';
 
 export const facts: Fact[] = [
-  { figure: '1922', label: 'built as a spice warehouse', part: 'gable' },
+  { figure: 'Spice store', label: 'the gable still carries its year', part: 'gable' },
   { figure: '12', label: 'rooms above the tea hall', part: 'rooms' },
   { figure: '14:00', label: 'check-in at the folding doors, out by noon', part: 'door' },
   { figure: '6', unit: 'min', label: 'on foot to Si Phraya pier', part: 'street' },
