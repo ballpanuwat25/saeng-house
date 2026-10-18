@@ -10,6 +10,9 @@ const thai = Anuphan({ subsets: ['thai'], weight: ['400', '500'], variable: '--f
 export const metadata: Metadata = {
   title: 'Saeng House · Talat Noi, Bangkok',
   description: 'A twelve-room hotel in a 1922 spice warehouse on the Chao Phraya, lit by red lanterns.',
+  // the share picture itself is src/app/opengraph-image.png; the icons are icon.svg and apple-icon.png
+  openGraph: { title: 'Saeng House', description: 'A lantern-lit house on the Chao Phraya. Twelve rooms in a 1922 spice warehouse in Talat Noi, Bangkok.', type: 'website', locale: 'en_GB' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export const viewport: Viewport = {

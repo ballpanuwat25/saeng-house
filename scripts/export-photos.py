@@ -17,6 +17,7 @@ ROOMS = ROOT / 'scripts' / 'assets' / 'rooms'
 
 # name: (source, exact crop size or None, max width when not cropped, crop focus, graded)
 PHOTOS = {
+    # the hero photos go out as WebP: the cinemagraph loads them with three more images, and WebP halves the wait
     'hero-lanterns':    ('hero-lanterns.jpg', None, 2400, None, False),
     'hero-lanterns-sm': ('hero-lanterns.jpg', None, 1600, None, False),
     # the rooms are generated (Google Gemini) and kept in the repo, not in design/photos-src
@@ -53,8 +54,12 @@ def export(name, spec):
         im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
     if graded:
         im = grade(im)
-    path = OUT / f'{name}.jpg'
-    im.save(path, 'JPEG', quality=82, optimize=True, progressive=True)
+    if name.startswith('hero-'):
+        path = OUT / f'{name}.webp'
+        im.save(path, 'WEBP', quality=80, method=6)
+    else:
+        path = OUT / f'{name}.jpg'
+        im.save(path, 'JPEG', quality=82, optimize=True, progressive=True)
     return path, im.size
 
 

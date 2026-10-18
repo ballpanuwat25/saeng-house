@@ -4,26 +4,44 @@ What is built and what comes next for the Saeng House homepage, a demo hotel sit
 The rule behind every idea below: a feature earns its place only if it comes from this hotel's own story
 (one evening, lantern light, a shophouse in Talat Noi). Effects that would fit any website stay out.
 
-## Built (homepage, `feat/homepage`)
+## Built
 
-- Hero: the lantern corridor photo as a cinemagraph. Lanterns sway on a breeze, their paper breathes
-  slowly, and the pointer is a lamp that lights the corridor. On wide screens the whole corridor shows as a
-  tall picture right of centre with its own blurred colour filling the sides.
-- The page tells one evening, 18:00 to 23:00. The clock in the header follows the scroll and the ground
-  darkens towards midnight.
-- An oxblood lamp follows the pointer over every plain background below the hero.
-- Rooms: three rooms by one photographer, turning on their own every 3.5 seconds until the visitor picks one.
-- Tea collage, walking list for the neighbourhood, booking card that totals the price.
-  The booking card does not send anything yet.
+- **Hero.** The lantern corridor as a cinemagraph. Every lantern is drawn whole from generated sprites
+  and swings from its cord on a breeze under a Photoshop ceiling with the lanterns removed, with a red glow
+  that moves with it. A quick pointer sweep or a sideways finger drag nudges the nearby lanterns. The pointer
+  is also a lamp that lights the corridor. See the README's Hero lanterns section for how it is built.
+- **One evening, 18:00 to 23:00.** The header clock reads each section's own time as the section reaches
+  the middle of the screen, a small lantern beside it burns brighter as the night goes on, and the ground
+  darkens towards midnight. An oxblood lamp follows the pointer over every plain background below the hero.
+- **Arrival.** The four facts are notes on a drawing of the warehouse front: the year on the gable, a window
+  for each room (lit, dim or shuttered), check-in at the folding doors, the pier walk along the street.
+- **Rooms.** Three rooms generated as one set in one building and one night, turning on their own until the
+  visitor picks one. The chosen room is marked with the house lantern. The top room sells its roof terrace.
+- **Tea**, a collage in the same night grade as every other photo.
+- **Walking map** drawn from OpenStreetMap: real streets, the river, and each walk routed and timed along
+  real streets from the hotel door.
+- **Booking ticket** in the manner of an old Chinatown shop slip, stamped with a red แสง seal when sent.
+  It does not send anything yet.
+- **Footer.** A hanging neon sign that sputters on at 23:00, one letter that keeps buzzing.
+- **Launch basics.** Lantern favicon and home-screen icon, a share image for link previews, WebP hero images
+  (the phone download is about 1.2 MB), keyboard-friendly room tabs and a skip link.
 
 ## Next up (agreed)
 
-1. **Real booking.** Availability per room and date, a request saved somewhere the hotel can read
-   (email or a small database), a confirmation the guest receives. Decide first whether this is a request
-   form the hotel answers by hand or a live calendar.
-2. **Demo mode for recording the Fastwork video.** A URL flag (for example `?demo`) that scrolls the page
-   on its own at a steady pace, pauses on each section, moves a fake pointer so the lamps and lanterns show,
-   and hides the hint text. The goal is a clean screen recording without hand-scrolling jitter.
+1. **Deploy** to Vercel so the site has a public link.
+2. **Real booking and an owner's dashboard.** The guest's request is saved and checked against real
+   availability; the owner confirms or declines it in a small back office, blocks dates taken elsewhere
+   (walk-ins, Agoda), and sees nights sold and income this month. The guest gets an email at each step.
+   A public demo mode lets portfolio visitors try the back office on sample data that resets every night.
+   Use Supabase (database and login); email first, since LINE Notify closed in 2025 and the LINE Messaging
+   API needs a LINE OA. The back office should speak the site's language (a guest register, the building
+   with lit windows), not a stock admin template. Out of scope until a real client: payments, channel
+   manager sync, more than one property.
+3. **Demo mode for recording the Fastwork video.** A URL flag (for example `?demo`) that scrolls the page
+   on its own at a steady pace, pauses on each section, sweeps a fake pointer past the lanterns, and hides
+   the hint text. Record it last, once the booking flow is in, so the video shows both sides.
+4. **Case study page.** A short write-up of what was made and why: the real-street map, the redrawn
+   lanterns, the evening clock. It helps a client see where the work is.
 
 ## Ideas to make it stand out
 
@@ -32,16 +50,10 @@ Ordered by how much they belong to this hotel and no other.
 1. **Real Bangkok time.** Tie the evening clock to the actual time in Bangkok. In daytime the lanterns are
    off and the photo is lit like day; around dusk they come on one by one; late at night they dim. Show
    today's sunset time, computed from Talat Noi's coordinates with no API. A visitor sees a different site
-   at a different hour. Recommended first.
-2. **Pick a room from the shophouse.** A cutaway drawing of the four-storey shophouse made in code. Every
-   room's window is visible; choosing a room lights its window and says which floor and whether it faces
-   the river or the soi. Later, rooms already booked on the chosen date show as dark windows. Recommended
-   together with idea 1.
-3. **Talat Noi walking map.** A simple map in the site's tones. Pointing at a place in the walking list
-   draws the route from the hotel door, with the minutes on foot.
-4. **A red seal on the booking.** When the request is sent, a square Chinese-style seal reading แสง is
-   stamped onto the card, like a receipt from an old shop. Small, memorable, quick to build.
-5. **Ambient sound, off by default.** A small button for river water, a distant ferry horn and wind chimes.
+   at a different hour.
+2. **Booked rooms as dark windows.** Once real booking exists, the warehouse drawing in the arrival section
+   shows tonight's booked rooms as lit windows and free ones dark.
+3. **Ambient sound, off by default.** A small button for river water, a distant ferry horn and wind chimes.
    Needs free-to-use recordings or sound made in code.
 
 Left out on purpose: lantern-shaped cursors, particles drifting across the screen, scrolling marquees.
@@ -49,7 +61,5 @@ These are what make a site read as AI-made.
 
 ## Before using it for a real client
 
-- Replace every photo with the hotel's own. The current ones are Unsplash pictures of other places, and
-  the moon-window "room" is really a hall.
+- Replace the generated rooms and the stock photos with the hotel's own.
 - Confirm the address, phone, prices and room facts; all of them are invented.
-- The hero photo is 1.4 MB at 2400px; AVIF could roughly halve it.

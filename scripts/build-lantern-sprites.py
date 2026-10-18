@@ -1,7 +1,7 @@
 # Keys the generated lanterns in scripts/assets/lanterns (one lantern each, on flat green) into one atlas
 # for the hero cinemagraph, and measures where each one's paper ball sits so the shader can place it
 # over a lantern of the photo. Writes:
-#   public/images/hero-lantern-sprites.png   the keyed lanterns side by side, straight alpha
+#   public/images/hero-lantern-sprites.webp  the keyed lanterns side by side, straight alpha
 #   src/content/hero-lantern-sprites.json    per sprite: its rectangle in the atlas, the centre and half
 #                                            width of its ball, and the x of its cord, all in atlas pixels
 #   python scripts/build-lantern-sprites.py
@@ -55,6 +55,6 @@ for stem, tile, m in zip(SPRITES, tiles, meta):
     atlas[:h, x:x + w] = tile
     out[stem] = {'rect': [x, 0, w, h], 'ball': [m['ball'][0] + x, m['ball'][1]], 'half': m['half'], 'cord': m['cord'] + x}
     x += w
-Image.fromarray(atlas).save(ROOT / 'public/images/hero-lantern-sprites.png', optimize=True)
+Image.fromarray(atlas).save(ROOT / 'public/images/hero-lantern-sprites.webp', quality=88, alpha_quality=90, method=6)
 (ROOT / 'src/content/hero-lantern-sprites.json').write_text(json.dumps({'size': [atlas.shape[1], H], 'sprites': out}, indent=2) + '\n')
 print(f'atlas {atlas.shape[1]}x{H}', {k: (v['rect'], [round(c) for c in v['ball']], round(v['half'])) for k, v in out.items()})

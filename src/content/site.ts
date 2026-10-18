@@ -40,14 +40,14 @@ export const hero = {
 };
 
 export const heroPhoto = {
-  large: '/images/hero-lanterns.jpg',
-  small: '/images/hero-lanterns-sm.jpg',
+  large: '/images/hero-lanterns.webp',
+  small: '/images/hero-lanterns-sm.webp',
   // the same photo with the front lanterns painted out, for the cut-outs to swing over
-  plate: '/images/hero-plate.jpg',
+  plate: '/images/hero-plate.webp',
   // which pixels belong to which front lantern (scripts/cut-lanterns.py)
   mask: '/images/hero-cut-mask.png',
   // the lanterns themselves, drawn whole (scripts/build-lantern-sprites.py)
-  sprites: '/images/hero-lantern-sprites.png',
+  sprites: '/images/hero-lantern-sprites.webp',
   alt: 'A narrow corridor hung with rows of glowing red paper lanterns at night',
 };
 

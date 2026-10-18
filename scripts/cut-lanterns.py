@@ -2,7 +2,7 @@
 #   hero-lanterns-cut.png  every lantern cut from the photo, transparent elsewhere, same size as the photo
 #   hero-plate.jpg         the photo with every lantern removed and the ceiling behind them drawn in
 # and writes:
-#   public/images/hero-plate.jpg     the Photoshop plate at the size the shader reads it
+#   public/images/hero-plate.webp    the Photoshop plate at the size the shader reads it
 #   public/images/hero-cut-mask.png  R: how opaque the cut is, G: which lantern owns the pixel (x12),
 #                                    B: where the plate replaces the photo (the ceiling, down past the
 #                                    lowest lantern)
@@ -39,7 +39,7 @@ def region(cx, cy, rx, ry, low, yy, xx):
 cut = Image.open(ROOT / 'scripts/assets/hero-lanterns-cut.png').resize((OUT_W, OUT_H), Image.LANCZOS)
 alpha = np.asarray(cut)[..., 3].astype(np.float32) / 255
 plate = Image.open(ROOT / 'scripts/assets/hero-plate.jpg').convert('RGB').resize((OUT_W, OUT_H), Image.LANCZOS)
-plate.save(ROOT / 'public/images/hero-plate.jpg', quality=88)
+plate.save(ROOT / 'public/images/hero-plate.webp', quality=80, method=6)
 
 k = OUT_W / SW
 yy, xx = np.mgrid[0:OUT_H, 0:OUT_W].astype(np.float32) / k
@@ -60,7 +60,7 @@ print(f'mask and plate {OUT_W}x{OUT_H}; {len(MARKS)} swinging lanterns, still la
 
 if '--preview' in sys.argv:
     hues = np.array([[0, 0, 0]] + [[(i * 97) % 256, (i * 57 + 120) % 256, (i * 151 + 60) % 256] for i in range(1, STILL)] + [[255, 255, 255]], np.uint8)
-    photo = np.asarray(Image.open(ROOT / 'public/images/hero-lanterns.jpg').convert('RGB').resize((OUT_W, OUT_H)))
+    photo = np.asarray(Image.open(ROOT / 'public/images/hero-lanterns.webp').convert('RGB').resize((OUT_W, OUT_H)))
     ids = (hues[owner] * 0.6 + photo * 0.4).astype(np.uint8)
     (ROOT / 'scripts/.cache').mkdir(exist_ok=True)
     Image.fromarray(np.concatenate([ids, np.asarray(plate)], 1)).save(ROOT / 'scripts/.cache/plate-preview.png')

@@ -55,7 +55,7 @@ python scripts/build-lantern-sprites.py
 python scripts/cut-lanterns.py --preview
 ```
 
-The first keys the green out of the lanterns into `public/images/hero-lantern-sprites.png`. The second writes `public/images/hero-plate.jpg` and `public/images/hero-cut-mask.png`; `--preview` also writes `scripts/.cache/plate-preview.png`.
+The first keys the green out of the lanterns into `public/images/hero-lantern-sprites.webp`. The second writes `public/images/hero-plate.webp` and `public/images/hero-cut-mask.png`; `--preview` also writes `scripts/.cache/plate-preview.png`.
 
 ## Walking map
 

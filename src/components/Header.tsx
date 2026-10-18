@@ -5,6 +5,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 export default function Header() {
   return (
     <header className="top wrap" id="top">
+      <a className="skip" href="#rooms">Skip to the rooms</a>
       <div className="brand">
         <a className="wm" href="#home" aria-label={hotel.name}>{hotel.wordmark}</a>
         <span className="clock" id="clock" aria-hidden="true">
