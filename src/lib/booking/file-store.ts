@@ -52,5 +52,15 @@ export function fileStore(): BookingStore {
         await save([...all, booking]);
         return { ok: true as const, booking };
       }),
+    list: load,
+    setStatus: (ref, answer) =>
+      inTurn(async () => {
+        const all = await load();
+        const i = all.findIndex((b) => b.ref === ref && b.status === 'requested');
+        if (i < 0) return null;
+        all[i] = { ...all[i], ...answer };
+        await save(all);
+        return all[i];
+      }),
   };
 }

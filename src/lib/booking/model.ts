@@ -10,7 +10,13 @@ export const HOLDING: readonly BookingStatus[] = ['requested', 'confirmed'];
 
 export type Guest = { name: string; email: string; contact: string };
 export type BookingRequest = { roomId: RoomId; checkIn: string; nights: number; guest: Guest; note: string };
-export type Booking = BookingRequest & { ref: string; status: BookingStatus; total: number; createdAt: string };
+export type Booking = BookingRequest & { ref: string; status: BookingStatus; total: number; createdAt: string; decline?: Decline };
+
+// why the owner turned a request down; the guest's email is worded from it
+export const DECLINE_REASONS = ['full', 'unreachable', 'repairs', 'other'] as const;
+export type DeclineReason = (typeof DECLINE_REASONS)[number];
+export type Decline = { reason: DeclineReason; note: string };
+export const isDeclineReason = (v: unknown): v is DeclineReason => DECLINE_REASONS.includes(v as DeclineReason);
 
 // how many rooms of each kind are free on each night of a stay
 export type Availability = Record<RoomId, { left: number; fullOn: string[] }>;

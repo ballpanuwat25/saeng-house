@@ -52,7 +52,25 @@ RESEND_API_KEY=<from resend.com>
 BOOKING_FROM="Saeng House <bookings@your-domain>"
 ```
 
-The service key never reaches the browser: only the server routes in `src/app/api` use it. Until a domain is verified in Resend, it only delivers to your own address.
+The service key never reaches the browser: only the server routes in `src/app/api` and the owner's actions use it. Until a domain is verified in Resend, it only delivers to your own address.
+
+### The owner's request book
+
+The owner answers requests at `/owner`. The page lists every booking on three sheets: requests waiting for an answer, confirmed stays still to come, and past or declined ones. The nearest stay comes first. Each request has two answers:
+
+- **Confirm** marks it confirmed and emails the guest a confirmation.
+- **Decline** asks why first: full that night, could not reach the guest, room closed for repairs, or something else (written out for the guest). It frees the room and emails the guest a note worded from the reason. When the house is full, the email lists the other room kinds still free for the same nights, each with a link back to the booking ticket.
+
+A request can only be answered once, so a second click never sends a second email.
+
+On your machine with nothing set, the password is `saeng-dev`. On a deployed site, set both of these (and in `.env.local` to change them locally), or the request book stays shut:
+
+```bash
+OWNER_PASSWORD=<a long password for the owner>
+OWNER_SESSION_SECRET=<a random string, e.g. from: openssl rand -base64 32>
+```
+
+A login lasts 14 days in an httpOnly cookie signed with the secret; changing the secret signs everyone out. With Supabase, run `supabase/migrations/0002_owner.sql` once after `0001`; it adds the decline reason to the table.
 
 ## What's next
 

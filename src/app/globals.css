@@ -79,7 +79,8 @@ h1 em, h2 em { font-style: italic; color: #f4d9c2; }
 .hero.look-still canvas { display: none; }
 
 /* loader: a dark field of small lanterns that light from the centre outward as the hero photo downloads */
-html.is-loading { overflow: hidden; }
+/* only while the loader is on the page; the owner pages have none and must scroll */
+html.is-loading:has(.loader) { overflow: hidden; }
 .loader { position: fixed; inset: 0; z-index: 100; background: #0a0605 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='72'%3E%3Crect x='27.5' y='6' width='1' height='8' fill='%232a1d18'/%3E%3Crect x='22' y='14' width='12' height='3' rx='1' fill='%233a2a1c'/%3E%3Cellipse cx='28' cy='29' rx='10' ry='12' fill='%232a1012'/%3E%3Crect x='22' y='41' width='12' height='3' rx='1' fill='%233a2a1c'/%3E%3Crect x='27' y='44' width='2' height='10' fill='%233a0d10'/%3E%3C/svg%3E") 0 0 / 56px 72px repeat; transition: opacity .9s ease; }
 .loader canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .loader.open { opacity: 0; }
@@ -296,6 +297,71 @@ main > .hero { z-index: 2; }
   .sign { justify-self: stretch; }
   .hint { display: none; }
 }
+/* the owner's request book (src/app/owner): the front desk register, on the same ticket paper as the booking slip */
+.owner { --paper: #efe4d0; --ink-dark: #2a1712; --ink-soft: #7a6455; max-width: 1180px; margin: 0 auto; padding-block: calc(env(safe-area-inset-top, 0px) + 28px) 96px; }
+.owner-top { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid rgba(236, 235, 232, .14); }
+.owner-top .wm { margin: 0; color: var(--lantern); }
+.owner-top h1 { margin: 0; font-size: var(--s-head); line-height: 1; letter-spacing: -0.012em; }
+.owner-out { border: 0; padding: 0; background: none; color: var(--muted); font-size: var(--s-small); text-decoration: underline; text-underline-offset: 5px; text-decoration-color: rgba(242, 163, 94, .6); cursor: pointer; transition: color .2s ease; }
+.owner-out:hover { color: var(--ember); }
+.owner-note { margin: 28px 0 0; max-width: 60ch; font-size: var(--s-small); color: var(--ink); }
+.sheet { margin-top: clamp(40px, 5vw, 64px); }
+.sheet h2 { font-size: clamp(1.75rem, 1.4rem + 1vw, 2.4rem); margin-bottom: 16px; }
+.sheet h2 span { font-family: var(--face); font-size: var(--s-small); color: var(--muted); font-variant-numeric: tabular-nums; margin-left: 8px; vertical-align: .35em; }
+/* the paper: a faint red margin rule runs down past the reference numbers, as in a ruled register */
+.ledger { --rule: 8.5rem; color-scheme: light; list-style: none; margin: 0; padding: 0 clamp(16px, 2.4vw, 30px); background: var(--paper) linear-gradient(90deg, transparent calc(var(--rule) - 1px), rgba(196, 24, 43, .32) calc(var(--rule) - 1px) var(--rule), transparent var(--rule)) no-repeat; color: var(--ink-dark); border-radius: 14px; filter: drop-shadow(0 18px 32px rgba(0, 0, 0, .4)); }
+.sheet-past .ledger { --paper: #d8cbb5; }
+.entry { display: grid; grid-template-columns: calc(var(--rule) - clamp(16px, 2.4vw, 30px)) minmax(0, 1fr) minmax(0, 1.15fr) 7.5rem; column-gap: 24px; row-gap: 10px; padding: 22px 0 22px; background: repeating-linear-gradient(90deg, rgba(42, 23, 18, .35) 0 7px, transparent 7px 13px) 0 0 / 100% 1.5px no-repeat; scroll-margin-top: 24px; }
+.entry:first-child, .ledger-empty:first-child { background: none; }
+.entry > * { margin: 0; min-width: 0; }
+/* the reference column runs down the whole entry, so its two lines never push the rows beside it apart */
+.entry-ref { grid-row: 1 / span 4; display: grid; gap: 4px; align-content: start; }
+.entry-ref b { font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.entry-ref span, .entry-guest span, .entry-guest a, .entry-stay span { font-size: var(--s-small); color: var(--ink-soft); }
+.entry-ref span { padding-right: 12px; }
+.entry-guest, .entry-stay { display: grid; align-content: start; gap: 2px; }
+.entry-guest a { overflow-wrap: anywhere; text-decoration-color: rgba(122, 100, 85, .5); text-underline-offset: 3px; }
+.entry-guest a:hover { color: var(--lantern); }
+.entry-name, .entry-stay p { margin: 0; font-family: var(--serif); font-size: 1.45rem; line-height: 1.15; }
+.entry-total { font-family: var(--serif); font-size: 1.8rem; line-height: 1; text-align: right; font-variant-numeric: lining-nums tabular-nums; }
+.entry-note, .entry-state, .entry-act { grid-column: 2 / -1; }
+.entry-note { font-size: .98rem; max-width: 62ch; }
+.entry-state { font-size: var(--s-small); color: var(--ink-soft); }
+.entry-act { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding-top: 4px; }
+.entry-act .btn { min-height: 44px; padding: 0 26px; }
+.ledger-empty { padding: 26px 0; padding-left: var(--rule); color: var(--ink-soft); font-size: var(--s-small); }
+.decline summary { list-style: none; color: var(--lantern); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; font-size: var(--s-small); font-weight: 500; }
+.decline summary::-webkit-details-marker { display: none; }
+.decline[open] { flex: 1 1 100%; }
+.decline[open] summary { margin-bottom: 12px; }
+.decline form { display: grid; gap: 14px; max-width: 560px; }
+.decline fieldset { margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.decline legend { padding: 0; margin-bottom: 8px; font-size: var(--s-small); color: var(--ink-soft); }
+.decline fieldset label { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border-radius: 10px; background: rgba(42, 23, 18, .06); cursor: pointer; font-size: .95rem; transition: background-color .2s ease; }
+.decline fieldset label:hover { background: rgba(42, 23, 18, .1); }
+.decline fieldset label:has(input:checked) { background: rgba(196, 24, 43, .12); }
+.decline input[type="radio"] { accent-color: var(--lantern); width: 18px; height: 18px; margin: 0; }
+.decline-note { display: grid; gap: 6px; font-size: var(--s-small); color: var(--ink-soft); }
+.decline textarea { font: inherit; font-size: 1rem; color: var(--ink-dark); background: rgba(42, 23, 18, .07); border: 0; border-radius: 10px; padding: 12px 14px; resize: vertical; }
+.decline textarea:focus-visible { outline: 2px solid var(--lantern); outline-offset: 1px; }
+.decline .msg { min-height: 0; padding: 0; }
+.decline .btn { justify-self: start; }
+.owner-door { min-height: 100svh; display: grid; place-items: center; padding-block: 40px; }
+.owner-door .ticket { max-width: 400px; }
+.owner-door .msg { min-height: 44px; padding-right: 0; }
+@media (max-width: 760px) {
+  .owner-top { grid-template-columns: 1fr auto; }
+  .owner-top h1 { grid-column: 1 / -1; grid-row: 2; }
+  .ledger { --rule: 0px; background-image: none; }
+  .entry { grid-template-columns: minmax(0, 1fr) auto; row-gap: 12px; }
+  .entry-ref { grid-column: 1 / -1; grid-row: auto; display: flex; justify-content: space-between; }
+  .entry-guest, .entry-note, .entry-state, .entry-act { grid-column: 1 / -1; }
+  .entry-stay { grid-column: 1; }
+  .entry-total { align-self: end; }
+  .decline fieldset { grid-template-columns: 1fr; }
+  .ledger-empty { padding-left: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .loader { transition: opacity .3s ease; }
   body, .btn, .photo img, .walk li button, .top, .clock { transition: none; }

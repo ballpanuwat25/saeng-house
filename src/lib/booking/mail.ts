@@ -3,14 +3,14 @@
 // for the figures, the red seal.
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { hotel } from '@/content/site';
-import { checkOutOf, roomOf, type Booking } from '@/lib/booking/model';
+import { hotel, rooms } from '@/content/site';
+import { checkOutOf, roomOf, type Availability, type Booking, type Decline } from '@/lib/booking/model';
 
 const day = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', timeZone: 'UTC' });
 const baht = (n: number) => '฿' + n.toLocaleString('en-US');
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-function ticket(b: Booking, heading: string, lines: string[]) {
+function ticket(b: Booking, heading: string, lines: string[], after = '') {
   const room = roomOf(b.roomId);
   const row = (k: string, v: string) =>
     `<tr><td style="padding:6px 0;color:#7a6455;font-size:13px">${k}</td><td style="padding:6px 0;text-align:right;font-size:15px">${v}</td></tr>`;
@@ -22,6 +22,7 @@ function ticket(b: Booking, heading: string, lines: string[]) {
     </tr></table>
     <h1 style="margin:22px 0 8px;font-family:Georgia,serif;font-weight:400;font-size:28px;line-height:1.15">${heading}</h1>
     ${lines.map((l) => `<p style="margin:0 0 10px;font-size:15px;line-height:1.55">${l}</p>`).join('')}
+    ${after}
     <table role="presentation" width="100%" style="margin-top:18px;border-top:1px dashed rgba(42,23,18,.35)">
       ${row('Room', esc(room.name))}
       ${row('Arriving', day(b.checkIn))}
@@ -47,6 +48,46 @@ export function receivedMail(b: Booking) {
       `Nothing is charged now. You pay at the house when you arrive.`,
     ]),
   };
+}
+
+export function confirmedMail(b: Booking) {
+  const first = b.guest.name.split(' ')[0];
+  return {
+    subject: `${hotel.name}: booking ${b.ref} confirmed`,
+    html: ticket(b, `See you on ${day(b.checkIn)}, ${esc(first)}.`, [
+      `Your room is confirmed. Check-in is from 14:00 at the folding doors on Soi Wanit 2, and checkout is by noon.`,
+      `Nothing is charged now. You pay at the house when you arrive.`,
+      `If your plans change, reply to this email or message us on LINE ${esc(hotel.line)}.`,
+    ]),
+  };
+}
+
+const sorry = `We are sorry. Nothing was charged.`;
+
+// `free` is how many rooms of each kind are still free for the same nights, used when the house is full
+export function declinedMail(b: Booking, decline: Decline, free: Availability, origin: string) {
+  const first = esc(b.guest.name.split(' ')[0]);
+  const room = esc(roomOf(b.roomId).name);
+  const subject = `${hotel.name}: we cannot take request ${b.ref}`;
+  if (decline.reason === 'full') {
+    const others = rooms.filter((r) => r.id !== b.roomId && free[r.id].left > 0);
+    const offer = others.length
+      ? `<p style="margin:18px 0 6px;font-size:15px;line-height:1.55">These rooms are still free for the same nights:</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${others
+      .map(
+        (r) => `<tr><td style="padding:10px 0;border-top:1px solid rgba(42,23,18,.15)"><span style="font-family:Georgia,serif;font-size:19px">${esc(r.name)}</span><br><span style="color:#7a6455;font-size:13px">${baht(r.pricePerNight)} a night, ${baht(r.pricePerNight * b.nights)} for ${b.nights} ${b.nights === 1 ? 'night' : 'nights'}</span></td>
+      <td style="padding:10px 0;border-top:1px solid rgba(42,23,18,.15);text-align:right"><a href="${esc(origin)}/#book" style="color:#c4182b;font-size:14px">Book this room</a></td></tr>`,
+      )
+      .join('')}</table>`
+      : `<p style="margin:18px 0 0;font-size:15px;line-height:1.55">Every room in the house is taken for those nights. Another date may still work.</p>`;
+    return { subject, html: ticket(b, `We are full ${b.nights === 1 ? 'that night' : 'those nights'}, ${first}.`, [`${room} is taken on the nights you asked for, so we cannot hold it for you. ${sorry}`], offer) };
+  }
+  const say = {
+    unreachable: [`We could not reach you, ${first}.`, `We tried to reach you about your stay and did not hear back, so we have let the room go. ${sorry}`, `If you still want to come, send a new request and we will hold a room again.`],
+    repairs: [`${room} is closed for repairs, ${first}.`, `It will not be ready on the nights you asked for, so we cannot hold it for you. ${sorry}`],
+    other: [`We cannot take your booking, ${first}.`, esc(decline.note), sorry],
+  }[decline.reason];
+  return { subject, html: ticket(b, say[0], say.slice(1)) };
 }
 
 export async function sendMail(to: string, mail: { subject: string; html: string }, tag: string) {
