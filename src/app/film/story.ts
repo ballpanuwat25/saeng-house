@@ -112,7 +112,19 @@ export async function story(desk: Lane, phone: Lane, mark: (scene: string) => vo
   await desk.see(entry);
   await sleep(500);
   await desk.hover(`${entry} .entry-name`);
-  await sleep(1800);
+  await sleep(1400);
+  // the owner opens Decline to show what it asks for, the reasons the guest's email is worded from, then
+  // folds it away again and confirms instead
+  await desk.press(`${entry} .decline summary`);
+  await desk.see(`${entry} .decline[open] fieldset`);
+  mark('declining');
+  await sleep(500);
+  await desk.hover(`${entry} .decline fieldset label:first-of-type`, 800);
+  await sleep(700);
+  await desk.hover(`${entry} .decline fieldset label:nth-of-type(2)`, 600);
+  await sleep(1500);
+  await desk.press(`${entry} .decline summary`);
+  await sleep(600);
   await desk.hover(`${entry} .entry-act form .btn`, 900);
   await sleep(600);
   await desk.press(`${entry} .entry-act form .btn`);
@@ -138,6 +150,6 @@ export async function story(desk: Lane, phone: Lane, mark: (scene: string) => vo
       await desk.glide(980, 760, 1400);
     })(),
   );
-  await sleep(5000);
+  await sleep(3200);
   return ref;
 }

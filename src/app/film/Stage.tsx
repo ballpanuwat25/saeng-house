@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { hero } from '@/content/site';
+import { hero, hotel } from '@/content/site';
 import { Lane, sleep } from '@/app/film/lane';
 import { story } from '@/app/film/story';
 
@@ -10,9 +10,10 @@ import { story } from '@/app/film/story';
 // watched on a smaller screen; the recording opens it in a 1920 by 1080 window, where it sits at full size.
 //
 // The state of the take is on <html data-film>: "setting" while the book is reset and the frames load,
-// "playing", then "done" or "failed", so whatever records it knows when to start and stop.
+// "playing", "ending" while the closing card is up, then "done" or "failed", so whatever records it knows
+// when to start and stop.
 
-type Take = 'setting' | 'playing' | 'done' | 'failed';
+type Take = 'setting' | 'playing' | 'ending' | 'done' | 'failed';
 
 const W = 1920;
 const H = 1080;
@@ -53,6 +54,11 @@ export default function Stage() {
       setTake('playing');
       await sleep(1400);
       await story(deskLane, phoneLane, (scene) => (document.documentElement.dataset.scene = scene));
+      if (stopped) return;
+      // the closing card comes up over both frames and holds long enough to read
+      document.documentElement.dataset.scene = 'end';
+      setTake('ending');
+      await sleep(6400);
       if (!stopped) setTake('done');
     })().catch((err: Error) => {
       console.error(err);
@@ -94,6 +100,12 @@ export default function Stage() {
         <figcaption>Guest, on a phone</figcaption>
       </figure>
       <div ref={cover} className="film-cover" />
+      <div className="film-end" data-on={take === 'ending' || take === 'done' || undefined} aria-hidden={take !== 'ending' && take !== 'done'}>
+        <p className="film-end-wm" lang="th">{hotel.wordmark}</p>
+        <p className="film-end-name">{hotel.name}</p>
+        <p className="film-end-line">A booking ticket for the guest, a request book for the owner, and the emails between them.</p>
+        <p className="film-end-note">A fictional hotel in Talat Noi, Bangkok, made for a portfolio.</p>
+      </div>
       {take === 'failed' && <p className="film-problem">The take stopped: {problem}</p>}
     </div>
   );

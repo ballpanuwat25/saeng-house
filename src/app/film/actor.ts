@@ -34,6 +34,7 @@ const HOVER_CSS = `
 .owner-tabs a.${HOVER} { color: var(--ink); }
 .date-pick.${HOVER} { background: rgba(42, 23, 18, .11); }
 .opt.${HOVER} { background: rgba(42, 23, 18, .1); }
+.decline fieldset label.${HOVER} { background: rgba(42, 23, 18, .1); }
 .cal-week button.${HOVER}:not(:disabled) { background: rgba(42, 23, 18, .08); }
 .cal-head button.${HOVER}:not(:disabled) { color: var(--lantern); }
 html, body, a, button, label { cursor: none !important; }
@@ -109,7 +110,7 @@ export function installActor(win: Window, { touch, slowActions }: Options) {
     const r = el.getBoundingClientRect();
     if (r.top >= 60 && r.bottom <= win.innerHeight - 60) return;
     const y = win.scrollY + r.top - win.innerHeight / 3;
-    await scrollTo(y, Math.min(1400, 500 + Math.abs(y - win.scrollY) * 0.6));
+    await scrollTo(y, Math.min(1100, 400 + Math.abs(y - win.scrollY) * 0.5));
   };
 
   // a pseudo-random pace for typing that is the same on every run
@@ -171,7 +172,7 @@ export function installActor(win: Window, { touch, slowActions }: Options) {
           el.dispatchEvent(new (win as typeof window).InputEvent('input', { data: ch, inputType: 'insertText', bubbles: true }));
           el.dispatchEvent(new (win as typeof window).KeyboardEvent('keyup', { key: ch, bubbles: true }));
           // a hand types in bursts: quicker inside a word, a beat longer after a space or a dot
-          await new Promise((r) => setTimeout(r, 75 + pace() * 90 + (' .@'.includes(ch) ? 140 : 0)));
+          await new Promise((r) => setTimeout(r, 60 + pace() * 70 + (' .@'.includes(ch) ? 110 : 0)));
         }
         return null;
       }

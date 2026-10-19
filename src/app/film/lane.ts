@@ -5,7 +5,13 @@ import { installActor, type Command, type Rect, type Reply } from '@/app/film/ac
 
 export type Parts = { frame: HTMLIFrameElement; hand: HTMLElement; veil: HTMLElement };
 
-const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+// how fast the whole take runs: every pause, glide and scroll in the story is scaled by this, so the
+// pace can be changed in one place without the scenes falling out of step
+export const TEMPO = 0.78;
+
+const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+// a pause in the story, at the take's tempo
+const sleep = (ms: number) => wait(ms * TEMPO);
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 const frameDone = () => new Promise<number>((r) => requestAnimationFrame(r));
 
@@ -63,7 +69,7 @@ export class Lane {
     const { frame, veil } = this.parts;
     veil.style.transition = `opacity ${fade}ms ease`;
     veil.style.opacity = '1';
-    await sleep(fade);
+    await wait(fade);
     await new Promise<void>((loaded) => {
       frame.addEventListener('load', () => loaded(), { once: true });
       frame.src = path;
@@ -72,9 +78,9 @@ export class Lane {
     await this.ask({ cmd: 'wait', sel: '.loader', gone: true, ms: 30000 });
     // the phone is a touch screen, but the frame's browser has a mouse, so the hero's hint is put right
     if (this.hint) await this.ask({ cmd: 'text', sel: '.hero .hint', text: this.hint });
-    await sleep(250);
+    await wait(250);
     veil.style.opacity = '0';
-    await sleep(fade);
+    await wait(fade);
   }
 
   private place(pressed = false) {
@@ -87,7 +93,7 @@ export class Lane {
     const from = { ...this.at };
     const dist = Math.hypot(x - from.x, y - from.y);
     if (dist < 1) return;
-    const time = ms ?? Math.min(1300, 420 + dist * 0.55);
+    const time = (ms ?? Math.min(1300, 420 + dist * 0.55)) * TEMPO;
     // the bend sits to one side of the straight line, the way a wrist swings
     const bend = Math.min(90, dist * 0.14);
     const cx = (from.x + x) / 2 + ((y - from.y) / dist) * bend;
@@ -186,7 +192,7 @@ export class Lane {
   }
 
   scroll(to: number | string, ms: number, offset?: number) {
-    return this.ask<number>({ cmd: 'scroll', to, ms, offset });
+    return this.ask<number>({ cmd: 'scroll', to, ms: ms * TEMPO, offset });
   }
 
   see(sel: string, text?: string, ms?: number) {
