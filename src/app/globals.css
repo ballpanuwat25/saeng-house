@@ -368,9 +368,12 @@ main > .hero { z-index: 2; }
 .slip .slip-tap { margin-top: 6px; font-size: .75rem; color: var(--ink-soft); }
 @keyframes slip-in { from { opacity: 0; transform: translateY(4px); } }
 @media (prefers-reduced-motion: reduce) { .slip { animation: none; } }
-.rack-jump { display: inline-flex; align-items: baseline; gap: 8px; color: var(--muted); }
-.rack-jump .pick { width: auto; min-height: 0; padding: 0; border-radius: 0; background: none; color: var(--ink); font-size: var(--s-small); text-decoration: underline; text-underline-offset: 5px; text-decoration-color: rgba(242, 163, 94, .6); }
-.rack-jump .pick:hover { color: var(--ember); }
+.rack-controls { display: grid; justify-items: end; gap: 10px; }
+/* the start night as a blank on a form: the date written in the serif on a dotted line, which turns lantern
+   red under the pointer */
+.rack-jump { display: inline-flex; align-items: baseline; gap: 10px; font-size: var(--s-small); color: var(--muted); }
+.rack-jump .pick { width: auto; min-width: 8.5rem; min-height: 44px; align-items: flex-end; padding: 0 4px 6px; border-radius: 0; background: none; border-bottom: 2px dotted rgba(236, 235, 232, .5); color: var(--ink); font-family: var(--serif); font-size: 1.35rem; line-height: 1; transition: border-color .2s ease, color .2s ease; }
+.rack-jump .pick:hover, .rack-jump .pick[aria-expanded="true"] { background: none; border-bottom-color: var(--lantern); }
 .rack-jump .pick:focus-visible { outline-color: var(--ember); outline-offset: 3px; }
 /* the room rack (src/app/owner/rooms): a line per room, a column per night, a strip of paper per stay. On a
    phone the rack scrolls sideways inside the paper and the room kinds stay pinned on the left */
@@ -453,6 +456,7 @@ main > .hero { z-index: 2; }
   .tally { padding-left: clamp(16px, 2.4vw, 30px); }
   .tally-head { position: static; flex-basis: 100%; }
   .rack { --kind: 6.25rem; --night: 2.1rem; }
+  .rack-controls { justify-items: start; }
   .rack-kind { font-size: 1.1rem; padding-right: 8px; }
   .entry { grid-template-columns: minmax(0, 1fr) auto; row-gap: 12px; }
   .entry-ref { grid-column: 1 / -1; grid-row: auto; display: flex; justify-content: space-between; }

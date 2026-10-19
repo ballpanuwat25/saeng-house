@@ -69,12 +69,16 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
           <h2 id="sheet-rack">
             {dayMonth(from)} to {dayMonth(addDays(until, -1))} {addDays(until, -1).slice(0, 4)}
           </h2>
-          <nav className="owner-months" aria-label="Weeks">
-            <Link href={`/owner/rooms?from=${addDays(from, -NIGHTS)}`} rel="prev">‹ Four weeks earlier</Link>
-            {from !== today && <Link href="/owner/rooms">From tonight</Link>}
-            <Link href={`/owner/rooms?from=${until}`} rel="next">Four weeks later ›</Link>
+          {/* the start night is the one thing here the owner fills in, so it reads as a blank on a form; the
+              links that step through the weeks sit quieter beneath it */}
+          <div className="rack-controls">
             <RackJump from={from} />
-          </nav>
+            <nav className="owner-months" aria-label="Weeks">
+              <Link href={`/owner/rooms?from=${addDays(from, -NIGHTS)}`} rel="prev">‹ Four weeks earlier</Link>
+              {from !== today && <Link href="/owner/rooms">From tonight</Link>}
+              <Link href={`/owner/rooms?from=${until}`} rel="next">Four weeks later ›</Link>
+            </nav>
+          </div>
         </div>
 
         <div className="ledger-page">
