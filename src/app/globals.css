@@ -32,6 +32,9 @@ a { color: inherit; }
 button, input { font: inherit; color: inherit; }
 img { display: block; max-width: 100%; }
 :focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+/* a field being typed in is outlined in lantern red, on the paper or off it, never in the browser's colours */
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--lantern); outline-offset: 1px; }
+input[type="radio"]:focus-visible, input[type="checkbox"]:focus-visible { outline-offset: 2px; }
 .wrap { padding-left: max(var(--m), env(safe-area-inset-left, 0px)); padding-right: max(var(--m), env(safe-area-inset-right, 0px)); }
 h1, h2 { font-family: var(--serif); font-weight: 400; }
 h2 { font-size: clamp(2.5rem, 1.6rem + 3vw, 4.4rem); line-height: 1.02; letter-spacing: -0.012em; margin: 0; text-wrap: balance; }
@@ -324,17 +327,21 @@ main > .hero { z-index: 2; }
 }
 /* the owner's request book (src/app/owner): the front desk register, on the same ticket paper as the booking slip */
 .owner { --paper: #efe4d0; --ink-dark: #2a1712; --ink-soft: #7a6455; max-width: 1180px; margin: 0 auto; padding-block: calc(env(safe-area-inset-top, 0px) + 28px) 96px; }
-.owner-top { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 20px; border-bottom: 1px solid rgba(236, 235, 232, .14); }
+.owner-top { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 20px; }
 .owner-top .wm { margin: 0; color: var(--lantern); }
 .owner-top h1 { margin: 0; font-size: var(--s-head); line-height: 1; letter-spacing: -0.012em; }
 .owner-out { border: 0; padding: 0; background: none; color: var(--muted); font-size: var(--s-small); text-decoration: underline; text-underline-offset: 5px; text-decoration-color: rgba(242, 163, 94, .6); cursor: pointer; transition: color .2s ease; }
 .owner-out:hover { color: var(--ember); }
-.owner-tabs { grid-column: 1 / -1; display: flex; gap: clamp(24px, 4vw, 44px); margin-top: 6px; }
+/* the tabs stay at the top of the window down a long sheet, so the owner can move on from the foot of it */
+.owner-tabs { position: sticky; top: 0; z-index: 30; display: flex; gap: clamp(24px, 4vw, 44px); padding-top: 14px; background: var(--bg); border-bottom: 1px solid rgba(236, 235, 232, .14); }
 /* the open tab sits on the header's rule, like the tab of the page the book is open at */
 .owner-tabs a { margin-bottom: -1px; padding-bottom: 12px; border-bottom: 2px solid transparent; font-family: var(--serif); font-size: clamp(1.35rem, 1.2rem + .5vw, 1.7rem); line-height: 1.1; color: var(--muted); text-decoration: none; transition: color .2s ease; }
 .owner-tabs a:hover { color: var(--ink); }
 .owner-tab-count { margin-left: 8px; font-family: var(--face); font-size: var(--s-small); color: var(--muted); font-variant-numeric: tabular-nums; vertical-align: .35em; }
 .owner-tab-count[data-late] { color: var(--lantern); font-weight: 500; }
+/* a request came in while the book was open: the count is stamped on again, like the seal */
+.owner-tab-count[data-new] { display: inline-block; color: var(--lantern); font-weight: 500; animation: count-in .5s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes count-in { from { opacity: 0; transform: scale(2.2); } 60% { opacity: 1; } to { opacity: 1; transform: scale(1); } }
 /* read by screen readers, not shown */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .owner-tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--lantern); }
@@ -342,7 +349,7 @@ main > .hero { z-index: 2; }
 .owner-find label { font-size: var(--s-small); color: var(--muted); }
 .owner-find div { display: flex; gap: 10px; }
 .owner-find input { flex: 1; min-width: 0; min-height: 48px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--paper); color: var(--ink-dark); font: inherit; }
-.owner-find input:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+.owner-find input:focus-visible { outline: 2px solid var(--lantern); outline-offset: 2px; }
 .sheet-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 28px; margin-bottom: 16px; }
 .sheet-head h2 { margin-bottom: 0; }
 .owner-months { display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: var(--s-small); }
@@ -358,7 +365,7 @@ html:has(.owner) { scrollbar-gutter: stable; }
 .link-pending[data-on] { animation: opening-rule 1.2s ease-in-out .12s infinite; }
 /* and the sheet below the tabs fades back, so the owner sees the page is turning even when the rule is brief */
 .owner > :not(.owner-top) { transition: opacity .2s ease; }
-html[data-turning] .owner > :not(.owner-top) { opacity: .5; transition-delay: .06s; }
+html[data-turning] .owner > :not(.owner-top, .owner-tabs) { opacity: .5; transition-delay: .06s; }
 @keyframes opening-rule { 0% { transform: scaleX(0); opacity: 1; } 70% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .link-pending[data-on] { animation: none; transform: scaleX(1); opacity: .6; } }
 /* a button whose form is at work (src/app/owner/Busy.tsx) */
@@ -437,7 +444,7 @@ html[data-turning] .owner > :not(.owner-top) { opacity: .5; transition-delay: .0
 .strip[data-waiting]:hover { background: #fbe9e2; }
 .strip[data-before] { margin-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; }
 .strip[data-after] { margin-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.entry { display: grid; grid-template-columns: calc(var(--rule) - clamp(16px, 2.4vw, 30px)) minmax(0, 1fr) minmax(0, 1.15fr) 7.5rem; column-gap: 24px; row-gap: 10px; padding: 22px 0 22px; background: repeating-linear-gradient(90deg, rgba(42, 23, 18, .35) 0 7px, transparent 7px 13px) 0 0 / 100% 1.5px no-repeat; scroll-margin-top: 24px; }
+.entry { display: grid; grid-template-columns: calc(var(--rule) - clamp(16px, 2.4vw, 30px)) minmax(0, 1fr) minmax(0, 1.15fr) 7.5rem; column-gap: 24px; row-gap: 10px; padding: 22px 0 22px; background: repeating-linear-gradient(90deg, rgba(42, 23, 18, .35) 0 7px, transparent 7px 13px) 0 0 / 100% 1.5px no-repeat; scroll-margin-top: 88px; }
 .entry:first-child, .ledger-empty:first-child { background: none; }
 .entry > * { margin: 0; min-width: 0; }
 /* the reference column runs down the whole entry, so its two lines never push the rows beside it apart */
@@ -447,6 +454,10 @@ html[data-turning] .owner > :not(.owner-top) { opacity: .5; transition-delay: .0
 .entry-ref span { padding-right: 12px; }
 .entry-age { font-style: normal; font-size: var(--s-small); color: var(--ink-soft); }
 .entry-age[data-late] { color: var(--lantern); font-weight: 500; }
+/* a request that arrived while the book was open (JustIn.tsx): named in red, its line washed red and fading */
+.entry-new { font-style: normal; font-size: var(--s-small); font-weight: 500; color: var(--lantern); }
+.entry:has(.entry-new) { animation: just-in 9s ease-out both; }
+@keyframes just-in { from { background-color: rgba(196, 24, 43, .12); } to { background-color: rgba(196, 24, 43, 0); } }
 .entry-guest, .entry-stay { display: grid; align-content: start; gap: 2px; }
 .entry-guest a { overflow-wrap: anywhere; text-decoration-color: rgba(122, 100, 85, .5); text-underline-offset: 3px; }
 .entry-guest a:hover { color: var(--lantern); }
@@ -550,4 +561,5 @@ html[data-turning] .owner > :not(.owner-top) { opacity: .5; transition-delay: .0
   .loader { transition: opacity .3s ease; }
   body, .btn, .photo img, .walk li button, .top, .clock { transition: none; }
   .seal, .map .route, .sign.lit, .sign.lit .neon span, .sign.lit .neon span:last-child { animation: none; stroke-dashoffset: 0; }
+  .owner-tab-count[data-new], .entry:has(.entry-new) { animation: none; }
 }

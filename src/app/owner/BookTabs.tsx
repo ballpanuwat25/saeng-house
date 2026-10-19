@@ -30,6 +30,19 @@ export default function BookTabs({ first }: { first: Waiting }) {
   const [waiting, setWaiting] = useState(first);
   // what the sheet on screen was drawn with
   const drawn = useRef(first);
+  // bumped each time the count goes up while the book is open: the count stamps in again, in lantern red
+  const [arrivals, setArrivals] = useState(0);
+  const bar = useRef<HTMLElement>(null);
+
+  // A move to another tab from far down a sheet keeps the scroll, since the tabs stay in reach; the next
+  // sheet would then start out of sight under them, so it is brought up to sit just below the tabs. A link
+  // to one stay (#ref) goes where it points instead.
+  useEffect(() => {
+    const header = bar.current?.previousElementSibling;
+    if (!header || location.hash) return;
+    const below = header.getBoundingClientRect().bottom + scrollY;
+    if (scrollY > below) scrollTo({ top: below, behavior: 'instant' });
+  }, [path]);
 
   // a server render (after Confirm, Decline, a redraw or a reload) brings a fresh count of its own
   useEffect(() => {
@@ -44,6 +57,7 @@ export default function BookTabs({ first }: { first: Waiting }) {
         .then((r) => (r.ok ? r.json() : null))
         .then((w: Waiting | null) => {
           if (!w) return;
+          if (w.count > drawn.current.count) setArrivals((n) => n + 1);
           setWaiting(w);
           if (w.count !== drawn.current.count || w.newest !== drawn.current.newest) {
             drawn.current = w;
@@ -65,12 +79,12 @@ export default function BookTabs({ first }: { first: Waiting }) {
   }, [path, router]);
 
   return (
-    <nav className="owner-tabs" aria-label="Request book">
+    <nav ref={bar} className="owner-tabs" aria-label="Request book">
       {TABS.map((t) => (
         <Link key={t.href} href={t.href} prefetch={false} aria-current={path === t.href ? 'page' : undefined}>
           {t.name}
           {t.href === '/owner' && waiting.count > 0 && (
-            <span className="owner-tab-count" data-late={waiting.late || undefined}>
+            <span key={arrivals} className="owner-tab-count" data-late={waiting.late || undefined} data-new={arrivals > 0 || undefined}>
               {waiting.count}
               <span className="sr"> waiting{waiting.late ? ', some past the hour' : ''}</span>
             </span>
