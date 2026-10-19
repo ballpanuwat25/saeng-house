@@ -36,7 +36,8 @@ export function nightsOf(checkIn: string, nights: number) {
   return Array.from({ length: nights }, (_, i) => new Date(start + i * DAY).toISOString().slice(0, 10));
 }
 
-export const checkOutOf = (checkIn: string, nights: number) => new Date(Date.parse(`${checkIn}T00:00:00Z`) + nights * DAY).toISOString().slice(0, 10);
+export const addDays = (iso: string, days: number) => new Date(Date.parse(`${iso}T00:00:00Z`) + days * DAY).toISOString().slice(0, 10);
+export const checkOutOf = addDays;
 
 export const totalOf = (roomId: RoomId, nights: number) => roomOf(roomId).pricePerNight * nights;
 

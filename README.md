@@ -56,12 +56,23 @@ The service key never reaches the browser: only the server routes in `src/app/ap
 
 ### The owner's request book
 
-The owner answers requests at `/owner`. The page lists every booking on three sheets: requests waiting for an answer, confirmed stays still to come, and past or declined ones. The nearest stay comes first. Each request has two answers:
+The owner answers requests at `/owner`. The book has two tabs, both plain links.
+
+**Requests** (`/owner`) has two sheets: requests waiting for an answer and confirmed stays still to come, nearest first. Neither is paged, because a stay leaves this tab on its checkout morning. Each request has two answers:
 
 - **Confirm** marks it confirmed and emails the guest a confirmation.
 - **Decline** asks why first: full that night, could not reach the guest, room closed for repairs, or something else (written out for the guest). It frees the room and emails the guest a note worded from the reason. When the house is full, the email lists the other room kinds still free for the same nights, each with a link back to the booking ticket.
 
 A request can only be answered once, so a second click never sends a second email.
+
+**Register** (`/owner/register`) keeps every stay a month at a time, so the page stays the same size after years of bookings. `?month=2026-11` opens a month (this month without it), with links to the months either side. It lists the stays that arrive that month and what became of each, and rules off the month's figures at the top of the sheet:
+
+- room-nights sold: nights of confirmed stays that fall in the month, so a stay across the month end is split between the two pages
+- revenue from those nights, at the price the guest was quoted
+- occupancy per room kind: nights sold divided by the number of rooms of that kind times the days in the month
+- how many requests for arrivals that month were declined, by reason
+
+The search box (`?q=`) looks for a ref, guest name, email or contact across every month, newest request first, and shows at most 50.
 
 On your machine with nothing set, the password is `saeng-dev`. On a deployed site, set both of these (and in `.env.local` to change them locally), or the request book stays shut:
 
@@ -70,7 +81,7 @@ OWNER_PASSWORD=<a long password for the owner>
 OWNER_SESSION_SECRET=<a random string, e.g. from: openssl rand -base64 32>
 ```
 
-A login lasts 14 days in an httpOnly cookie signed with the secret; changing the secret signs everyone out. With Supabase, run `supabase/migrations/0002_owner.sql` once after `0001`; it adds the decline reason to the table.
+A login lasts 14 days in an httpOnly cookie signed with the secret; changing the secret signs everyone out. With Supabase, run `supabase/migrations/0002_owner.sql` and then `0003_register.sql` once after `0001`. The first adds the decline reason to the table; the second adds the columns and indexes the register filters on (a `check_out` date, and a `search_text` column under a trigram index), so a month or a search reads only its own rows.
 
 ## What's next
 

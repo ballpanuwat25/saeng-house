@@ -2,7 +2,8 @@
 // check and the save happen inside one database call, under a lock per room kind, so two guests cannot
 // both take the last room. Talks to Supabase's REST endpoint directly with the service key; this runs on
 // the server only.
-import { newRef, nightsOf, roomOf, totalOf, type Booking, type BookingStatus, type DeclineReason, type RoomId, type Taken } from '@/lib/booking/model';
+import { addDays, newRef, nightsOf, roomOf, totalOf, type Booking, type BookingStatus, type DeclineReason, type RoomId, type Taken } from '@/lib/booking/model';
+import { booking as bookingCopy } from '@/content/site';
 import type { BookingStore } from '@/lib/booking/store';
 
 type Row = {
@@ -45,8 +46,22 @@ export function supabaseStore(url: string, key: string): BookingStore {
       });
       return out.ok && out.booking ? { ok: true, booking: toBooking(out.booking) } : { ok: false, fullOn: out.full_on ?? [] };
     },
-    async list() {
-      return (await rest<Row[]>('bookings?select=*', 'GET')).map(toBooking);
+    async stays({ from, until, status }) {
+      // check_out (0003_register.sql) gives the exact overlap; the lower bound on check_in, the earliest
+      // arrival a stay of the longest length could have and still reach `from`, lets the check_in index
+      // read only the window around the month instead of every stay before it
+      const filters = new URLSearchParams({ select: '*', check_out: `gt.${from}` });
+      filters.append('check_in', `gte.${addDays(from, 1 - bookingCopy.maxNights)}`);
+      if (until) filters.append('check_in', `lt.${until}`);
+      if (status) filters.set('status', `in.(${status.join(',')})`);
+      return (await rest<Row[]>(`bookings?${filters}`, 'GET')).map(toBooking);
+    },
+    async search(q, limit) {
+      // search_text (0003_register.sql) joins the four fields under one trigram index. PostgREST reads * as
+      // the wildcard, and a backslash keeps the guest's own % or _ from acting as one
+      const needle = q.replace(/\*/g, '').replace(/[\\%_]/g, '\\$&');
+      const filters = new URLSearchParams({ select: '*', search_text: `ilike.*${needle}*`, order: 'created_at.desc', limit: String(limit) });
+      return (await rest<Row[]>(`bookings?${filters}`, 'GET')).map(toBooking);
     },
     async setStatus(ref, answer) {
       // the status filter makes this a no-op on a request already answered, in the same statement as the update

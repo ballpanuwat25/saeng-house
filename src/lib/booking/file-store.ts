@@ -2,7 +2,7 @@
 // Supabase. One process only: requests queue behind each other so a check and its save never interleave.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { availability, HOLDING, newRef, nightsOf, totalOf, type Booking, type Taken } from '@/lib/booking/model';
+import { availability, checkOutOf, HOLDING, newRef, nightsOf, totalOf, type Booking, type Taken } from '@/lib/booking/model';
 import type { BookingStore } from '@/lib/booking/store';
 
 const FILE = path.join(process.cwd(), '.data', 'bookings.json');
@@ -52,7 +52,15 @@ export function fileStore(): BookingStore {
         await save([...all, booking]);
         return { ok: true as const, booking };
       }),
-    list: load,
+    stays: async ({ from, until, status }) =>
+      (await load()).filter((b) => checkOutOf(b.checkIn, b.nights) > from && (!until || b.checkIn < until) && (!status || status.includes(b.status))),
+    async search(q, limit) {
+      const needle = q.toLowerCase();
+      return (await load())
+        .filter((b) => [b.ref, b.guest.name, b.guest.email, b.guest.contact].some((field) => field.toLowerCase().includes(needle)))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, limit);
+    },
     setStatus: (ref, answer) =>
       inTurn(async () => {
         const all = await load();
