@@ -8,6 +8,7 @@ import { ChangeStay } from '@/app/owner/StayForms';
 import BookTabs from '@/app/owner/BookTabs';
 import Busy from '@/app/owner/Busy';
 import DeclineBack from '@/app/owner/DeclineBack';
+import JustIn from '@/app/owner/JustIn';
 
 const when = (iso: string) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
 export const baht = (n: number) => '฿' + n.toLocaleString('en-US');
@@ -29,19 +30,22 @@ export const REASONS: Record<DeclineReason, string> = {
 };
 
 // The header on every tab, from the book's layout, so it stays put while a tab loads. The Requests tab
-// carries the number of requests waiting for an answer, in lantern red once any of them is late, so the
-// owner sees it from the rack or the register too.
+// carries the number of requests waiting for an answer on a lantern-red disc, so the owner sees it from the
+// rack or the register too; the requests that are late say so on the sheet. The tabs sit just below the header rather than in it,
+// so they can stay at the top of the window while a long sheet scrolls (globals.css).
 export async function BookTop() {
   const waiting = await waitingNow();
   return (
-    <header className="owner-top">
-      <p className="wm" lang="th">{hotel.wordmark}</p>
-      <h1>Request book</h1>
-      <form action={logout}>
-        <button className="owner-out" type="submit">Sign out</button>
-      </form>
+    <>
+      <header className="owner-top">
+        <p className="wm" lang="th">{hotel.wordmark}</p>
+        <h1>Request book</h1>
+        <form action={logout}>
+          <button className="owner-out" type="submit">Sign out</button>
+        </form>
+      </header>
       <BookTabs first={waiting} />
-    </header>
+    </>
   );
 }
 
@@ -57,6 +61,7 @@ export function Entry({ b, kind, today, now, declining }: { b: Booking; kind: En
         <b>{b.ref}</b>
         <span>sent {when(b.createdAt)}</span>
         {age && <em className="entry-age" data-late={age.late || undefined}>{age.text}</em>}
+        {kind === 'answer' && <JustIn sent={b.createdAt} />}
       </p>
       <div className="entry-guest">
         <p className="entry-name">{b.guest.name}</p>
