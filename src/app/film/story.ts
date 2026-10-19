@@ -47,12 +47,16 @@ export async function story(desk: Lane, phone: Lane, mark: (scene: string) => vo
   // 2. The guest books on the phone; the owner opens the request book on the desk meanwhile.
   mark('booking');
   let ref = '';
+  // how many were waiting before the guest sent theirs; the book's own 15-second check may catch the new
+  // request a moment before the owner turns to the window, so the count is read before the guest sends
+  let waitingBefore = 0;
   await both(
     (async () => {
       await desk.open('/owner/login');
       await sleep(900);
       await desk.press('.owner-door .btn');
       await desk.see('.owner-tabs');
+      waitingBefore = Number((await desk.read('.owner-tab-count'))?.match(/\d+/)?.[0] ?? 0);
       await desk.glide(760, 620);
     })(),
     (async () => {
@@ -93,26 +97,33 @@ export async function story(desk: Lane, phone: Lane, mark: (scene: string) => vo
   );
   if (!/^SH-/.test(ref)) throw new Error(`the ticket came back without a ref (${ref})`);
 
-  // 3. The owner, on the desk. The request book does not redraw itself while it is open, so the owner moves
-  // to the Rooms tab: the count beside Requests goes up on the move (it asks /owner/waiting), and the new
-  // strip, edged in red, is on the rack. Its paper note says who it is; back on Requests, the owner confirms.
+  // 3. The owner, on the desk. The owner turns back to the book's window, which makes it ask for new
+  // requests at once instead of at its next 15-second check: the count beside Requests goes up and the
+  // request joins the foot of the sheet without a reload. Its strip on the Rooms tab carries the paper note;
+  // back on Requests, the owner looks at Decline, backs out, and confirms.
   mark('owner');
   const entry = `[id="${ref}"]`;
   const strip = `.strip[data-ref="${ref}"]`;
-  const waitingBefore = Number((await desk.read('.owner-tab-count'))?.match(/\d+/)?.[0] ?? 0);
-  await desk.press('.owner-tabs a[href="/owner/rooms"]');
+  await desk.glide(700, 560, 900);
+  await desk.ask({ cmd: 'focus' });
   await desk.see('.owner-tab-count', String(waitingBefore + 1));
+  await desk.see(entry);
+  mark('arrived');
+  await sleep(900);
+  await desk.hover(`${entry} .entry-name`);
+  await sleep(1800);
+  await desk.press('.owner-tabs a[href="/owner/rooms"]');
   await desk.see(strip);
-  await sleep(1600);
+  await sleep(1300);
   await desk.hover(strip);
   await desk.see('.slip');
   mark('rack');
-  await sleep(3000);
+  await sleep(2800);
   await desk.press('.owner-tabs a[href="/owner"]');
   await desk.see(entry);
-  await sleep(500);
+  await sleep(400);
   await desk.hover(`${entry} .entry-name`);
-  await sleep(1400);
+  await sleep(700);
   // the owner opens Decline to show what it asks for (Confirm steps aside while it is open), the reasons
   // the guest's email is worded from, then backs out with "Don't decline" and confirms instead
   await desk.press(`${entry} .decline summary`);

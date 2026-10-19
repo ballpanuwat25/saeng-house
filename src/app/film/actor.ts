@@ -13,6 +13,7 @@ export type Command =
   | { cmd: 'wait'; sel: string; text?: string; gone?: boolean; ms?: number }
   | { cmd: 'read'; sel: string }
   | { cmd: 'path' }
+  | { cmd: 'focus' }
   | { cmd: 'text'; sel: string; text: string };
 
 export type Message = Command & { film: true; id: number };
@@ -201,6 +202,10 @@ export function installActor(win: Window, { touch, slowActions }: Options) {
         return find(c.sel)?.textContent ?? null;
       case 'path':
         return win.location.pathname + win.location.search;
+      // the window coming back into use, as when the owner turns to it again
+      case 'focus':
+        win.dispatchEvent(new (win as typeof window).FocusEvent('focus'));
+        return null;
       case 'text': {
         const el = find(c.sel);
         if (el) el.textContent = c.text;
