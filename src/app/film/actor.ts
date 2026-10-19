@@ -9,7 +9,7 @@ export type Command =
   | { cmd: 'point'; x: number; y: number }
   | { cmd: 'press'; x: number; y: number }
   | { cmd: 'type'; sel: string; text: string; seed: number }
-  | { cmd: 'scroll'; to: number | string; ms: number; offset?: number }
+  | { cmd: 'scroll'; to: number | string; ms: number; offset?: number; center?: boolean }
   | { cmd: 'wait'; sel: string; text?: string; gone?: boolean; ms?: number }
   | { cmd: 'read'; sel: string }
   | { cmd: 'path' }
@@ -194,7 +194,9 @@ export function installActor(win: Window, { touch, slowActions }: Options) {
         else {
           const el = find(c.to);
           if (!el) throw new Error(`nothing matches ${c.to}`);
-          y = win.scrollY + el.getBoundingClientRect().top;
+          const r = el.getBoundingClientRect();
+          // centred brings the middle of the element to the middle of the window
+          y = win.scrollY + (c.center ? r.top + r.height / 2 - win.innerHeight / 2 : r.top);
         }
         await scrollTo(y + (c.offset ?? 0), c.ms);
         return win.scrollY;

@@ -207,8 +207,8 @@ export class Lane {
     return this.ask({ cmd: 'type', sel, text, seed });
   }
 
-  scroll(to: number | string, ms: number, offset?: number) {
-    return this.ask<number>({ cmd: 'scroll', to, ms: ms * TEMPO, offset });
+  scroll(to: number | string, ms: number, offset?: number, center?: boolean) {
+    return this.ask<number>({ cmd: 'scroll', to, ms: ms * TEMPO, offset, center });
   }
 
   see(sel: string, text?: string, ms?: number) {

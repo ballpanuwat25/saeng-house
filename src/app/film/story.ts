@@ -30,7 +30,7 @@ export async function story(desk: Lane, phone: Lane, mark: (scene: string) => vo
       await sleep(500);
       await desk.scroll('.arrive', 2600, -72);
       await sleep(1600);
-      await desk.scroll('#rooms', 2600, -72);
+      await desk.scroll('#rooms .rooms-grid', 2600, 0, true);
       await sleep(1800);
     })(),
     (async () => {
