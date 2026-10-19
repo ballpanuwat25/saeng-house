@@ -7,6 +7,7 @@ import { confirmBooking, declineBooking, logout } from '@/app/owner/actions';
 import { ChangeStay } from '@/app/owner/StayForms';
 import BookTabs from '@/app/owner/BookTabs';
 import Busy from '@/app/owner/Busy';
+import DeclineBack from '@/app/owner/DeclineBack';
 
 const when = (iso: string) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
 export const baht = (n: number) => '฿' + n.toLocaleString('en-US');
@@ -82,8 +83,13 @@ export function Entry({ b, kind, today, now, declining }: { b: Booking; kind: En
             <input type="hidden" name="ref" value={b.ref} />
             <Busy label="Confirm" busy="Confirming…" />
           </form>
+          {/* while Decline is open, Confirm steps out of the way (globals.css), so the only red button left is
+              the one that declines, and the heading says what is happening */}
           <details className="decline" open={declining !== undefined}>
-            <summary>Decline</summary>
+            <summary>
+              <span className="decline-shut">Decline</span>
+              <span className="decline-open">Declining {b.guest.name}&rsquo;s request</span>
+            </summary>
             <form action={declineBooking}>
               <input type="hidden" name="ref" value={b.ref} />
               <fieldset>
@@ -100,7 +106,10 @@ export function Entry({ b, kind, today, now, declining }: { b: Booking; kind: En
                 <textarea name="note" rows={2} maxLength={600} />
               </label>
               {declining && <p className="msg bad" role="alert">{declining === 'note' ? 'Write the reason for the guest first.' : 'Choose a reason first.'}</p>}
-              <Busy label="Decline and email the guest" busy="Declining…" />
+              <div className="decline-go">
+                <Busy label="Decline and email the guest" busy="Declining…" />
+                <DeclineBack />
+              </div>
             </form>
           </details>
         </div>
