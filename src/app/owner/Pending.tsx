@@ -25,7 +25,8 @@ export function Pending({ on }: { on?: boolean }) {
 
 export function PendingLink({ href, rel, children }: { href: string; rel?: string; children: React.ReactNode }) {
   return (
-    <Link href={href} rel={rel}>
+    // not prefetched, so the sheet it opens is read fresh (BookTabs.tsx says why)
+    <Link href={href} rel={rel} prefetch={false}>
       {children}
       <Pending />
     </Link>

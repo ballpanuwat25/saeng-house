@@ -4,6 +4,11 @@
 // address; while the next tab loads, the one pressed draws its rule (Pending.tsx). The layout is not rendered
 // again on a move between tabs, so the number of waiting requests is asked for afresh on every move and
 // once a minute, from /owner/waiting.
+//
+// No link in the book prefetches. The sheets have no loading.tsx, so a prefetch brings back only the route,
+// not the sheet; a click on a prefetched link then skips the server and shows the copy of that sheet the
+// browser kept from its last visit, so a request that came in since would be missing while the count above
+// already has it. Without the prefetch every move asks the server for the sheet as it is now.
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -41,7 +46,7 @@ export default function BookTabs({ first }: { first: Waiting }) {
   return (
     <nav className="owner-tabs" aria-label="Request book">
       {TABS.map((t) => (
-        <Link key={t.href} href={t.href} aria-current={path === t.href ? 'page' : undefined}>
+        <Link key={t.href} href={t.href} prefetch={false} aria-current={path === t.href ? 'page' : undefined}>
           {t.name}
           {t.href === '/owner' && waiting.count > 0 && (
             <span className="owner-tab-count" data-late={waiting.late || undefined}>
