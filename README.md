@@ -58,7 +58,7 @@ The site talks to Supabase's REST endpoint with `fetch`, so no Supabase package 
 
 The owner answers requests at `/owner`. The book has three tabs, all plain links.
 
-**Requests** (`/owner`) has two sheets: requests waiting for an answer and confirmed stays still to come, nearest first. Neither is paged, because a stay leaves this tab on its checkout morning. Each request has two answers:
+**Requests** (`/owner`) has two sheets: requests waiting for an answer, the one waiting longest first (the late ones lead, and a new one joins the foot), and confirmed stays still to come, nearest first. The book checks for new requests every 15 seconds and whenever the owner comes back to the window, and draws the sheet again when one has come in, so it shows up without a reload; whatever the owner is typing in a form stays. Neither is paged, because a stay leaves this tab on its checkout morning. Each request has two answers:
 
 - **Confirm** marks it confirmed and emails the guest a confirmation.
 - **Decline** asks why first, and while its panel is open Confirm steps aside, so the only red button left is the one that declines; "Don't decline" folds it away and brings Confirm back. The reasons: full that night, could not reach the guest, room closed for repairs, or something else (written out for the guest). It frees the room and emails the guest a note worded from the reason. When the house is full, the email lists the other room kinds still free for the same nights, each with a link back to the booking ticket.
@@ -128,7 +128,7 @@ The portfolio video is recorded from a stage at `/film`: the desk on the left (a
 
 1. Both frames on the home page. A drawn cursor walks under the hero's lanterns and a finger drags across the phone's, then both scroll down together.
 2. On the phone the guest opens the ticket, picks a date, adds a night, picks a room, turns the ticket over, types a name and email and sends it; the seal stamps. On the desk the owner opens the demo book meanwhile.
-3. On the desk the owner moves to Rooms, where the count beside Requests goes up and the new strip carries its paper note, then back to Requests. There the owner opens Decline to show the reasons it asks for, backs out with "Don't decline", and presses Confirm.
+3. On the desk the owner turns back to the book: the count beside Requests goes up and the request joins the foot of the sheet by itself. Its strip on the Rooms tab carries its paper note; then back to Requests. There the owner opens Decline to show the reasons it asks for, backs out with "Don't decline", and presses Confirm.
 4. The phone opens the confirmation email the guest would get; the desk turns to the Register's month figures. A closing card with the house's name comes up over both.
 
 The pace of the whole take is one number, `TEMPO` in `src/app/film/lane.ts`, which scales every pause, glide and scroll.
@@ -142,7 +142,7 @@ DEMO_MODE=1
 OWNER_SESSION_SECRET=<any string>
 ```
 
-then open `http://localhost:3000/film` in a window of 1920 by 1080 (a smaller window shows the whole stage scaled down). Leave Supabase out of `.env.local` so the takes use the file under `.data/`: the reset throws away every booking in whichever store the site points at. The page says where the take is on `<html>`: `data-film` is `setting` until the opening card's type has loaded, `title` while that card is up, `playing` from when it lifts, `ending` while the closing card is up, then `done` or `failed`, and `data-scene` names the moment (`title`, `lanterns`, `opening`, `booking`, `calendar`, `sealed`, `owner`, `rack`, `declining`, `confirming`, `close`, `end`), so a recorder knows when to start and stop.
+then open `http://localhost:3000/film` in a window of 1920 by 1080 (a smaller window shows the whole stage scaled down). Leave Supabase out of `.env.local` so the takes use the file under `.data/`: the reset throws away every booking in whichever store the site points at. The page says where the take is on `<html>`: `data-film` is `setting` until the opening card's type has loaded, `title` while that card is up, `playing` from when it lifts, `ending` while the closing card is up, then `done` or `failed`, and `data-scene` names the moment (`title`, `lanterns`, `opening`, `booking`, `calendar`, `sealed`, `owner`, `arrived`, `rack`, `declining`, `confirming`, `close`, `end`), so a recorder knows when to start and stop.
 
 ## What's next
 

@@ -5,12 +5,15 @@ import { bookingStore } from '@/lib/booking/store';
 
 export const late = (sentAt: string, now: number) => now - Date.parse(sentAt) > 36e5;
 
-export type Waiting = { count: number; late: boolean };
+// `newest` is when the latest of them was sent, so the book can tell a new request from one answered
+// elsewhere even when the count comes out the same
+export type Waiting = { count: number; late: boolean; newest: string };
 
 export async function waitingNow(): Promise<Waiting> {
   const store = bookingStore();
-  if (!store) return { count: 0, late: false };
+  if (!store) return { count: 0, late: false, newest: '' };
   const now = Date.now();
   const waiting = await store.stays({ from: bangkokToday(), status: ['requested'] });
-  return { count: waiting.length, late: waiting.some((b) => late(b.createdAt, now)) };
+  const newest = waiting.reduce((at, b) => (b.createdAt > at ? b.createdAt : at), '');
+  return { count: waiting.length, late: waiting.some((b) => late(b.createdAt, now)), newest };
 }
