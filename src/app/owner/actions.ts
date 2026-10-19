@@ -7,26 +7,31 @@ import { availability, bangkokToday, dayMonth, isDeclineReason, parseOwnerBookin
 import { cancelledMail, changedMail, confirmedMail, declinedMail, sendMail } from '@/lib/booking/mail';
 import { bookingStore } from '@/lib/booking/store';
 import { newSession, ownerConfig, passwordMatches, SESSION_COOKIE, SESSION_DAYS, sessionValid } from '@/lib/owner/session';
-import { forgive, knock } from '@/lib/owner/throttle';
-
-// The address the request came from. On Vercel x-vercel-forwarded-for is set by the platform and cannot be
-// sent by the visitor; the other two are only as trustworthy as the proxy in front, which is why the
-// throttle also keeps a ceiling across every address.
-const clientIp = (h: Headers) =>
-  (h.get('x-vercel-forwarded-for') ?? h.get('x-real-ip') ?? h.get('x-forwarded-for'))?.split(',')[0].trim() || 'unknown';
+import { clientIp, forgive, knock, LOGIN } from '@/lib/owner/throttle';
+import { isDemo } from '@/lib/demo';
 
 export async function login(form: FormData) {
   const config = ownerConfig();
   const ip = clientIp(await headers());
   // the try is written down before the password is looked at, so tries sent all at once are counted too
-  const door = await knock(ip);
+  const door = await knock(LOGIN, ip);
   if (!door.open) redirect('/owner/login?shut=1');
   if (!config || !(await passwordMatches(config, String(form.get('password') ?? '')))) {
     // a moment's wait on every wrong try slows a script down further, and costs the owner nothing
     await new Promise((r) => setTimeout(r, 700));
     redirect(`/owner/login?${door.lastTry ? 'shut' : 'wrong'}=1`);
   }
-  await forgive(ip);
+  await forgive(LOGIN, ip);
+  (await cookies()).set(SESSION_COOKIE, await newSession(config), {
+    httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/owner', maxAge: SESSION_DAYS * 86400,
+  });
+  redirect('/owner');
+}
+
+// the public demo's door: anyone may open the book, so there is nothing to check but that this is the demo
+export async function demoLogin() {
+  const config = ownerConfig();
+  if (!isDemo() || !config) redirect('/owner/login');
   (await cookies()).set(SESSION_COOKIE, await newSession(config), {
     httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/owner', maxAge: SESSION_DAYS * 86400,
   });
@@ -57,10 +62,11 @@ async function mailed(to: string, mail: { subject: string; html: string }, tag: 
 }
 
 // back to the book with a line saying what happened; `mail` is whether the guest's email went out, or 'none'
-// when the owner chose not to send one or there is no address to send it to
+// when the owner chose not to send one or there is no address to send it to. In the public demo nothing
+// goes out, and the line links to the email instead.
 type Mailed = boolean | 'none';
 const done = (ref: string, what: string, mail: Mailed) =>
-  redirect(`/owner?${new URLSearchParams({ done: ref, what, ...(mail === 'none' ? { mail: 'none' } : !mail && { mail: 'failed' }) })}`);
+  redirect(`/owner?${new URLSearchParams({ done: ref, what, ...(mail === 'none' ? { mail: 'none' } : isDemo() ? { mail: 'demo' } : !mail && { mail: 'failed' }) })}`);
 
 // the owner's choice to email the guest, which only counts when there is an address
 const wantsMail = (form: FormData, email: string) => form.get('mail') === 'on' && email !== '';

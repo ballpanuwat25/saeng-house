@@ -11,9 +11,12 @@ const DEV_SECRET = 'saeng-house-dev-session-secret';
 
 type OwnerConfig = { password: string; secret: string } | null;
 
-// on a deployed site both must be set, or the back office stays shut rather than falling back to a known password
+// on a deployed site both must be set, or the back office stays shut rather than falling back to a known password.
+// The public demo opens the book without a password (src/lib/demo.ts), so it only needs the secret that
+// signs the cookie; its password is a fresh random one that nobody knows.
 export function ownerConfig(): OwnerConfig {
-  const { OWNER_PASSWORD, OWNER_SESSION_SECRET, VERCEL } = process.env;
+  const { OWNER_PASSWORD, OWNER_SESSION_SECRET, VERCEL, DEMO_MODE } = process.env;
+  if (DEMO_MODE === '1' && OWNER_SESSION_SECRET) return { password: crypto.randomUUID(), secret: OWNER_SESSION_SECRET };
   if (OWNER_PASSWORD && OWNER_SESSION_SECRET) return { password: OWNER_PASSWORD, secret: OWNER_SESSION_SECRET };
   return VERCEL ? null : { password: OWNER_PASSWORD || DEV_PASSWORD, secret: OWNER_SESSION_SECRET || DEV_SECRET };
 }

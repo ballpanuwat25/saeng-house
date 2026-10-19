@@ -97,6 +97,31 @@ OWNER_EMAIL=<where to send each new request>
 
 A login lasts 14 days in an httpOnly cookie signed with the secret; changing the secret signs everyone out. Each try is written down before its password is checked, so tries sent all at once are counted too. Five tries from one address within 15 minutes shut the door to that address for the rest of the 15 minutes, a right password wipes that address's slate, and 50 tries across every address within 15 minutes shut it for everyone, in case a script fakes a new address on each try. Every wrong try also waits a moment before it answers. With Supabase the tries are kept in a table, so every server instance counts the same ones; without it they are kept in memory. If the table cannot be read, the door stays open rather than locking the owner out, and the error is logged. With Supabase, run `supabase/migrations/0002_owner.sql`, `0003_register.sql` `0004_change_stay.sql` and `0005_owner_logins.sql` once after `0001`. The first adds the decline reason to the table; the second adds the columns and indexes the register filters on (a `check_out` date, and a `search_text` column under a trigram index), so a month or a search reads only its own rows; the third adds the function that moves a confirmed stay under the same lock as a new request; the fourth adds the table of wrong passwords.
 
+### The public demo
+
+The portfolio copy of the site runs with `DEMO_MODE=1`, so strangers can play with all of it, owner's side included, without anyone getting an email or the rooms filling up for good (`src/lib/demo.ts`):
+
+- **No email leaves the site.** After a request the ticket links to the email the guest would get and the one the owner would get, and after Confirm, Decline, a change or a cancellation the book links to the guest's email. Each is built from the booking at `/demo/mail/<ref>/<kind>`, a page that exists only in the demo.
+- **Anyone can open the owner's book** from `/owner/login`, with one button and no password.
+- **The bookings are replaced every night** at 03:00 Bangkok time by a fresh, made-up year of them: eleven months behind and two ahead, never over the number of rooms, with some requests still waiting (`src/lib/booking/demo-seed.ts`). Vercel's cron calls `/api/demo/reset` (`vercel.json`) with `CRON_SECRET`.
+- **Ten requests an hour from one address** (two hundred from everyone), counted in the same table as the owner's login tries.
+
+Set these on the demo's Vercel project, on top of Supabase:
+
+```bash
+DEMO_MODE=1
+OWNER_SESSION_SECRET=<a random string>
+CRON_SECRET=<a random string; Vercel sends it to the cron>
+```
+
+To fill the book straight away instead of waiting for the night:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://<the demo's domain>/api/demo/reset
+```
+
+The reset throws away every booking in the database it points at, so give the demo its own Supabase project.
+
 ## What's next
 
 See [docs/IDEAS.md](docs/IDEAS.md) for the backlog: real booking, a demo mode for recording the Fastwork

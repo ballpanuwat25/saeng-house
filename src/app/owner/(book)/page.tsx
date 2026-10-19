@@ -9,12 +9,15 @@ import { bookingStore } from '@/lib/booking/store';
 import { Entry, type EntryKind } from '@/app/owner/book';
 import { AddBooking } from '@/app/owner/StayForms';
 import { byArrival } from '@/app/owner/ledger';
+import { mailPath, type MailKind } from '@/lib/demo';
 
 export const metadata: Metadata = { title: `Request book · ${hotel.name}`, robots: { index: false } };
 export const dynamic = 'force-dynamic';
 
 // the line at the top after an answer, a change or a new booking
 const DONE: Record<string, string> = { confirmed: 'confirmed', declined: 'declined', cancelled: 'cancelled', moved: 'changed', added: 'added and confirmed' };
+// in the public demo nothing is sent, so the line offers the email the guest would have had
+const DEMO_MAIL: Record<string, MailKind> = { confirmed: 'confirmed', declined: 'declined', cancelled: 'cancelled', moved: 'changed', added: 'confirmed' };
 const MAIL: Record<string, string> = {
   failed: 'The email to the guest did not go out, so write to them yourself.',
   none: 'No email was sent, so let the guest know yourself.',
@@ -45,7 +48,18 @@ export default async function OwnerRequests({ searchParams }: { searchParams: Pr
     <>
       {params.done && (
         <p className="owner-note" role="status">
-          {params.done} {DONE[params.what ?? ''] ?? 'saved'}. {MAIL[params.mail ?? 'sent'] ?? MAIL.sent}
+          {params.done} {DONE[params.what ?? ''] ?? 'saved'}.{' '}
+          {params.mail === 'demo' && DEMO_MAIL[params.what ?? ''] ? (
+            <>
+              In this demo no email goes out:{' '}
+              <a href={mailPath(params.done, DEMO_MAIL[params.what ?? ''])} target="_blank" rel="noopener">
+                read the one the guest would get
+              </a>
+              .
+            </>
+          ) : (
+            (MAIL[params.mail ?? 'sent'] ?? MAIL.sent)
+          )}
         </p>
       )}
 

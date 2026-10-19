@@ -27,6 +27,8 @@ export interface BookingStore {
   // moves a confirmed stay to other nights or another kind of room, checking the new nights are free (not
   // counting the stay itself) and saving in one step, like request; the price is worked out again
   move(ref: string, stay: Stay): Promise<MoveResult>;
+  // throws every booking away and puts these in their place; only the public demo's nightly reset uses it
+  replaceAll(bookings: Booking[]): Promise<void>;
 }
 
 export type StayFilter = { from: string; until?: string; status?: readonly BookingStatus[] };

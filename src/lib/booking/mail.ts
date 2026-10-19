@@ -5,6 +5,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { hotel, rooms } from '@/content/site';
 import { checkOutOf, roomOf, type Availability, type Booking, type Decline } from '@/lib/booking/model';
+import { isDemo } from '@/lib/demo';
 
 const day = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', timeZone: 'UTC' });
 const baht = (n: number) => '฿' + n.toLocaleString('en-US');
@@ -131,6 +132,8 @@ export function declinedMail(b: Booking, decline: Decline, free: Availability, o
 }
 
 export async function sendMail(to: string, mail: { subject: string; html: string }, tag: string) {
+  // the public demo sends nothing; its visitors read each email on the web instead (src/app/demo/mail)
+  if (isDemo()) return;
   const { RESEND_API_KEY, BOOKING_FROM, VERCEL } = process.env;
   if (RESEND_API_KEY && BOOKING_FROM) {
     const res = await fetch('https://api.resend.com/emails', {

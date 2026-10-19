@@ -15,7 +15,7 @@ type Step =
   | { side: 'stay' }
   | { side: 'guest' }
   | { side: 'guest'; sending: true }
-  | { side: 'done'; ref: string; email: string }
+  | { side: 'done'; ref: string; email: string; mails?: { guest: string; owner: string } }
   | { side: 'done'; demo: true };
 // what the house says about the chosen nights: unknown while asking, or no store behind the site at all
 type Rooms = { live: false } | { live: true; rooms: Availability } | null;
@@ -100,7 +100,7 @@ export default function BookingCard() {
     if (data?.ok && data.demo) return setStep({ side: 'done', demo: true });
     if (data?.ok) {
       askAgain((n) => n + 1);
-      return setStep({ side: 'done', ref: data.ref, email: data.email });
+      return setStep({ side: 'done', ref: data.ref, email: data.email, mails: data.mails });
     }
     if (res?.status === 409) {
       // someone took the last room while this guest was typing: back to the stay, with fresh numbers
@@ -125,7 +125,18 @@ export default function BookingCard() {
     if (step.side === 'guest' && !sending) void send();
   };
 
-  const message = step.side === 'done' ? ('demo' in step ? booking.demo : booking.sent(step.ref, step.email)) : problem;
+  // in the public demo no email goes out, so the ticket offers both to read instead
+  const message =
+    step.side !== 'done' ? problem
+    : 'demo' in step ? booking.demo
+    : step.mails ? (
+      <>
+        {booking.demoSent(step.ref)}{' '}
+        <a href={step.mails.guest} target="_blank" rel="noopener">yours</a> and{' '}
+        <a href={step.mails.owner} target="_blank" rel="noopener">the owner&rsquo;s</a>.
+      </>
+    )
+    : booking.sent(step.ref, step.email);
   const action =
     step.side === 'done' ? booking.again : step.side === 'stay' ? (chosenIsFull ? booking.fullAction : booking.action) : sending ? booking.sending : booking.details.send;
 
@@ -214,7 +225,10 @@ export default function BookingCard() {
         <button className="btn" type="submit" disabled={chosenIsFull && step.side === 'stay'} aria-disabled={sending}>
           {action}
         </button>
-        <p className={`msg${problem && step.side !== 'done' ? ' bad' : ''}`} aria-live="polite">{message}</p>
+        <p className={`msg${problem && step.side !== 'done' ? ' bad' : ''}`} aria-live="polite">
+          {/* one span, so the demo's sentence and its links flow as one line in the flex row */}
+          <span>{message}</span>
+        </p>
         {step.side === 'done' && (
           <svg className="seal" viewBox="0 0 100 100" aria-hidden="true">
             <rect x="4" y="4" width="92" height="92" rx="6" className="seal-ink" />

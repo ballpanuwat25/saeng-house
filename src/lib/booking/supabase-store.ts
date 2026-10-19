@@ -18,8 +18,14 @@ const toBooking = (r: Row): Booking => ({
   ...(r.decline_reason && { decline: { reason: r.decline_reason, note: r.decline_note ?? '' } }),
 });
 
+const toRow = (b: Booking) => ({
+  ref: b.ref, room_id: b.roomId, check_in: b.checkIn, nights: b.nights, status: b.status, total: b.total,
+  guest_name: b.guest.name, guest_email: b.guest.email, guest_contact: b.guest.contact, note: b.note, created_at: b.createdAt,
+  decline_reason: b.decline?.reason ?? null, decline_note: b.decline?.note ?? null,
+});
+
 export function supabaseStore(url: string, key: string): BookingStore {
-  const rest = async <T>(route: string, method: string, body?: Record<string, unknown>): Promise<T> => {
+  const rest = async <T>(route: string, method: string, body?: Record<string, unknown> | Record<string, unknown>[]): Promise<T> => {
     const res = await fetch(`${url}/rest/v1/${route}`, {
       method,
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
@@ -45,6 +51,11 @@ export function supabaseStore(url: string, key: string): BookingStore {
         p_total: totalOf(req.roomId, req.nights), p_name: req.guest.name, p_email: req.guest.email, p_contact: req.guest.contact, p_note: req.note,
       });
       return out.ok && out.booking ? { ok: true, booking: toBooking(out.booking) } : { ok: false, fullOn: out.full_on ?? [] };
+    },
+    async replaceAll(bookings) {
+      // PostgREST deletes nothing without a filter, so this one matches every row
+      await rest('bookings?ref=not.is.null', 'DELETE');
+      for (let i = 0; i < bookings.length; i += 500) await rest('bookings', 'POST', bookings.slice(i, i + 500).map(toRow));
     },
     async stays({ from, until, status }) {
       // check_out (0003_register.sql) gives the exact overlap; the lower bound on check_in, the earliest

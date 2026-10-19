@@ -252,6 +252,9 @@ html.is-loading:has(.loader) { overflow: hidden; }
 /* a field people never see; bots fill it */
 .trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .msg.bad { color: var(--lantern); }
+/* the public demo's ticket and book link to the emails instead of sending them */
+.msg a, .owner-note a { color: var(--lantern); text-underline-offset: 3px; }
+.owner-note a { color: var(--ember); }
 .ticket .btn:disabled { background: rgba(42, 23, 18, .25); color: var(--paper); cursor: not-allowed; transform: none; }
 .total { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-top: 8px; }
 .total b { font-family: var(--serif); font-weight: 400; font-size: 2.2rem; line-height: 1; font-variant-numeric: lining-nums; }
@@ -503,6 +506,10 @@ main > .hero { z-index: 2; }
 .owner-fault .owner-fault-code { font-size: .75rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .owner-door { min-height: 100svh; display: grid; place-items: center; padding-block: 40px; }
 .owner-door .ticket { max-width: 400px; }
+.owner-door .ticket:has(.door-title) { max-width: 460px; }
+.door-title { margin: 4px 0 0; font-size: 1.8rem; line-height: 1.1; }
+.door-note { margin: 0; font-size: .95rem; line-height: 1.55; color: var(--ink-dark); }
+.door-note + .door-note { color: var(--ink-soft); font-size: var(--s-small); }
 .owner-door .ticket:has(.owner-fault) { max-width: 480px; }
 .owner-door .msg { min-height: 44px; padding-right: 0; }
 @media (max-width: 760px) {

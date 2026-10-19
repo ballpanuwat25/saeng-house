@@ -135,6 +135,8 @@ export const booking = {
   fullAction: 'Full on these nights',
   sending: 'Sending…',
   sent: (ref: string, email: string) => `Request ${ref} is in. We confirm by email to ${email} within the hour.`,
+  // the public demo (src/lib/demo.ts), which reads out the emails instead of sending them
+  demoSent: (ref: string) => `Request ${ref} is in. This is a demo, so no email went out. Read`,
   demo: 'Request received. (Demo: nothing was sent.)',
   failed: 'The request did not go through. Please try again, or call us.',
 };

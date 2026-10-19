@@ -4,6 +4,8 @@
 import { parseRequest } from '@/lib/booking/model';
 import { ownerMail, receivedMail, sendMail } from '@/lib/booking/mail';
 import { bookingStore } from '@/lib/booking/store';
+import { isDemo, mailPath } from '@/lib/demo';
+import { BOOKING, clientIp, knock } from '@/lib/owner/throttle';
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -13,6 +15,9 @@ export async function POST(req: Request) {
   if (!parsed.ok) return Response.json({ ok: false, error: parsed.error }, { status: 400 });
   const store = bookingStore();
   if (!store) return Response.json({ ok: true, demo: true });
+  // the public demo takes a few requests from each visitor, so nobody can fill every room for the next one
+  if (isDemo() && !(await knock(BOOKING, clientIp(req.headers))).open)
+    return Response.json({ ok: false, error: 'That is plenty of requests from here for one demo. Try again in an hour, or open the owner’s book to answer the ones you sent.' }, { status: 429 });
 
   const result = await store.request(parsed.value);
   if (!result.ok) return Response.json({ ok: false, fullOn: result.fullOn }, { status: 409 });
@@ -26,5 +31,7 @@ export async function POST(req: Request) {
     send(booking.guest.email, receivedMail(booking), `${booking.ref}-received`),
     (OWNER_EMAIL || !RESEND_API_KEY) && send(OWNER_EMAIL ?? '', ownerMail(booking, new URL(req.url).origin), `${booking.ref}-owner`),
   ]);
-  return Response.json({ ok: true, ref: booking.ref, email: booking.guest.email, total: booking.total });
+  // the public demo sends nothing, so the ticket links to both emails instead
+  const mails = isDemo() ? { guest: mailPath(booking.ref, 'received'), owner: mailPath(booking.ref, 'owner') } : undefined;
+  return Response.json({ ok: true, ref: booking.ref, email: booking.guest.email, total: booking.total, mails });
 }

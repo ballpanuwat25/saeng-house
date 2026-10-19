@@ -52,6 +52,7 @@ export function fileStore(): BookingStore {
         await save([...all, booking]);
         return { ok: true as const, booking };
       }),
+    replaceAll: (bookings) => inTurn(() => save(bookings)),
     stays: async ({ from, until, status }) =>
       (await load()).filter((b) => checkOutOf(b.checkIn, b.nights) > from && (!until || b.checkIn < until) && (!status || status.includes(b.status))),
     async search(q, limit) {
