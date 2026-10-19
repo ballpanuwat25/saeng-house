@@ -26,6 +26,8 @@ const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export const roomOf = (id: RoomId) => rooms.find((r) => r.id === id)!;
+// "Lattice", "Moon Window", "Roof": the room's name without its article or the word room, where space is short
+export const shortName = (id: RoomId) => roomOf(id).name.replace(/^The | Room$/g, '');
 export const isRoomId = (v: unknown): v is RoomId => rooms.some((r) => r.id === v);
 
 // the hotel's own today: a guest booking at 23:30 in London is already booking for tomorrow in Bangkok
@@ -38,6 +40,11 @@ export function nightsOf(checkIn: string, nights: number) {
 
 export const addDays = (iso: string, days: number) => new Date(Date.parse(`${iso}T00:00:00Z`) + days * DAY).toISOString().slice(0, 10);
 export const checkOutOf = addDays;
+
+// a yyyy-mm-dd date as "20 Oct" or "Tue 20 Oct", read the same wherever the server or the browser is
+const utcDate = (iso: string, opts: Intl.DateTimeFormatOptions) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { ...opts, timeZone: 'UTC' });
+export const dayMonth = (iso: string) => utcDate(iso, { day: 'numeric', month: 'short' });
+export const weekDay = (iso: string) => utcDate(iso, { weekday: 'short', day: 'numeric', month: 'short' });
 
 export const totalOf = (roomId: RoomId, nights: number) => roomOf(roomId).pricePerNight * nights;
 

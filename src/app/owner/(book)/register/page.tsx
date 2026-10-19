@@ -5,7 +5,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { hotel, rooms } from '@/content/site';
-import { bangkokToday, type Booking, type DeclineReason } from '@/lib/booking/model';
+import { bangkokToday, shortName, type Booking, type DeclineReason } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
 import { baht, Entry } from '@/app/owner/book';
 import { byArrival, monthFrom, shiftMonth, tally, type Month } from '@/app/owner/ledger';
@@ -16,7 +16,6 @@ export const dynamic = 'force-dynamic';
 const FOUND_AT_MOST = 50;
 
 const monthName = (m: Month) => new Date(`${m.from}T00:00:00Z`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-const short = (name: string) => name.replace(/^The | Room$/g, '');
 const percent = (n: number) => `${Math.round(n * 100)}%`;
 
 const WHY: Record<DeclineReason, string> = { full: 'full', unreachable: 'guest unreachable', repairs: 'repairs', other: 'other' };
@@ -80,7 +79,7 @@ function Page({ month, today, stays }: { month: Month; today: string; stays: Boo
             occupancy{' '}
             {rooms.map((r, i) => (
               <span key={r.id} className="tally-room">
-                {short(r.name)} <b>{percent(t.occupancy[r.id])}</b>
+                {shortName(r.id)} <b>{percent(t.occupancy[r.id])}</b>
                 {i < rooms.length - 1 && ', '}
               </span>
             ))}

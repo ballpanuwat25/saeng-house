@@ -3,25 +3,30 @@
 // a public endpoint once it is built.
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { availability, bangkokToday, isDeclineReason, parseOwnerBooking, parseRoomStay } from '@/lib/booking/model';
+import { availability, bangkokToday, dayMonth, isDeclineReason, parseOwnerBooking, parseRoomStay } from '@/lib/booking/model';
 import { cancelledMail, changedMail, confirmedMail, declinedMail, sendMail } from '@/lib/booking/mail';
 import { bookingStore } from '@/lib/booking/store';
 import { newSession, ownerConfig, passwordMatches, SESSION_COOKIE, SESSION_DAYS, sessionValid } from '@/lib/owner/session';
-import { isShut, noteWrongTry } from '@/lib/owner/throttle';
+import { forgive, knock } from '@/lib/owner/throttle';
 
-// the address the request came from; on Vercel the first entry of x-forwarded-for is set by the platform
-const clientIp = (h: Headers) => h.get('x-forwarded-for')?.split(',')[0].trim() || h.get('x-real-ip') || 'unknown';
+// The address the request came from. On Vercel x-vercel-forwarded-for is set by the platform and cannot be
+// sent by the visitor; the other two are only as trustworthy as the proxy in front, which is why the
+// throttle also keeps a ceiling across every address.
+const clientIp = (h: Headers) =>
+  (h.get('x-vercel-forwarded-for') ?? h.get('x-real-ip') ?? h.get('x-forwarded-for'))?.split(',')[0].trim() || 'unknown';
 
 export async function login(form: FormData) {
   const config = ownerConfig();
   const ip = clientIp(await headers());
-  if (await isShut(ip)) redirect('/owner/login?shut=1');
+  // the try is written down before the password is looked at, so tries sent all at once are counted too
+  const door = await knock(ip);
+  if (!door.open) redirect('/owner/login?shut=1');
   if (!config || !(await passwordMatches(config, String(form.get('password') ?? '')))) {
-    await noteWrongTry(ip);
     // a moment's wait on every wrong try slows a script down further, and costs the owner nothing
     await new Promise((r) => setTimeout(r, 700));
-    redirect(`/owner/login?${(await isShut(ip)) ? 'shut' : 'wrong'}=1`);
+    redirect(`/owner/login?${door.lastTry ? 'shut' : 'wrong'}=1`);
   }
+  await forgive(ip);
   (await cookies()).set(SESSION_COOKIE, await newSession(config), {
     httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/owner', maxAge: SESSION_DAYS * 86400,
   });
@@ -60,8 +65,7 @@ const done = (ref: string, what: string, mail: Mailed) =>
 // the owner's choice to email the guest, which only counts when there is an address
 const wantsMail = (form: FormData, email: string) => form.get('mail') === 'on' && email !== '';
 
-const fullOn = (dates: string[]) =>
-  `That room is full on ${dates.map((d) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })).join(', ')}.`;
+const fullOn = (dates: string[]) => `That room is full on ${dates.map(dayMonth).join(', ')}.`;
 
 // what the forms that use useActionState get back when something is wrong; on success they are redirected
 export type FormState = { error: string } | null;
@@ -125,8 +129,10 @@ export async function addBooking(_: FormState, form: FormData): Promise<FormStat
   if (!parsed.ok) return { error: parsed.error };
   const held = await store.request(parsed.value);
   if (!held.ok) return { error: fullOn(held.fullOn) };
-  const booking = (await store.setStatus(held.booking.ref, { status: 'confirmed' }, 'requested')) ?? held.booking;
-  const { ref } = booking;
+  const { ref } = held.booking;
+  const booking = await store.setStatus(ref, { status: 'confirmed' }, 'requested');
+  // answered from somewhere else in the moment between the two steps: say so, and email nobody
+  if (!booking) return { error: `${ref} was saved but answered elsewhere before it could be confirmed. Look for it in the book before adding it again.` };
   done(ref, 'added', wantsMail(form, booking.guest.email) ? await mailed(booking.guest.email, confirmedMail(booking), `${ref}-confirmed`) : 'none');
   return null;
 }

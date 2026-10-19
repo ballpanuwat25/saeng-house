@@ -1,5 +1,6 @@
--- Wrong passwords at the owner's door (src/lib/owner/throttle.ts), one row each, so every server instance
--- counts the same tries. Rows older than a day are deleted as new ones come in. Closed to the public keys
+-- Tries at the owner's door (src/lib/owner/throttle.ts), one row each, written before the password is
+-- checked, so every server instance counts the same tries. A right password deletes its address's rows,
+-- so what stays is wrong tries; rows older than a day are deleted as new ones come in. Closed to the public keys
 -- like the bookings table; the website uses the service key from the server only.
 
 create table if not exists owner_login_failures (

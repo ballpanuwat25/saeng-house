@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { booking, hotel, rooms, type Room } from '@/content/site';
 import DatePicker from '@/components/DatePicker';
-import type { Availability } from '@/lib/booking/model';
+import { addDays, bangkokToday, checkOutOf, dayMonth, type Availability } from '@/lib/booking/model';
 
 // fired by "Book this room" in the rooms section so the ticket arrives with that room chosen
 export const CHOOSE_ROOM = 'saeng:choose-room';
@@ -21,8 +21,6 @@ type Step =
 type Rooms = { live: false } | { live: true; rooms: Availability } | null;
 
 const DAY = 864e5;
-const isoDate = (d: Date) => d.toISOString().slice(0, 10);
-const shortDate = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 const baht = (n: number) => '฿' + n.toLocaleString('en-US');
 
 // A booking ticket in the manner of an old Chinatown shop slip: the stay above the perforation, then who
@@ -42,9 +40,11 @@ export default function BookingCard() {
   // dates depend on the visitor's clock, so they are set after mount to keep server and client markup equal
   useEffect(() => {
     const now = new Date();
-    setToday(isoDate(now));
+    // the house's own today, which the server checks against, not the visitor's or UTC's
+    const houseToday = bangkokToday();
+    setToday(houseToday);
     setSerial(String(Math.floor((now.getTime() / DAY) % 10000)).padStart(4, '0'));
-    setStay((s) => ({ ...s, checkIn: isoDate(new Date(now.getTime() + booking.daysAhead * DAY)) }));
+    setStay((s) => ({ ...s, checkIn: addDays(houseToday, booking.daysAhead) }));
     const onChoose = (e: Event) => {
       setStay((s) => ({ ...s, roomId: (e as CustomEvent<Room['id']>).detail }));
       setStep({ side: 'stay' });
@@ -83,8 +83,7 @@ export default function BookingCard() {
 
   const room = rooms.find((r) => r.id === stay.roomId)!;
   const total = room.pricePerNight * stay.nights;
-  const from = stay.checkIn ? new Date(stay.checkIn) : null;
-  const span = from ? `${shortDate(from)} to ${shortDate(new Date(from.getTime() + stay.nights * DAY))}` : '';
+  const span = stay.checkIn ? `${dayMonth(stay.checkIn)} to ${dayMonth(checkOutOf(stay.checkIn, stay.nights))}` : '';
   const free = houseSays?.live ? houseSays.rooms : null;
   const chosenIsFull = free ? free[stay.roomId].left === 0 : false;
   const sending = step.side === 'guest' && 'sending' in step;
@@ -107,7 +106,7 @@ export default function BookingCard() {
       // someone took the last room while this guest was typing: back to the stay, with fresh numbers
       askAgain((n) => n + 1);
       setStep({ side: 'stay' });
-      return setProblem(`${room.name} is now full on ${data.fullOn.map((d: string) => shortDate(new Date(d))).join(', ')}.`);
+      return setProblem(`${room.name} is now full on ${data.fullOn.map(dayMonth).join(', ')}.`);
     }
     setStep({ side: 'guest' });
     setProblem(data?.error ?? booking.failed);
@@ -145,7 +144,7 @@ export default function BookingCard() {
             <div className="pair">
               <div className="field">
                 <label htmlFor="checkin">Arriving</label>
-                <DatePicker id="checkin" label="Arriving" min={today} value={stay.checkIn} onChange={(checkIn) => changeStay({ checkIn })} />
+                <DatePicker id="checkin" label="Arriving" min={today} today={today} value={stay.checkIn} onChange={(checkIn) => changeStay({ checkIn })} />
               </div>
               <div className="field">
                 <span className="lbl" id="n-lbl">Nights</span>

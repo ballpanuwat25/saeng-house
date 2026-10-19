@@ -4,9 +4,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { hotel, rooms } from '@/content/site';
-import { addDays, bangkokToday, checkOutOf, HOLDING, roomOf, type Booking } from '@/lib/booking/model';
+import { addDays, bangkokToday, checkOutOf, dayMonth, HOLDING, roomOf, shortName, weekDay, type Booking } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
-import { baht, day } from '@/app/owner/book';
+import { baht } from '@/app/owner/book';
 import { rack } from '@/app/owner/rack';
 import RackJump from '@/app/owner/RackJump';
 import RackSlips, { type Slip } from '@/app/owner/RackSlips';
@@ -18,8 +18,6 @@ const NIGHTS = 28;
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 const date = (iso: string) => new Date(`${iso}T00:00:00Z`);
-const dayMonth = (iso: string) => date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
-const short = (name: string) => name.replace(/^The | Room$/g, '');
 const surname = (name: string) => name.trim().split(' ').at(-1) ?? name;
 
 // a strip opens the stay where it is kept: the Requests tab while it is still to come, the register after
@@ -48,7 +46,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
       b.ref,
       {
         ref: b.ref, name: b.guest.name, room: roomOf(b.roomId).name, total: baht(b.total), note: b.note, waiting: b.status === 'requested',
-        nights: `${day(b.checkIn)} to ${day(checkOutOf(b.checkIn, b.nights))}, ${b.nights} ${b.nights === 1 ? 'night' : 'nights'}`,
+        nights: `${weekDay(b.checkIn)} to ${weekDay(checkOutOf(b.checkIn, b.nights))}, ${b.nights} ${b.nights === 1 ? 'night' : 'nights'}`,
         state: b.status === 'requested' ? 'Waiting for your answer' : checkOutOf(b.checkIn, b.nights) > today ? 'Confirmed' : 'Stayed',
       },
     ]),
@@ -82,7 +80,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
             <span className="tally-head">Full nights</span>
             {shelves.map((s) => (
               <span key={s.id}>
-                {short(roomOf(s.id).name)} <b>{s.full.length}</b>
+                {shortName(s.id)} <b>{s.full.length}</b>
                 {s.full.length > 0 && `: ${s.full.map(dayMonth).join(', ')}`}
               </span>
             ))}
@@ -110,7 +108,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
                 const room = rooms.find((r) => r.id === s.id)!;
                 return [
                   <p key={`${s.id}-kind`} className="rack-kind" style={{ gridRow: `${firstLine[k]} / span ${s.lines}` }}>
-                    {short(room.name)}
+                    {shortName(room.id)}
                     <span>{room.count} rooms</span>
                   </p>,
                   ...Array.from({ length: s.lines }, (_, line) => (
@@ -126,7 +124,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
                       data-after={after || undefined}
                       style={{ gridColumn: `${start + 2} / span ${span}`, gridRow: firstLine[k] + line }}
                       data-ref={b.ref}
-                      aria-label={`${b.guest.name}, ${room.name}, ${day(b.checkIn)} to ${day(checkOutOf(b.checkIn, b.nights))}${b.status === 'requested' ? ', waiting for an answer' : ''}`}
+                      aria-label={`${b.guest.name}, ${room.name}, ${weekDay(b.checkIn)} to ${weekDay(checkOutOf(b.checkIn, b.nights))}${b.status === 'requested' ? ', waiting for an answer' : ''}`}
                     >
                       {surname(b.guest.name)}
                     </Link>

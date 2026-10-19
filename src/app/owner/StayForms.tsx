@@ -29,7 +29,7 @@ function StayFields({ id, start, today }: { id: string; start: StayValues; today
       <div className="stay-when">
         <div className="field">
           <label htmlFor={`${id}-in`}>Arriving</label>
-          <DatePicker id={`${id}-in`} label="Arriving" min={today} value={checkIn} onChange={setCheckIn} />
+          <DatePicker id={`${id}-in`} label="Arriving" min={today} today={today} value={checkIn} onChange={setCheckIn} />
           <input type="hidden" name="checkIn" value={checkIn} />
         </div>
         <div className="field">

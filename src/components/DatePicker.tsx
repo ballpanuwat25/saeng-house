@@ -11,7 +11,8 @@ import { createPortal } from 'react-dom';
 // Keyboard: the arrow keys move a day or a week, Page Up and Page Down a month, Home and End to the ends of
 // the week; Enter picks, Escape closes.
 
-type Props = { id?: string; value: string; min?: string; onChange: (iso: string) => void; align?: 'start' | 'end'; label?: string };
+// `today` is the day marked as today; without it, the browser's own date
+type Props = { id?: string; value: string; min?: string; today?: string; onChange: (iso: string) => void; align?: 'start' | 'end'; label?: string };
 
 const DAY = 864e5;
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -45,16 +46,17 @@ function weeksOf(month: string) {
   return Array.from({ length: cells.length / 7 }, (_, w) => cells.slice(w * 7, w * 7 + 7));
 }
 
-export default function DatePicker({ id, value, min, onChange, align = 'start', label }: Props) {
+export default function DatePicker({ id, value, min, today: given, onChange, align = 'start', label }: Props) {
   const [open, setOpen] = useState(false);
   const [cursor, setCursor] = useState(value); // the day the keyboard is on
   const [at, setAt] = useState<{ top: number; left: number } | null>(null);
-  const [today, setToday] = useState('');
+  const [here, setHere] = useState('');
+  const today = given ?? here;
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const month = firstOf(cursor || value || today || '2000-01-01');
 
-  useEffect(() => setToday(localToday()), []);
+  useEffect(() => setHere(localToday()), []);
 
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
@@ -101,10 +103,12 @@ export default function DatePicker({ id, value, min, onChange, align = 'start', 
     };
   }, [open, close, place]);
 
-  // the keyboard's day takes the focus whenever it moves
+  // the keyboard's day takes the focus once the calendar is placed and whenever that day moves, not each
+  // time the calendar follows a scroll, which would pull the focus off the month buttons
+  const placed = at !== null;
   useEffect(() => {
-    if (open && at) panel.current?.querySelector<HTMLButtonElement>(`[data-day="${cursor}"]`)?.focus();
-  }, [open, at, cursor]);
+    if (open && placed) panel.current?.querySelector<HTMLButtonElement>(`[data-day="${cursor}"]`)?.focus();
+  }, [open, placed, cursor]);
 
   const allowed = (day: string) => !min || day >= min;
   const move = (day: string) => setCursor(min && day < min ? min : day);

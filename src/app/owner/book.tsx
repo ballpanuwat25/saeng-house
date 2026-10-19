@@ -1,19 +1,15 @@
 // What the tabs of the request book share: the header with its tabs, and one entry on the sheet.
 import Link from 'next/link';
 import { hotel } from '@/content/site';
-import { bangkokToday, checkOutOf, roomOf, type Booking, type DeclineReason } from '@/lib/booking/model';
-import { bookingStore } from '@/lib/booking/store';
+import { checkOutOf, roomOf, weekDay, type Booking, type DeclineReason } from '@/lib/booking/model';
+import { late, waitingNow } from '@/lib/owner/waiting';
 import { confirmBooking, declineBooking, logout } from '@/app/owner/actions';
 import { ChangeStay } from '@/app/owner/StayForms';
 import BookTabs from '@/app/owner/BookTabs';
 import Busy from '@/app/owner/Busy';
 
-export const day = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 const when = (iso: string) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
 export const baht = (n: number) => '฿' + n.toLocaleString('en-US');
-
-// The guest's email promises an answer within the hour, so a request waiting longer than that is late
-const late = (sentAt: string, now: number) => now - Date.parse(sentAt) > 36e5;
 
 // how long a request has been waiting
 function waiting(sentAt: string, now: number) {
@@ -35,10 +31,7 @@ export const REASONS: Record<DeclineReason, string> = {
 // carries the number of requests waiting for an answer, in lantern red once any of them is late, so the
 // owner sees it from the rack or the register too.
 export async function BookTop() {
-  const store = bookingStore();
-  const now = Date.now();
-  const waitingNow = store ? await store.stays({ from: bangkokToday(), status: ['requested'] }) : [];
-  const anyLate = waitingNow.some((b) => late(b.createdAt, now));
+  const waiting = await waitingNow();
   return (
     <header className="owner-top">
       <p className="wm" lang="th">{hotel.wordmark}</p>
@@ -46,7 +39,7 @@ export async function BookTop() {
       <form action={logout}>
         <button className="owner-out" type="submit">Sign out</button>
       </form>
-      <BookTabs waiting={waitingNow.length} late={anyLate} />
+      <BookTabs first={waiting} />
     </header>
   );
 }
@@ -72,7 +65,7 @@ export function Entry({ b, kind, today, now, declining }: { b: Booking; kind: En
       <div className="entry-stay">
         <p>{roomOf(b.roomId).name}</p>
         <span>
-          {day(b.checkIn)} to {day(checkOutOf(b.checkIn, b.nights))} {checkOutOf(b.checkIn, b.nights).slice(0, 4)}, {b.nights} {b.nights === 1 ? 'night' : 'nights'}
+          {weekDay(b.checkIn)} to {weekDay(checkOutOf(b.checkIn, b.nights))} {checkOutOf(b.checkIn, b.nights).slice(0, 4)}, {b.nights} {b.nights === 1 ? 'night' : 'nights'}
         </span>
       </div>
       <p className="entry-total">{baht(b.total)}</p>
