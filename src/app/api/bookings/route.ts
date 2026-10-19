@@ -1,7 +1,8 @@
-// POST /api/bookings: a guest's request. Checks the nights are still free, saves it, and emails the guest.
+// POST /api/bookings: a guest's request. Checks the nights are still free, saves it, and emails the guest
+// and the owner.
 // The price is worked out here from the house's own rates, never taken from the browser.
 import { parseRequest } from '@/lib/booking/model';
-import { receivedMail, sendMail } from '@/lib/booking/mail';
+import { ownerMail, receivedMail, sendMail } from '@/lib/booking/mail';
 import { bookingStore } from '@/lib/booking/store';
 
 export async function POST(req: Request) {
@@ -16,11 +17,14 @@ export async function POST(req: Request) {
   const result = await store.request(parsed.value);
   if (!result.ok) return Response.json({ ok: false, fullOn: result.fullOn }, { status: 409 });
   const { booking } = result;
-  try {
-    await sendMail(booking.guest.email, receivedMail(booking), `${booking.ref}-received`);
-  } catch (err) {
-    // the request is saved either way; the owner sees it and can reach the guest
-    console.error(err);
-  }
+  // the request is saved either way; a mail that fails is logged, and the owner still finds the request in the book
+  const send = (to: string, mail: { subject: string; html: string }, tag: string) => sendMail(to, mail, tag).catch((err) => console.error(err));
+  // the owner's address comes from OWNER_EMAIL; on a developer's machine without it the mail still goes to
+  // .data/outbox, so the whole flow can be seen
+  const { OWNER_EMAIL, RESEND_API_KEY } = process.env;
+  await Promise.all([
+    send(booking.guest.email, receivedMail(booking), `${booking.ref}-received`),
+    (OWNER_EMAIL || !RESEND_API_KEY) && send(OWNER_EMAIL ?? '', ownerMail(booking, new URL(req.url).origin), `${booking.ref}-owner`),
+  ]);
   return Response.json({ ok: true, ref: booking.ref, email: booking.guest.email, total: booking.total });
 }

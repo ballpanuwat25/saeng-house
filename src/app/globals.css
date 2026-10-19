@@ -330,6 +330,10 @@ main > .hero { z-index: 2; }
 /* the open tab sits on the header's rule, like the tab of the page the book is open at */
 .owner-tabs a { margin-bottom: -1px; padding-bottom: 12px; border-bottom: 2px solid transparent; font-family: var(--serif); font-size: clamp(1.35rem, 1.2rem + .5vw, 1.7rem); line-height: 1.1; color: var(--muted); text-decoration: none; transition: color .2s ease; }
 .owner-tabs a:hover { color: var(--ink); }
+.owner-tab-count { margin-left: 8px; font-family: var(--face); font-size: var(--s-small); color: var(--muted); font-variant-numeric: tabular-nums; vertical-align: .35em; }
+.owner-tab-count[data-late] { color: var(--lantern); font-weight: 500; }
+/* read by screen readers, not shown */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .owner-tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--lantern); }
 .owner-find { margin-top: 32px; display: grid; gap: 8px; max-width: 560px; }
 .owner-find label { font-size: var(--s-small); color: var(--muted); }

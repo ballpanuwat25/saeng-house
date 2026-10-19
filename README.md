@@ -63,7 +63,9 @@ The owner answers requests at `/owner`. The book has three tabs, all plain links
 - **Confirm** marks it confirmed and emails the guest a confirmation.
 - **Decline** asks why first: full that night, could not reach the guest, room closed for repairs, or something else (written out for the guest). It frees the room and emails the guest a note worded from the reason. When the house is full, the email lists the other room kinds still free for the same nights, each with a link back to the booking ticket.
 
-A request can only be answered once, so a second click never sends a second email. Each waiting request says how long it has waited, in lantern red once it is past the hour the guest's email promises.
+A request can only be answered once, so a second click never sends a second email. Each waiting request says how long it has waited, in lantern red once it is past the hour the guest's email promises. The Requests tab carries the number waiting, on every tab, in lantern red when any of them is late.
+
+Each new request from the site is also emailed to the owner at `OWNER_EMAIL`, with the guest's details and a button straight to the request in the book. Without `OWNER_EMAIL` on your machine, that email goes to `.data/outbox/` with the others.
 
 The owner can also:
 
@@ -88,6 +90,7 @@ On your machine with nothing set, the password is `saeng-dev`. On a deployed sit
 ```bash
 OWNER_PASSWORD=<a long password for the owner>
 OWNER_SESSION_SECRET=<a random string, e.g. from: openssl rand -base64 32>
+OWNER_EMAIL=<where to send each new request>
 ```
 
 A login lasts 14 days in an httpOnly cookie signed with the secret; changing the secret signs everyone out. With Supabase, run `supabase/migrations/0002_owner.sql`, `0003_register.sql` and `0004_change_stay.sql` once after `0001`. The first adds the decline reason to the table; the second adds the columns and indexes the register filters on (a `check_out` date, and a `search_text` column under a trigram index), so a month or a search reads only its own rows; the third adds the function that moves a confirmed stay under the same lock as a new request.

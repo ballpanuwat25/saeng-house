@@ -1,4 +1,4 @@
-// The emails a guest gets. With a Resend key they are sent; on a developer's machine without one they are
+// The emails a guest gets, and the one the owner gets for each new request. With a Resend key they are sent; on a developer's machine without one they are
 // written to .data/outbox/ to open in a browser. Laid out like the booking ticket: cream paper, a serif
 // for the figures, the red seal.
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -59,6 +59,23 @@ export function confirmedMail(b: Booking) {
       `Nothing is charged now. You pay at the house when you arrive.`,
       `If your plans change, reply to this email or message us on LINE ${esc(hotel.line)}.`,
     ]),
+  };
+}
+
+// to the owner, for each request a guest sends from the site: who, what, and a way straight to the answer.
+// The request holds a room until it is answered, and the guest was promised an answer within the hour.
+export function ownerMail(b: Booking, origin: string) {
+  const room = roomOf(b.roomId).name;
+  const who = [esc(b.guest.name), `<a href="mailto:${esc(b.guest.email)}" style="color:#2a1712">${esc(b.guest.email)}</a>`, b.guest.contact && esc(b.guest.contact)].filter(Boolean).join('<br>');
+  const open = `<p style="margin:20px 0 0"><a href="${esc(origin)}/owner#${b.ref}" style="display:inline-block;padding:12px 22px;border-radius:999px;background:#c4182b;color:#fff4ee;font-size:15px;text-decoration:none">Answer in the request book</a></p>`;
+  return {
+    subject: `New request ${b.ref}: ${room}, ${day(b.checkIn)}, ${b.nights} ${b.nights === 1 ? 'night' : 'nights'}`,
+    html: ticket(
+      b,
+      'A new request is waiting.',
+      [`The room is held until you answer. The guest has been told to expect an answer within the hour.`, who, ...(b.note ? [`&ldquo;${esc(b.note)}&rdquo;`] : [])],
+      open,
+    ),
   };
 }
 

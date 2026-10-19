@@ -1,7 +1,8 @@
 // What the two tabs of the request book share: the header with its tabs, and one entry on the sheet.
 import Link from 'next/link';
 import { hotel } from '@/content/site';
-import { checkOutOf, roomOf, type Booking, type DeclineReason } from '@/lib/booking/model';
+import { bangkokToday, checkOutOf, roomOf, type Booking, type DeclineReason } from '@/lib/booking/model';
+import { bookingStore } from '@/lib/booking/store';
 import { confirmBooking, declineBooking, logout } from '@/app/owner/actions';
 import { ChangeStay } from '@/app/owner/StayForms';
 
@@ -9,14 +10,16 @@ export const day = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateStr
 const when = (iso: string) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
 export const baht = (n: number) => '฿' + n.toLocaleString('en-US');
 
-// how long a request has been waiting. The guest's email promises an answer within the hour, so past an
-// hour it is marked late
+// The guest's email promises an answer within the hour, so a request waiting longer than that is late
+const late = (sentAt: string, now: number) => now - Date.parse(sentAt) > 36e5;
+
+// how long a request has been waiting
 function waiting(sentAt: string, now: number) {
   const minutes = Math.max(0, Math.round((now - Date.parse(sentAt)) / 60000));
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
   const text = minutes < 60 ? `${minutes} min` : hours < 48 ? `${hours} ${hours === 1 ? 'hour' : 'hours'}` : `${days} days`;
-  return { text: `waiting ${text}`, late: minutes > 60 };
+  return { text: `waiting ${text}`, late: late(sentAt, now) };
 }
 
 export const REASONS: Record<DeclineReason, string> = {
@@ -28,7 +31,13 @@ export const REASONS: Record<DeclineReason, string> = {
 
 export type Tab = 'requests' | 'rooms' | 'register';
 
-export function BookTop({ tab }: { tab: Tab }) {
+// The header on every tab. The Requests tab carries the number of requests waiting for an answer, in
+// lantern red once any of them is late, so the owner sees it from the rack or the register too.
+export async function BookTop({ tab }: { tab: Tab }) {
+  const store = bookingStore();
+  const now = Date.now();
+  const waitingNow = store ? await store.stays({ from: bangkokToday(), status: ['requested'] }) : [];
+  const anyLate = waitingNow.some((b) => late(b.createdAt, now));
   return (
     <header className="owner-top">
       <p className="wm" lang="th">{hotel.wordmark}</p>
@@ -37,7 +46,15 @@ export function BookTop({ tab }: { tab: Tab }) {
         <button className="owner-out" type="submit">Sign out</button>
       </form>
       <nav className="owner-tabs" aria-label="Request book">
-        <Link href="/owner" aria-current={tab === 'requests' ? 'page' : undefined}>Requests</Link>
+        <Link href="/owner" aria-current={tab === 'requests' ? 'page' : undefined}>
+          Requests
+          {waitingNow.length > 0 && (
+            <span className="owner-tab-count" data-late={anyLate || undefined}>
+              {waitingNow.length}
+              <span className="sr"> waiting{anyLate ? ', some past the hour' : ''}</span>
+            </span>
+          )}
+        </Link>
         <Link href="/owner/rooms" aria-current={tab === 'rooms' ? 'page' : undefined}>Rooms</Link>
         <Link href="/owner/register" aria-current={tab === 'register' ? 'page' : undefined}>Register</Link>
       </nav>
