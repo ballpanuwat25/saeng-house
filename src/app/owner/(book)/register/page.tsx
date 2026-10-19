@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import { PendingLink } from '@/app/owner/Pending';
 import FindBox from '@/app/owner/FindBox';
 import { hotel, rooms } from '@/content/site';
-import { bangkokToday, shortName, type Booking, type DeclineReason } from '@/lib/booking/model';
+import { bangkokToday, shortName, weekDay, type Booking, type DeclineReason } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
 import { baht, Entry } from '@/app/owner/book';
 import { byArrival, monthFrom, shiftMonth, tally, type Month } from '@/app/owner/ledger';
@@ -82,7 +82,14 @@ function Page({ month, today, stays }: { month: Month; today: string; stays: Boo
         </p>
         <ol className="ledger">
           {arriving.length === 0 && <li className="ledger-empty">No stays arrive this month.</li>}
-          {arriving.map((b) => <Entry key={b.ref} b={b} kind="kept" today={today} />)}
+          {/* the month runs by arrival, so each new arrival day gets a line of its own, as in a book at the desk;
+              the left column of each stay is when it was asked for, which would otherwise read as the order */}
+          {arriving.flatMap((b, i) => [
+            ...(i === 0 || b.checkIn !== arriving[i - 1].checkIn
+              ? [<li key={`day-${b.checkIn}`} className="ledger-day">{weekDay(b.checkIn)}</li>]
+              : []),
+            <Entry key={b.ref} b={b} kind="kept" today={today} />,
+          ])}
         </ol>
       </div>
     </section>

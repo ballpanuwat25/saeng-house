@@ -492,6 +492,10 @@ html[data-turning] .owner > :not(.owner-top, .owner-tabs) { opacity: .5; transit
 .entry-state { font-size: var(--s-small); color: var(--ink-soft); }
 .entry-act { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding-top: 4px; }
 .entry-act .btn { min-height: 44px; padding: 0 26px; }
+/* an arrival day in the register: a dated line above the stays that arrive on it */
+.ledger-day { padding: 22px 0 0; font-family: var(--serif); font-size: 1.45rem; line-height: 1.2; color: var(--ink-dark); border-top: 1px solid rgba(42, 23, 18, .4); }
+.ledger-day:first-child { border-top: 0; }
+.ledger-day + .entry { background-image: none; padding-top: 10px; }
 .ledger-empty { padding: 26px 0; padding-left: var(--rule); color: var(--ink-soft); font-size: var(--s-small); }
 .decline summary { list-style: none; color: var(--lantern); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; font-size: var(--s-small); font-weight: 500; }
 .decline summary::-webkit-details-marker { display: none; }
