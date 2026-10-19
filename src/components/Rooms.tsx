@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { rooms, roomsSection } from '@/content/site';
 import Rich from '@/components/Rich';
 import { CHOOSE_ROOM } from '@/components/BookingCard';
@@ -78,19 +78,22 @@ export default function Rooms() {
             </a>
           </div>
         </div>
+        {/* every room's photo stays in the frame, the ones not shown faded out, so the browser fetches all
+            three as the section comes near; mounting each photo only on its turn left the frame empty while
+            it downloaded on a slow first visit */}
         <figure className="photo stage" aria-live="polite">
-          <AnimatePresence initial={false}>
+          {rooms.map((r, i) => (
             <motion.div
-              key={room.id}
+              key={r.id}
               className="shot"
-              initial={{ opacity: 0, scale: 1.04 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
+              aria-hidden={i !== shown}
+              initial={false}
+              animate={i === shown ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.04 }}
               transition={{ duration: 1.1, ease: [0.45, 0, 0.55, 1] }}
             >
-              <Image src={room.photo.src} alt={room.photo.alt} fill sizes="(max-width: 860px) 100vw, 55vw" />
+              <Image src={r.photo.src} alt={r.photo.alt} fill sizes="(max-width: 860px) 100vw, 55vw" />
             </motion.div>
-          </AnimatePresence>
+          ))}
         </figure>
       </div>
     </section>
