@@ -124,7 +124,7 @@ The reset throws away every booking in the database it points at, so give the de
 
 ### Film mode
 
-The portfolio video is recorded from a stage at `/film`: the desk on the left (a 1440 by 900 window drawn at 0.95) and a phone on the right (390 by 844), each a live copy of the site in a frame, on the site's dark ground in a 1920 by 1080 page. One script plays both frames in step (`src/app/film/story.ts`), about 67 seconds:
+The portfolio video is recorded from a stage at `/film`: the desk on the left (a 1440 by 900 window drawn at 0.95) and a phone on the right (390 by 844), each a live copy of the site in a frame, on the site's dark ground in a 1920 by 1080 page. One script plays both frames in step (`src/app/film/story.ts`), about 71 seconds. An opening card with the house's name holds for at least four seconds while the book resets and both frames load behind it, then:
 
 1. Both frames on the home page. A drawn cursor walks under the hero's lanterns and a finger drags across the phone's, then both scroll down together.
 2. On the phone the guest opens the ticket, picks a date, adds a night, picks a room, turns the ticket over, types a name and email and sends it; the seal stamps. On the desk the owner opens the demo book meanwhile.
@@ -142,7 +142,7 @@ DEMO_MODE=1
 OWNER_SESSION_SECRET=<any string>
 ```
 
-then open `http://localhost:3000/film` in a window of 1920 by 1080 (a smaller window shows the whole stage scaled down). Leave Supabase out of `.env.local` so the takes use the file under `.data/`: the reset throws away every booking in whichever store the site points at. The page says where the take is on `<html>`: `data-film` is `setting`, `playing`, `ending` while the closing card is up, then `done` or `failed`, and `data-scene` names the moment (`opening`, `booking`, `calendar`, `sealed`, `owner`, `rack`, `declining`, `confirming`, `close`, `end`), so a recorder knows when to start and stop.
+then open `http://localhost:3000/film` in a window of 1920 by 1080 (a smaller window shows the whole stage scaled down). Leave Supabase out of `.env.local` so the takes use the file under `.data/`: the reset throws away every booking in whichever store the site points at. The page says where the take is on `<html>`: `data-film` is `setting` until the opening card's type has loaded, `title` while that card is up, `playing`, `ending` while the closing card is up, then `done` or `failed`, and `data-scene` names the moment (`title`, `opening`, `booking`, `calendar`, `sealed`, `owner`, `rack`, `declining`, `confirming`, `close`, `end`), so a recorder knows when to start and stop.
 
 ## What's next
 
