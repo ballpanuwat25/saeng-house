@@ -118,10 +118,12 @@ export async function story(desk: Lane, phone: Lane, mark: (scene: string) => vo
   await desk.hover(strip);
   await desk.see('.slip');
   mark('rack');
-  await sleep(2800);
-  await desk.press('.owner-tabs a[href="/owner"]');
-  await desk.see(entry);
-  await sleep(400);
+  await sleep(2600);
+  // the strip itself opens the stay: back on Requests it is brought to the middle and washed red
+  await desk.press(strip);
+  await desk.see(`${entry}[data-flash]`);
+  mark('focused');
+  await sleep(1600);
   await desk.hover(`${entry} .entry-name`);
   await sleep(700);
   // the owner opens Decline to show what it asks for (Confirm steps aside while it is open), the reasons
@@ -150,7 +152,8 @@ export async function story(desk: Lane, phone: Lane, mark: (scene: string) => vo
   await desk.hover('.owner-note a', 1000);
   await sleep(1800);
 
-  // 4. Close: the guest reads the confirmation on the phone; the desk turns to the month's figures.
+  // 4. Close: the guest reads the confirmation on the phone; the desk turns to the month's figures, then down
+  // the month's page to the guest's line, now confirmed.
   mark('close');
   await both(
     phone.open(`/demo/mail/${encodeURIComponent(ref)}/confirmed`, 600),
@@ -160,7 +163,10 @@ export async function story(desk: Lane, phone: Lane, mark: (scene: string) => vo
       await desk.see('.tally');
       await sleep(600);
       await desk.hover('.tally-head', 1100);
-      await desk.glide(980, 760, 1400);
+      await sleep(900);
+      await desk.scroll(entry, 2400, 0, true);
+      mark('kept');
+      await desk.hover(`${entry} .entry-name`, 1100);
     })(),
   );
   await sleep(3200);

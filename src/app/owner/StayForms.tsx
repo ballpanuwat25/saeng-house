@@ -64,7 +64,9 @@ export function AddBooking({ today }: { today: string }) {
   const [state, act, pending] = useActionState(addBooking, null);
   return (
     <details className="owner-add" open={state !== null}>
-      <summary>Add a booking taken by phone, on LINE or as a walk-in</summary>
+      <summary>
+        <span>Add a booking taken by phone, on LINE or as a walk-in</span>
+      </summary>
       <form onSubmit={submitTo(act)} className="stay-form">
         <StayFields id="add" start={{ roomId: rooms[0].id, checkIn: today, nights: bookingCopy.defaultNights }} today={today} />
         <div className="stay-guest">

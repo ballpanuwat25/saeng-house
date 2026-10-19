@@ -86,7 +86,9 @@ export default function Evening() {
       const show = hero.getBoundingClientRect().bottom < innerHeight * 0.5;
       glow.classList.toggle('on', show);
       if (show) {
-        if (now - lamp.moved > 2500 && !reduce) {
+        // with no mouse at all (a touch screen) the lamp drifts on its own; once a pointer has moved it
+        // stays where the pointer is, even while the pointer rests
+        if (!lamp.moved && !reduce) {
           const t = now / 1000;
           lamp.tx = innerWidth * (0.5 + 0.32 * Math.sin(t * 0.23));
           lamp.ty = innerHeight * (0.5 + 0.25 * Math.sin(t * 0.31 + 1));
