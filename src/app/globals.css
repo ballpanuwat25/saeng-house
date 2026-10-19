@@ -356,6 +356,9 @@ html:has(.owner) { scrollbar-gutter: stable; }
 .link-pending { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--lantern); transform: scaleX(0); transform-origin: left; pointer-events: none; }
 .owner-months .link-pending, .rack-jump .link-pending { bottom: -4px; }
 .link-pending[data-on] { animation: opening-rule 1.2s ease-in-out .12s infinite; }
+/* and the sheet below the tabs fades back, so the owner sees the page is turning even when the rule is brief */
+.owner > :not(.owner-top) { transition: opacity .2s ease; }
+html[data-turning] .owner > :not(.owner-top) { opacity: .5; transition-delay: .06s; }
 @keyframes opening-rule { 0% { transform: scaleX(0); opacity: 1; } 70% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .link-pending[data-on] { animation: none; transform: scaleX(1); opacity: .6; } }
 /* a button whose form is at work (src/app/owner/Busy.tsx) */
