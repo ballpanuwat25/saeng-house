@@ -30,8 +30,8 @@ export const REASONS: Record<DeclineReason, string> = {
 };
 
 // The header on every tab, from the book's layout, so it stays put while a tab loads. The Requests tab
-// carries the number of requests waiting for an answer on a lantern-red disc, so the owner sees it from the
-// rack or the register too; the requests that are late say so on the sheet. The tabs sit just below the header rather than in it,
+// carries a lantern-red dot while requests wait for an answer, so the owner sees it from the rack or the
+// register too; how many, and which are late, the sheet itself says. The tabs sit just below the header rather than in it,
 // so they can stay at the top of the window while a long sheet scrolls (globals.css).
 export async function BookTop() {
   const waiting = await waitingNow();

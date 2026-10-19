@@ -343,12 +343,9 @@ main > .hero { z-index: 2; }
 /* the open tab sits on the header's rule, like the tab of the page the book is open at */
 .owner-tabs a { margin-bottom: -1px; padding-bottom: 12px; border-bottom: 2px solid transparent; font-family: var(--serif); font-size: clamp(1.35rem, 1.2rem + .5vw, 1.7rem); line-height: 1.1; color: var(--muted); text-decoration: none; transition: color .2s ease; }
 .owner-tabs a:hover { color: var(--ink); }
-/* the requests waiting, as a lantern-red disc beside the tab: each one is still owed an answer */
-.owner-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.6rem; height: 1.6rem; margin-left: 8px; padding: 0 calc(.4rem - 1px) 0 calc(.4rem + 1px); border-radius: 999px; background: var(--lantern); color: var(--lantern-ink); font-family: var(--face); font-size: .72rem; font-weight: 600; line-height: 1; font-variant-numeric: proportional-nums; letter-spacing: .01em; vertical-align: .5em; }
-/* the figures are centred on their own height, not on the line's, which sat them off the disc's middle; the
-   disc's padding leans a pixel right, since the figures' shapes sit a little left of their own middle */
-.owner-tab-n { text-box: trim-both cap alphabetic; }
-/* a request came in while the book was open: the disc is stamped on again, like the seal */
+/* requests are waiting: a small lantern-red dot on the tab's top right corner; the number is on the sheet */
+.owner-tab-count { position: absolute; top: 2px; right: -10px; width: 8px; height: 8px; border-radius: 50%; background: var(--lantern); }
+/* a request came in while the book was open: the dot is stamped on again, like the seal */
 .owner-tab-count[data-new] { animation: count-in .5s cubic-bezier(.2, 1.4, .4, 1) both; }
 @keyframes count-in { from { opacity: 0; transform: scale(2.2); } 60% { opacity: 1; } to { opacity: 1; transform: scale(1); } }
 /* read by screen readers, not shown */

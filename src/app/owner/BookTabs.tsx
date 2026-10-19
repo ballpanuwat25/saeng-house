@@ -85,8 +85,7 @@ export default function BookTabs({ first }: { first: Waiting }) {
           {t.name}
           {t.href === '/owner' && waiting.count > 0 && (
             <span key={arrivals} className="owner-tab-count" data-late={waiting.late || undefined} data-new={arrivals > 0 || undefined}>
-              <span className="owner-tab-n">{waiting.count}</span>
-              <span className="sr"> waiting{waiting.late ? ', some past the hour' : ''}</span>
+              <span className="sr">{waiting.count} waiting{waiting.late ? ', some past the hour' : ''}</span>
             </span>
           )}
           <Pending />
