@@ -9,6 +9,16 @@ import { isDemo } from '@/lib/demo';
 
 const day = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', timeZone: 'UTC' });
 const baht = (n: number) => '฿' + n.toLocaleString('en-US');
+// The seal is a picture (scripts/make-email-seal.mjs), because email apps do not load the site's Thai face
+// and would set the wordmark in whatever the phone has. A sent email needs the picture's full address:
+// SITE_URL, or on Vercel the production domain it provides; the demo's email pages are on the site
+// itself, so the path alone does there.
+const sealSrc = () => {
+  const { SITE_URL, VERCEL_PROJECT_PRODUCTION_URL } = process.env;
+  const site = SITE_URL ?? (VERCEL_PROJECT_PRODUCTION_URL ? `https://${VERCEL_PROJECT_PRODUCTION_URL}` : '');
+  return `${site.replace(/\/$/, '')}/images/email-seal.png`;
+};
+
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 function ticket(b: Booking, heading: string, lines: string[], after = '') {
@@ -33,7 +43,7 @@ function ticket(b: Booking, heading: string, lines: string[], after = '') {
     </table>
     <table role="presentation" width="100%" style="margin-top:22px"><tr>
       <td style="color:#7a6455;font-size:13px;line-height:1.6">${esc(hotel.address[0])}<br>${esc(hotel.address[1])}<br>${esc(hotel.phone)} · LINE ${esc(hotel.line)}</td>
-      <td style="text-align:right;vertical-align:bottom"><span style="display:inline-block;width:56px;height:56px;line-height:56px;text-align:center;background:#c4182b;color:#efe4d0;border-radius:6px;font-size:22px;transform:rotate(-9deg)">${esc(hotel.wordmark)}</span></td>
+      <td style="text-align:right;vertical-align:bottom"><span style="display:inline-block;width:56px;height:56px;line-height:56px;text-align:center;background:#c82c3c;color:#efe4d0;border-radius:4px;font-size:22px;transform:rotate(-9deg)"><img src="${esc(sealSrc())}" width="56" height="56" alt="${esc(hotel.wordmark)}" style="display:block;width:56px;height:56px;border:0;border-radius:4px;color:#efe4d0;font-size:22px;line-height:56px;text-align:center"></span></td>
     </tr></table>
   </td></tr></table>
   <p style="max-width:480px;margin:16px auto 0;color:#7a6455;font-size:12px;text-align:center">${esc(hotel.name)} is a fictional hotel made for a portfolio.</p>

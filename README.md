@@ -52,7 +52,7 @@ RESEND_API_KEY=<from resend.com>
 BOOKING_FROM="Saeng House <bookings@your-domain>"
 ```
 
-The site talks to Supabase's REST endpoint with `fetch`, so no Supabase package is needed. Use these two names exactly, not the `NEXT_PUBLIC_SUPABASE_URL` and publishable key from Supabase's Next.js guide: the table is closed to the publishable key by row-level security, so with it every booking is refused, and a `NEXT_PUBLIC_` name would send the secret key to every visitor's browser. The service key never reaches the browser: only the server routes in `src/app/api` and the owner's actions use it. Until a domain is verified in Resend, it only delivers to your own address.
+The site talks to Supabase's REST endpoint with `fetch`, so no Supabase package is needed. Use these two names exactly, not the `NEXT_PUBLIC_SUPABASE_URL` and publishable key from Supabase's Next.js guide: the table is closed to the publishable key by row-level security, so with it every booking is refused, and a `NEXT_PUBLIC_` name would send the secret key to every visitor's browser. The service key never reaches the browser: only the server routes in `src/app/api` and the owner's actions use it. Until a domain is verified in Resend, it only delivers to your own address. The red seal at the foot of each email is a picture on the site (`public/images/email-seal.png`), since email apps do not load the site's Thai face; on Vercel the emails find it at the production domain by themselves, and anywhere else set `SITE_URL=https://<the site's address>` so they can. An app that blocks pictures shows the wordmark on a red square instead.
 
 ### The owner's request book
 
@@ -172,6 +172,12 @@ The first keys the green out of the lanterns into `public/images/hero-lantern-sp
 
 ```bash
 node scripts/make-share-image.mjs http://localhost:3000
+```
+
+The seal in the emails, `public/images/email-seal.png`, is drawn the same way from the running site, so its wordmark is in the site's own Thai face:
+
+```bash
+node scripts/make-email-seal.mjs http://localhost:3000
 ```
 
 The browser icon is `src/app/icon.svg` and the home-screen icon `src/app/apple-icon.png`, both the house lantern.
