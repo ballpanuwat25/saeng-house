@@ -72,7 +72,7 @@ The owner can also:
 - **Add a booking** taken by phone, on LINE or as a walk-in, from the link above the sheets. It goes through the same check that the nights are free as a guest's request, so the rack and the register stay true, and is confirmed at once. The email may be left out, but there has to be an email, a phone or a LINE name.
 - **Change or cancel** a confirmed stay, from the entry on the Confirmed sheet. A change picks other nights or another room under the same check (the stay's own nights do not count against it), and works out the price again; a guest already staying can be given more nights. Cancelling frees the room. Either can email the guest, if there is an address.
 
-The header and tabs stay put while a tab loads, with a line saying the book is opening below them, and a button that saves and emails says what it is doing (Confirming…, Declining…) and cannot be pressed twice meanwhile.
+The header and tabs stay put while a tab loads, and the sheet being read stays up until the next is ready, with a lantern rule drawing under the tab or link that was pressed, so the page never empties, loses its scrollbar or jumps; and a button that saves and emails says what it is doing (Confirming…, Declining…) and cannot be pressed twice meanwhile.
 
 When the book cannot reach the bookings (Supabase down, a key changed), it shows a page on the same paper saying what the last click may have done and how to try again, instead of the framework's error page.
 

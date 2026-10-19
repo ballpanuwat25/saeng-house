@@ -1,13 +1,14 @@
 'use client';
 
 // The tabs of the request book, plain links. They live in the book's layout and know the open tab from the
-// address, so they turn over at the click while the next tab is still loading. The layout is not rendered
+// address; while the next tab loads, the one pressed draws its rule (Pending.tsx). The layout is not rendered
 // again on a move between tabs, so the number of waiting requests is asked for afresh on every move and
 // once a minute, from /owner/waiting.
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { Waiting } from '@/lib/owner/waiting';
+import { Pending } from '@/app/owner/Pending';
 
 const TABS = [
   { href: '/owner', name: 'Requests' },
@@ -48,6 +49,7 @@ export default function BookTabs({ first }: { first: Waiting }) {
               <span className="sr"> waiting{waiting.late ? ', some past the hour' : ''}</span>
             </span>
           )}
+          <Pending />
         </Link>
       ))}
     </nav>

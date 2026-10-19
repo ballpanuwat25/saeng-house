@@ -1,5 +1,6 @@
 // The request book's three tabs share this page: the header and its tabs stay while the sheet below
-// changes, and loading.tsx fills the sheet's place while the next one is read.
+// changes. There is no loading.tsx on purpose: the sheet being read stays up until the next is ready, with
+// a rule drawing under the link that was pressed (Pending.tsx), so the page never empties and jumps.
 import { BookTop } from '@/app/owner/book';
 
 export const dynamic = 'force-dynamic';

@@ -3,7 +3,7 @@
 // across every month. Both read only what they show from the store, so the page stays the same size after
 // years of bookings.
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { PendingLink } from '@/app/owner/Pending';
 import { hotel, rooms } from '@/content/site';
 import { bangkokToday, shortName, type Booking, type DeclineReason } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
@@ -65,9 +65,9 @@ function Page({ month, today, stays }: { month: Month; today: string; stays: Boo
           {monthName(month)} <span>{arriving.length || ''}</span>
         </h2>
         <nav className="owner-months" aria-label="Months">
-          <Link href={`/owner/register?month=${prev.key}`} rel="prev">‹ {monthName(prev)}</Link>
-          {month.key !== today.slice(0, 7) && <Link href="/owner/register">This month</Link>}
-          <Link href={`/owner/register?month=${next.key}`} rel="next">{monthName(next)} ›</Link>
+          <PendingLink href={`/owner/register?month=${prev.key}`} rel="prev">‹ {monthName(prev)}</PendingLink>
+          {month.key !== today.slice(0, 7) && <PendingLink href="/owner/register">This month</PendingLink>}
+          <PendingLink href={`/owner/register?month=${next.key}`} rel="next">{monthName(next)} ›</PendingLink>
         </nav>
       </div>
       <div className="ledger-page">
@@ -103,7 +103,7 @@ function Found({ q, month, today, found }: { q: string; month: Month; today: str
           Found for &ldquo;{q}&rdquo; <span>{found.length || ''}</span>
         </h2>
         <nav className="owner-months" aria-label="Months">
-          <Link href={`/owner/register?month=${month.key}`}>Back to {monthName(month)}</Link>
+          <PendingLink href={`/owner/register?month=${month.key}`}>Back to {monthName(month)}</PendingLink>
         </nav>
       </div>
       {found.length === FOUND_AT_MOST && <p className="owner-note">Showing the {FOUND_AT_MOST} newest requests. Type more of the name or the ref to narrow it.</p>}

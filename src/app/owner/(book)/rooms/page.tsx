@@ -3,6 +3,7 @@
 // still waiting, edged in lantern red so they stand out, and confirmed stays.
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { PendingLink } from '@/app/owner/Pending';
 import { hotel, rooms } from '@/content/site';
 import { addDays, bangkokToday, checkOutOf, dayMonth, HOLDING, roomOf, shortName, weekDay, type Booking } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
@@ -68,9 +69,9 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
           <div className="rack-controls">
             <RackJump from={from} />
             <nav className="owner-months" aria-label="Weeks">
-              <Link href={`/owner/rooms?from=${addDays(from, -NIGHTS)}`} rel="prev">‹ Four weeks earlier</Link>
-              {from !== today && <Link href="/owner/rooms">From tonight</Link>}
-              <Link href={`/owner/rooms?from=${until}`} rel="next">Four weeks later ›</Link>
+              <PendingLink href={`/owner/rooms?from=${addDays(from, -NIGHTS)}`} rel="prev">‹ Four weeks earlier</PendingLink>
+              {from !== today && <PendingLink href="/owner/rooms">From tonight</PendingLink>}
+              <PendingLink href={`/owner/rooms?from=${until}`} rel="next">Four weeks later ›</PendingLink>
             </nav>
           </div>
         </div>
