@@ -8,6 +8,7 @@ import { booking as bookingCopy, rooms } from '@/content/site';
 import type { Booking, RoomId } from '@/lib/booking/model';
 import DatePicker from '@/components/DatePicker';
 import { addBooking, cancelStay, changeStay, type FormState } from '@/app/owner/actions';
+import Busy from '@/app/owner/Busy';
 
 type StayValues = { roomId: RoomId; checkIn: string; nights: number };
 
@@ -112,7 +113,7 @@ export function ChangeStay({ b, today }: { b: Booking; today: string }) {
           <input type="hidden" name="ref" value={b.ref} />
           <p>The room is freed for other guests. This cannot be undone; a new booking would be needed.</p>
           {canMail && <MailBox label="Email the guest that it is cancelled" />}
-          <button className="btn" type="submit">Cancel {b.ref}</button>
+          <Busy label={`Cancel ${b.ref}`} busy="Cancelling…" />
         </form>
       </details>
     </details>

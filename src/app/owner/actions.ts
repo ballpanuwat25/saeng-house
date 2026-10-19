@@ -7,10 +7,21 @@ import { availability, bangkokToday, isDeclineReason, parseOwnerBooking, parseRo
 import { cancelledMail, changedMail, confirmedMail, declinedMail, sendMail } from '@/lib/booking/mail';
 import { bookingStore } from '@/lib/booking/store';
 import { newSession, ownerConfig, passwordMatches, SESSION_COOKIE, SESSION_DAYS, sessionValid } from '@/lib/owner/session';
+import { isShut, noteWrongTry } from '@/lib/owner/throttle';
+
+// the address the request came from; on Vercel the first entry of x-forwarded-for is set by the platform
+const clientIp = (h: Headers) => h.get('x-forwarded-for')?.split(',')[0].trim() || h.get('x-real-ip') || 'unknown';
 
 export async function login(form: FormData) {
   const config = ownerConfig();
-  if (!config || !(await passwordMatches(config, String(form.get('password') ?? '')))) redirect('/owner/login?wrong=1');
+  const ip = clientIp(await headers());
+  if (await isShut(ip)) redirect('/owner/login?shut=1');
+  if (!config || !(await passwordMatches(config, String(form.get('password') ?? '')))) {
+    await noteWrongTry(ip);
+    // a moment's wait on every wrong try slows a script down further, and costs the owner nothing
+    await new Promise((r) => setTimeout(r, 700));
+    redirect(`/owner/login?${(await isShut(ip)) ? 'shut' : 'wrong'}=1`);
+  }
   (await cookies()).set(SESSION_COOKIE, await newSession(config), {
     httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/owner', maxAge: SESSION_DAYS * 86400,
   });

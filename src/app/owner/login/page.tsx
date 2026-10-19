@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 import { hotel } from '@/content/site';
 import { ownerConfig } from '@/lib/owner/session';
+import { WINDOW_MINUTES } from '@/lib/owner/throttle';
 import { login } from '@/app/owner/actions';
+import Busy from '@/app/owner/Busy';
 
 export const metadata: Metadata = { title: `Owner · ${hotel.name}`, robots: { index: false } };
 
-export default async function OwnerLogin({ searchParams }: { searchParams: Promise<{ wrong?: string }> }) {
-  const { wrong } = await searchParams;
+export default async function OwnerLogin({ searchParams }: { searchParams: Promise<{ wrong?: string; shut?: string }> }) {
+  const { wrong, shut } = await searchParams;
+  const bad = Boolean(wrong || shut);
   const open = ownerConfig() !== null;
   return (
     <main className="owner owner-door wrap">
@@ -20,12 +23,18 @@ export default async function OwnerLogin({ searchParams }: { searchParams: Promi
             <label htmlFor="password">The owner&rsquo;s password</label>
             <input id="password" name="password" type="password" autoComplete="current-password" required autoFocus disabled={!open} />
           </div>
-          <p className={`msg${wrong ? ' bad' : ''}`} role={wrong ? 'alert' : undefined}>
-            {!open ? 'The book stays shut until OWNER_PASSWORD and OWNER_SESSION_SECRET are set.' : wrong ? 'That is not the password.' : 'For the house only.'}
+          <p className={`msg${bad ? ' bad' : ''}`} role={bad ? 'alert' : undefined}>
+            {!open
+              ? 'The book stays shut until OWNER_PASSWORD and OWNER_SESSION_SECRET are set.'
+              : shut
+                ? `Too many wrong tries from here. Wait ${WINDOW_MINUTES} minutes, then try again.`
+                : wrong
+                  ? 'That is not the password.'
+                  : 'For the house only.'}
           </p>
         </div>
         <div className="ticket-stub">
-          <button className="btn" type="submit" disabled={!open}>Open the book</button>
+          <Busy label="Open the book" busy="Opening…" disabled={!open} />
         </div>
       </form>
     </main>

@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { hotel, rooms } from '@/content/site';
 import { bangkokToday, type Booking, type DeclineReason } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
-import { baht, BookTop, Entry } from '@/app/owner/book';
+import { baht, Entry } from '@/app/owner/book';
 import { byArrival, monthFrom, shiftMonth, tally, type Month } from '@/app/owner/ledger';
 
 export const metadata: Metadata = { title: `Register · ${hotel.name}`, robots: { index: false } };
@@ -31,8 +31,7 @@ export default async function OwnerRegister({ searchParams }: { searchParams: Pr
   const q = (params.q ?? '').trim().replace(/\s+/g, ' ').slice(0, 80);
 
   return (
-    <main className="owner wrap">
-      <BookTop tab="register" />
+    <>
 
       <form className="owner-find" role="search" action="/owner/register">
         <label htmlFor="find">Find a booking by ref, name, email or contact</label>
@@ -50,7 +49,7 @@ export default async function OwnerRegister({ searchParams }: { searchParams: Pr
       ) : (
         <Page month={month} today={today} stays={await store.stays({ from: month.from, until: month.until })} />
       )}
-    </main>
+    </>
   );
 }
 

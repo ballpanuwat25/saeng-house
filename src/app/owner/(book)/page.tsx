@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import { hotel } from '@/content/site';
 import { bangkokToday, HOLDING, type Booking } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
-import { BookTop, Entry, type EntryKind } from '@/app/owner/book';
+import { Entry, type EntryKind } from '@/app/owner/book';
 import { AddBooking } from '@/app/owner/StayForms';
 import { byArrival } from '@/app/owner/ledger';
 
@@ -42,9 +42,7 @@ export default async function OwnerRequests({ searchParams }: { searchParams: Pr
   };
 
   return (
-    <main className="owner wrap">
-      <BookTop tab="requests" />
-
+    <>
       {params.done && (
         <p className="owner-note" role="status">
           {params.done} {DONE[params.what ?? ''] ?? 'saved'}. {MAIL[params.mail ?? 'sent'] ?? MAIL.sent}
@@ -70,6 +68,6 @@ export default async function OwnerRequests({ searchParams }: { searchParams: Pr
           </section>
         ))
       )}
-    </main>
+    </>
   );
 }

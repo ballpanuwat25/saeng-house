@@ -1,10 +1,12 @@
-// What the two tabs of the request book share: the header with its tabs, and one entry on the sheet.
+// What the tabs of the request book share: the header with its tabs, and one entry on the sheet.
 import Link from 'next/link';
 import { hotel } from '@/content/site';
 import { bangkokToday, checkOutOf, roomOf, type Booking, type DeclineReason } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
 import { confirmBooking, declineBooking, logout } from '@/app/owner/actions';
 import { ChangeStay } from '@/app/owner/StayForms';
+import BookTabs from '@/app/owner/BookTabs';
+import Busy from '@/app/owner/Busy';
 
 export const day = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 const when = (iso: string) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
@@ -29,11 +31,10 @@ export const REASONS: Record<DeclineReason, string> = {
   other: 'Something else',
 };
 
-export type Tab = 'requests' | 'rooms' | 'register';
-
-// The header on every tab. The Requests tab carries the number of requests waiting for an answer, in
-// lantern red once any of them is late, so the owner sees it from the rack or the register too.
-export async function BookTop({ tab }: { tab: Tab }) {
+// The header on every tab, from the book's layout, so it stays put while a tab loads. The Requests tab
+// carries the number of requests waiting for an answer, in lantern red once any of them is late, so the
+// owner sees it from the rack or the register too.
+export async function BookTop() {
   const store = bookingStore();
   const now = Date.now();
   const waitingNow = store ? await store.stays({ from: bangkokToday(), status: ['requested'] }) : [];
@@ -45,19 +46,7 @@ export async function BookTop({ tab }: { tab: Tab }) {
       <form action={logout}>
         <button className="owner-out" type="submit">Sign out</button>
       </form>
-      <nav className="owner-tabs" aria-label="Request book">
-        <Link href="/owner" aria-current={tab === 'requests' ? 'page' : undefined}>
-          Requests
-          {waitingNow.length > 0 && (
-            <span className="owner-tab-count" data-late={anyLate || undefined}>
-              {waitingNow.length}
-              <span className="sr"> waiting{anyLate ? ', some past the hour' : ''}</span>
-            </span>
-          )}
-        </Link>
-        <Link href="/owner/rooms" aria-current={tab === 'rooms' ? 'page' : undefined}>Rooms</Link>
-        <Link href="/owner/register" aria-current={tab === 'register' ? 'page' : undefined}>Register</Link>
-      </nav>
+      <BookTabs waiting={waitingNow.length} late={anyLate} />
     </header>
   );
 }
@@ -98,7 +87,7 @@ export function Entry({ b, kind, today, now, declining }: { b: Booking; kind: En
         <div className="entry-act">
           <form action={confirmBooking}>
             <input type="hidden" name="ref" value={b.ref} />
-            <button className="btn" type="submit">Confirm</button>
+            <Busy label="Confirm" busy="Confirming…" />
           </form>
           <details className="decline" open={declining !== undefined}>
             <summary>Decline</summary>
@@ -118,7 +107,7 @@ export function Entry({ b, kind, today, now, declining }: { b: Booking; kind: En
                 <textarea name="note" rows={2} maxLength={600} />
               </label>
               {declining && <p className="msg bad" role="alert">{declining === 'note' ? 'Write the reason for the guest first.' : 'Choose a reason first.'}</p>}
-              <button className="btn" type="submit">Decline and email the guest</button>
+              <Busy label="Decline and email the guest" busy="Declining…" />
             </form>
           </details>
         </div>

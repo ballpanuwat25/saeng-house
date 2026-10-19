@@ -43,7 +43,7 @@ Where the bookings go depends on what is set up:
 
 - **Nothing set up, on your machine:** bookings go to `.data/bookings.json` and each email is written to `.data/outbox/` as a page to open in a browser. Delete `.data/` to start over.
 - **Nothing set up, on Vercel:** the ticket is a demo. It stamps the seal and sends nothing.
-- **Supabase and Resend set up:** bookings live in Supabase and emails are sent. Run the files in `supabase/migrations` once each, in order (`0001` to `0004`), in the Supabase SQL editor, then set these in Vercel (Project, Settings, Environment Variables) and in `.env.local` for your machine:
+- **Supabase and Resend set up:** bookings live in Supabase and emails are sent. Run the files in `supabase/migrations` once each, in order (`0001` to `0005`), in the Supabase SQL editor, then set these in Vercel (Project, Settings, Environment Variables) and in `.env.local` for your machine:
 
 ```bash
 SUPABASE_URL=https://<project>.supabase.co
@@ -72,6 +72,8 @@ The owner can also:
 - **Add a booking** taken by phone, on LINE or as a walk-in, from the link above the sheets. It goes through the same check that the nights are free as a guest's request, so the rack and the register stay true, and is confirmed at once. The email may be left out, but there has to be an email, a phone or a LINE name.
 - **Change or cancel** a confirmed stay, from the entry on the Confirmed sheet. A change picks other nights or another room under the same check (the stay's own nights do not count against it), and works out the price again; a guest already staying can be given more nights. Cancelling frees the room. Either can email the guest, if there is an address.
 
+The header and tabs stay put while a tab loads, with a line saying the book is opening below them, and a button that saves and emails says what it is doing (Confirming…, Declining…) and cannot be pressed twice meanwhile.
+
 When the book cannot reach the bookings (Supabase down, a key changed), it shows a page on the same paper saying what the last click may have done and how to try again, instead of the framework's error page.
 
 **Rooms** (`/owner/rooms`) is the room rack old front desks kept on the wall: a line for each of the 12 rooms, a column for each night, four weeks at a time from tonight (`?from=2026-11-01` for another start), with links to the four weeks either side. Each stay that holds a room is a strip across its nights, with the guest's surname: confirmed stays in ink, requests still waiting edged in lantern red. Guests book a kind of room rather than a numbered one, so the rack deals each kind's stays onto its lines itself, first free line by arrival. The nights each kind is full are listed above the rack. Hovering or focusing a strip brings up a note on the same ticket paper with the guest's full name, the ref, the room, the nights, the total and where the request stands, since a one-night strip only has room for a couple of letters; on a phone the first tap shows the note and the second opens the stay. A strip links to the stay on the Requests or Register tab, and the date picker beside the links starts the rack on any night. On a phone the rack scrolls sideways inside the paper, with the room kinds pinned on the left.
@@ -93,7 +95,7 @@ OWNER_SESSION_SECRET=<a random string, e.g. from: openssl rand -base64 32>
 OWNER_EMAIL=<where to send each new request>
 ```
 
-A login lasts 14 days in an httpOnly cookie signed with the secret; changing the secret signs everyone out. With Supabase, run `supabase/migrations/0002_owner.sql`, `0003_register.sql` and `0004_change_stay.sql` once after `0001`. The first adds the decline reason to the table; the second adds the columns and indexes the register filters on (a `check_out` date, and a `search_text` column under a trigram index), so a month or a search reads only its own rows; the third adds the function that moves a confirmed stay under the same lock as a new request.
+A login lasts 14 days in an httpOnly cookie signed with the secret; changing the secret signs everyone out. Five wrong passwords from one address within 15 minutes shut the door to that address for the rest of the 15 minutes, and every wrong try waits a moment before it answers. With Supabase the wrong tries are kept in a table, so every server instance counts the same ones; without it they are kept in memory. If the table cannot be read, the door stays open rather than locking the owner out, and the error is logged. With Supabase, run `supabase/migrations/0002_owner.sql`, `0003_register.sql` `0004_change_stay.sql` and `0005_owner_logins.sql` once after `0001`. The first adds the decline reason to the table; the second adds the columns and indexes the register filters on (a `check_out` date, and a `search_text` column under a trigram index), so a month or a search reads only its own rows; the third adds the function that moves a confirmed stay under the same lock as a new request; the fourth adds the table of wrong passwords.
 
 ## What's next
 

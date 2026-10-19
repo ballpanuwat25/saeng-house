@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { hotel, rooms } from '@/content/site';
 import { addDays, bangkokToday, checkOutOf, HOLDING, roomOf, type Booking } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
-import { baht, BookTop, day } from '@/app/owner/book';
+import { baht, day } from '@/app/owner/book';
 import { rack } from '@/app/owner/rack';
 import RackJump from '@/app/owner/RackJump';
 import RackSlips, { type Slip } from '@/app/owner/RackSlips';
@@ -37,10 +37,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
 
   if (!store) {
     return (
-      <main className="owner wrap">
-        <BookTop tab="rooms" />
-        <p className="owner-note">No booking store is set up on this site, so there is nothing to show. The README explains how to connect Supabase.</p>
-      </main>
+      <p className="owner-note">No booking store is set up on this site, so there is nothing to show. The README explains how to connect Supabase.</p>
     );
   }
 
@@ -61,8 +58,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
   const lastRow = firstLine.at(-1)! + shelves.at(-1)!.lines;
 
   return (
-    <main className="owner wrap">
-      <BookTop tab="rooms" />
+    <>
 
       <section className="sheet" aria-labelledby="sheet-rack">
         <div className="sheet-head">
@@ -141,6 +137,6 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
           </RackSlips>
         </div>
       </section>
-    </main>
+    </>
   );
 }
