@@ -43,7 +43,7 @@ Where the bookings go depends on what is set up:
 
 - **Nothing set up, on your machine:** bookings go to `.data/bookings.json` and each email is written to `.data/outbox/` as a page to open in a browser. Delete `.data/` to start over.
 - **Nothing set up, on Vercel:** the ticket is a demo. It stamps the seal and sends nothing.
-- **Supabase and Resend set up:** bookings live in Supabase and emails are sent. Run the files in `supabase/migrations` once each, in order (`0001`, `0002`, `0003`), in the Supabase SQL editor, then set these in Vercel (Project, Settings, Environment Variables) and in `.env.local` for your machine:
+- **Supabase and Resend set up:** bookings live in Supabase and emails are sent. Run the files in `supabase/migrations` once each, in order (`0001` to `0004`), in the Supabase SQL editor, then set these in Vercel (Project, Settings, Environment Variables) and in `.env.local` for your machine:
 
 ```bash
 SUPABASE_URL=https://<project>.supabase.co
@@ -63,7 +63,14 @@ The owner answers requests at `/owner`. The book has three tabs, all plain links
 - **Confirm** marks it confirmed and emails the guest a confirmation.
 - **Decline** asks why first: full that night, could not reach the guest, room closed for repairs, or something else (written out for the guest). It frees the room and emails the guest a note worded from the reason. When the house is full, the email lists the other room kinds still free for the same nights, each with a link back to the booking ticket.
 
-A request can only be answered once, so a second click never sends a second email.
+A request can only be answered once, so a second click never sends a second email. Each waiting request says how long it has waited, in lantern red once it is past the hour the guest's email promises.
+
+The owner can also:
+
+- **Add a booking** taken by phone, on LINE or at the door, from the link above the sheets. It goes through the same check that the nights are free as a guest's request, so the rack and the register stay true, and is confirmed at once. The email may be left out, but there has to be an email, a phone or a LINE name.
+- **Change or cancel** a confirmed stay, from the entry on the Confirmed sheet. A change picks other nights or another room under the same check (the stay's own nights do not count against it), and works out the price again; a guest already staying can be given more nights. Cancelling frees the room. Either can email the guest, if there is an address.
+
+When the book cannot reach the bookings (Supabase down, a key changed), it shows a page on the same paper saying what the last click may have done and how to try again, instead of the framework's error page.
 
 **Rooms** (`/owner/rooms`) is the room rack old front desks kept on the wall: a line for each of the 12 rooms, a column for each night, four weeks at a time from tonight (`?from=2026-11-01` for another start), with links to the four weeks either side. Each stay that holds a room is a strip across its nights, with the guest's surname: confirmed stays in ink, requests still waiting edged in lantern red. Guests book a kind of room rather than a numbered one, so the rack deals each kind's stays onto its lines itself, first free line by arrival. The nights each kind is full are listed above the rack. Hovering or focusing a strip brings up a note on the same ticket paper with the guest's full name, the ref, the room, the nights, the total and where the request stands, since a one-night strip only has room for a couple of letters; on a phone the first tap shows the note and the second opens the stay. A strip links to the stay on the Requests or Register tab, and the date picker beside the links starts the rack on any night. On a phone the rack scrolls sideways inside the paper, with the room kinds pinned on the left.
 
@@ -83,7 +90,7 @@ OWNER_PASSWORD=<a long password for the owner>
 OWNER_SESSION_SECRET=<a random string, e.g. from: openssl rand -base64 32>
 ```
 
-A login lasts 14 days in an httpOnly cookie signed with the secret; changing the secret signs everyone out. With Supabase, run `supabase/migrations/0002_owner.sql` and then `0003_register.sql` once after `0001`. The first adds the decline reason to the table; the second adds the columns and indexes the register filters on (a `check_out` date, and a `search_text` column under a trigram index), so a month or a search reads only its own rows.
+A login lasts 14 days in an httpOnly cookie signed with the secret; changing the secret signs everyone out. With Supabase, run `supabase/migrations/0002_owner.sql`, `0003_register.sql` and `0004_change_stay.sql` once after `0001`. The first adds the decline reason to the table; the second adds the columns and indexes the register filters on (a `check_out` date, and a `search_text` column under a trigram index), so a month or a search reads only its own rows; the third adds the function that moves a confirmed stay under the same lock as a new request.
 
 ## What's next
 

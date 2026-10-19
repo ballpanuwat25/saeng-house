@@ -60,16 +60,37 @@ export const newRef = () => 'SH-' + Array.from(crypto.getRandomValues(new Uint8A
 
 type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
 
-export function parseStay(input: { checkIn?: unknown; nights?: unknown }): Parsed<{ checkIn: string; nights: number }> {
+// `earliest` is today for a new booking; a stay already under way may keep its own arrival day when changed
+export function parseStay(input: { checkIn?: unknown; nights?: unknown }, earliest = bangkokToday()): Parsed<{ checkIn: string; nights: number }> {
   const { checkIn, nights } = input;
   if (typeof checkIn !== 'string' || !ISO.test(checkIn) || Number.isNaN(Date.parse(checkIn))) return { ok: false, error: 'Choose an arrival date.' };
-  if (checkIn < bangkokToday()) return { ok: false, error: 'That date has already passed in Bangkok.' };
+  if (checkIn < earliest) return { ok: false, error: 'That date has already passed in Bangkok.' };
   const n = Number(nights);
   if (!Number.isInteger(n) || n < 1 || n > bookingCopy.maxNights) return { ok: false, error: `Stays run from 1 to ${bookingCopy.maxNights} nights.` };
   return { ok: true, value: { checkIn, nights: n } };
 }
 
 const text = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().replace(/\s+/g, ' ').slice(0, max) : '');
+
+// the stay part of a form: which room, which nights
+export function parseRoomStay(input: { roomId?: unknown; checkIn?: unknown; nights?: unknown }, earliest?: string): Parsed<{ roomId: RoomId; checkIn: string; nights: number }> {
+  const stay = parseStay(input, earliest);
+  if (!stay.ok) return stay;
+  if (!isRoomId(input.roomId)) return { ok: false, error: 'Choose a room.' };
+  return { ok: true, value: { roomId: input.roomId, ...stay.value } };
+}
+
+// a booking the owner takes by phone, on LINE or at the door. The email may be left out, since a guest on
+// the phone may not give one, but there has to be some way to reach them.
+export function parseOwnerBooking(input: Record<string, unknown>): Parsed<BookingRequest> {
+  const stay = parseRoomStay(input);
+  if (!stay.ok) return stay;
+  const guest = { name: text(input.name, 80), email: text(input.email, 120).toLowerCase(), contact: text(input.contact, 60) };
+  if (guest.name.length < 2) return { ok: false, error: 'Write the guest’s name.' };
+  if (guest.email && !EMAIL.test(guest.email)) return { ok: false, error: 'That email address does not look right.' };
+  if (!guest.email && !guest.contact) return { ok: false, error: 'Write an email, a phone number or a LINE name, so the house can reach the guest.' };
+  return { ok: true, value: { ...stay.value, guest, note: text(input.note, 500) } };
+}
 
 export function parseRequest(body: unknown): Parsed<BookingRequest> {
   const b = (body ?? {}) as Record<string, unknown>;

@@ -62,6 +62,29 @@ export function confirmedMail(b: Booking) {
   };
 }
 
+// sent when the owner moves a confirmed stay, at the guest's asking or the house's
+export function changedMail(b: Booking) {
+  const first = b.guest.name.split(' ')[0];
+  return {
+    subject: `${hotel.name}: booking ${b.ref} changed`,
+    html: ticket(b, `Your stay has changed, ${esc(first)}.`, [
+      `Your booking now reads as below, and the room is confirmed for these nights. Check-in is from 14:00 at the folding doors on Soi Wanit 2, and checkout is by noon.`,
+      `If this is not what you asked for, reply to this email or message us on LINE ${esc(hotel.line)}.`,
+    ]),
+  };
+}
+
+export function cancelledMail(b: Booking) {
+  const first = b.guest.name.split(' ')[0];
+  return {
+    subject: `${hotel.name}: booking ${b.ref} cancelled`,
+    html: ticket(b, `Your stay is cancelled, ${esc(first)}.`, [
+      `The room below is no longer held for you. Nothing was charged.`,
+      `If this is a surprise, reply to this email or message us on LINE ${esc(hotel.line)}, and we will see what we can do.`,
+    ]),
+  };
+}
+
 const sorry = `We are sorry. Nothing was charged.`;
 
 // `free` is how many rooms of each kind are still free for the same nights, used when the house is full

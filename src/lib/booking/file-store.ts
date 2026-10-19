@@ -61,14 +61,26 @@ export function fileStore(): BookingStore {
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .slice(0, limit);
     },
-    setStatus: (ref, answer) =>
+    setStatus: (ref, change, from) =>
       inTurn(async () => {
         const all = await load();
-        const i = all.findIndex((b) => b.ref === ref && b.status === 'requested');
+        const i = all.findIndex((b) => b.ref === ref && b.status === from);
         if (i < 0) return null;
-        all[i] = { ...all[i], ...answer };
+        all[i] = { ...all[i], ...change };
         await save(all);
         return all[i];
+      }),
+    move: (ref, stay) =>
+      inTurn(async () => {
+        const all = await load();
+        const i = all.findIndex((b) => b.ref === ref && b.status === 'confirmed');
+        if (i < 0) return null;
+        const others = all.filter((_, j) => j !== i);
+        const { fullOn } = availability(count(others, stay.checkIn, stay.nights), stay.checkIn, stay.nights)[stay.roomId];
+        if (fullOn.length) return { ok: false as const, fullOn };
+        all[i] = { ...all[i], ...stay, total: totalOf(stay.roomId, stay.nights) };
+        await save(all);
+        return { ok: true as const, booking: all[i] };
       }),
   };
 }

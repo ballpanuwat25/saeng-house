@@ -63,13 +63,21 @@ export function supabaseStore(url: string, key: string): BookingStore {
       const filters = new URLSearchParams({ select: '*', search_text: `ilike.*${needle}*`, order: 'created_at.desc', limit: String(limit) });
       return (await rest<Row[]>(`bookings?${filters}`, 'GET')).map(toBooking);
     },
-    async setStatus(ref, answer) {
-      // the status filter makes this a no-op on a request already answered, in the same statement as the update
-      const decline = answer.status === 'declined' ? answer.decline : null;
-      const rows = await rest<Row[]>(`bookings?ref=eq.${encodeURIComponent(ref)}&status=eq.requested`, 'PATCH', {
-        status: answer.status, decline_reason: decline?.reason ?? null, decline_note: decline?.note ?? null,
+    async setStatus(ref, change, from) {
+      // the status filter makes this a no-op on a booking already moved on, in the same statement as the update
+      const decline = change.status === 'declined' ? change.decline : null;
+      const rows = await rest<Row[]>(`bookings?ref=eq.${encodeURIComponent(ref)}&status=eq.${from}`, 'PATCH', {
+        status: change.status, decline_reason: decline?.reason ?? null, decline_note: decline?.note ?? null,
       });
       return rows[0] ? toBooking(rows[0]) : null;
+    },
+    async move(ref, stay) {
+      const out = await rpc<{ ok: boolean; booking?: Row; full_on?: string[]; missing?: boolean }>('move_booking', {
+        p_ref: ref, p_room: stay.roomId, p_capacity: roomOf(stay.roomId).count, p_check_in: stay.checkIn, p_nights: stay.nights,
+        p_total: totalOf(stay.roomId, stay.nights),
+      });
+      if (out.missing) return null;
+      return out.ok && out.booking ? { ok: true, booking: toBooking(out.booking) } : { ok: false, fullOn: out.full_on ?? [] };
     },
   };
 }

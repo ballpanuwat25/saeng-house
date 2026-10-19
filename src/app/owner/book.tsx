@@ -3,10 +3,21 @@ import Link from 'next/link';
 import { hotel } from '@/content/site';
 import { checkOutOf, roomOf, type Booking, type DeclineReason } from '@/lib/booking/model';
 import { confirmBooking, declineBooking, logout } from '@/app/owner/actions';
+import { ChangeStay } from '@/app/owner/StayForms';
 
 export const day = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 const when = (iso: string) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
 export const baht = (n: number) => '฿' + n.toLocaleString('en-US');
+
+// how long a request has been waiting. The guest's email promises an answer within the hour, so past an
+// hour it is marked late
+function waiting(sentAt: string, now: number) {
+  const minutes = Math.max(0, Math.round((now - Date.parse(sentAt)) / 60000));
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const text = minutes < 60 ? `${minutes} min` : hours < 48 ? `${hours} ${hours === 1 ? 'hour' : 'hours'}` : `${days} days`;
+  return { text: `waiting ${text}`, late: minutes > 60 };
+}
 
 export const REASONS: Record<DeclineReason, string> = {
   full: 'Full that night',
@@ -38,12 +49,14 @@ export function BookTop({ tab }: { tab: Tab }) {
 // is a line in the register, with what became of it
 export type EntryKind = 'answer' | 'ahead' | 'kept';
 
-export function Entry({ b, kind, today, declining }: { b: Booking; kind: EntryKind; today: string; declining?: string }) {
+export function Entry({ b, kind, today, now, declining }: { b: Booking; kind: EntryKind; today: string; now?: number; declining?: string }) {
+  const age = kind === 'answer' && now ? waiting(b.createdAt, now) : null;
   return (
     <li className="entry" id={b.ref}>
       <p className="entry-ref">
         <b>{b.ref}</b>
         <span>sent {when(b.createdAt)}</span>
+        {age && <em className="entry-age" data-late={age.late || undefined}>{age.text}</em>}
       </p>
       <div className="entry-guest">
         <p className="entry-name">{b.guest.name}</p>
@@ -59,6 +72,11 @@ export function Entry({ b, kind, today, declining }: { b: Booking; kind: EntryKi
       <p className="entry-total">{baht(b.total)}</p>
       {b.note && <p className="entry-note">&ldquo;{b.note}&rdquo;</p>}
       {kind === 'kept' && <p className="entry-state">{stateOf(b, today)}</p>}
+      {kind === 'ahead' && (
+        <div className="entry-act">
+          <ChangeStay b={b} today={today} />
+        </div>
+      )}
       {kind === 'answer' && (
         <div className="entry-act">
           <form action={confirmBooking}>
