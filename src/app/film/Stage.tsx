@@ -18,7 +18,7 @@ type Take = 'setting' | 'title' | 'playing' | 'ending' | 'done' | 'failed';
 const W = 1920;
 const H = 1080;
 // the opening card stays up at least this long, and longer when the frames are slow to load
-const TITLE_MS = 4200;
+const TITLE_MS = 2000;
 
 // a card over both frames, in the house's type: the opening one and the closing one
 function Card({ on, line, note }: { on: boolean; line: string; note: string }) {
@@ -61,11 +61,17 @@ export default function Stage() {
       const titled = performance.now();
       document.documentElement.dataset.scene = 'title';
       setTake('title');
-      const reset = await fetch('/film/reset', { method: 'POST' });
-      if (!reset.ok) throw new Error(`the book did not reset (${reset.status})`);
+      // the home page does not read the book, so the reset and the two frames load side by side
       const deskLane = new Lane('desk', parts(desk));
       const phoneLane = new Lane('phone', parts(phone), hero.hint.touch);
-      await Promise.all([deskLane.open('/', 0), phoneLane.open('/', 0)]);
+      await Promise.all([
+        fetch('/film/reset', { method: 'POST' }).then((r) => {
+          if (!r.ok) throw new Error(`the book did not reset (${r.status})`);
+        }),
+        deskLane.open('/', 0),
+        phoneLane.open('/', 0),
+      ]);
+      console.info(`[film] frames ready ${Math.round(performance.now() - titled)} ms after the title`);
       await new Promise((r) => setTimeout(r, Math.max(0, TITLE_MS - (performance.now() - titled))));
       if (stopped) return;
       // the card lifts off both frames at rest, a beat before anything moves

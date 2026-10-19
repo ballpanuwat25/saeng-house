@@ -124,7 +124,7 @@ The reset throws away every booking in the database it points at, so give the de
 
 ### Film mode
 
-The portfolio video is recorded from a stage at `/film`: the desk on the left (a 1440 by 900 window drawn at 0.95) and a phone on the right (390 by 844), each a live copy of the site in a frame, on the site's dark ground in a 1920 by 1080 page. One script plays both frames in step (`src/app/film/story.ts`), about 71 seconds. An opening card with the house's name holds for at least four seconds while the book resets and both frames load behind it, then:
+The portfolio video is recorded from a stage at `/film`: the desk on the left (a 1440 by 900 window drawn at 0.95) and a phone on the right (390 by 844), each a live copy of the site in a frame, on the site's dark ground in a 1920 by 1080 page. One script plays both frames in step (`src/app/film/story.ts`), about 71 seconds. An opening card with the house's name stays up while the book resets and both frames load behind it (about four to five seconds on the dev server, three on a production build, never under two), then:
 
 1. Both frames on the home page. A drawn cursor walks under the hero's lanterns and a finger drags across the phone's, then both scroll down together.
 2. On the phone the guest opens the ticket, picks a date, adds a night, picks a room, turns the ticket over, types a name and email and sends it; the seal stamps. On the desk the owner opens the demo book meanwhile.
