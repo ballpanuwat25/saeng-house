@@ -123,5 +123,5 @@ function stateOf(b: Booking, today: string) {
   if (b.status === 'declined') return `Declined: ${b.decline ? REASONS[b.decline.reason].toLowerCase() : 'no reason kept'}${b.decline?.note ? `. “${b.decline.note}”` : ''}`;
   if (b.status === 'cancelled') return 'Cancelled';
   if (b.status === 'confirmed') return ahead ? 'Confirmed' : 'Stayed';
-  return ahead ? <Link href={`/owner#${b.ref}`}>Waiting for an answer on the Requests tab</Link> : 'Never answered';
+  return ahead ? <Link href={`/owner#${b.ref}`} prefetch={false}>Waiting for an answer on the Requests tab</Link> : 'Never answered';
 }
