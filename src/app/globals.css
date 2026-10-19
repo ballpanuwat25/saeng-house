@@ -353,9 +353,15 @@ main > .hero { z-index: 2; }
 .owner-tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--lantern); }
 .owner-find { margin-top: 32px; display: grid; gap: 8px; max-width: 560px; }
 .owner-find label { font-size: var(--s-small); color: var(--muted); }
-.owner-find div { display: flex; gap: 10px; }
+.owner-find div { position: relative; display: flex; gap: 10px; }
+.owner-find .link-pending { bottom: -6px; border-radius: 2px; }
+/* while a search is being answered the results fade back, as a sheet does while a tab loads; the box does not */
+.owner > :not(.owner-top, .owner-tabs, .owner-find) { transition: opacity .2s ease; }
+html[data-finding] .owner > :not(.owner-top, .owner-tabs, .owner-find) { opacity: .5; transition-delay: .06s; }
 .owner-find input { flex: 1; min-width: 0; min-height: 48px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--paper); color: var(--ink-dark); font: inherit; }
 .owner-find input:focus-visible { outline: 2px solid var(--lantern); outline-offset: 2px; }
+/* the browser's own clear button is a grey cross from another design; emptying the box does the same */
+.owner-find input::-webkit-search-cancel-button { appearance: none; }
 .sheet-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 28px; margin-bottom: 16px; }
 .sheet-head h2 { margin-bottom: 0; }
 .owner-months { display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: var(--s-small); }

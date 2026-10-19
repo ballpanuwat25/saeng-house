@@ -4,6 +4,7 @@
 // years of bookings.
 import type { Metadata } from 'next';
 import { PendingLink } from '@/app/owner/Pending';
+import FindBox from '@/app/owner/FindBox';
 import { hotel, rooms } from '@/content/site';
 import { bangkokToday, shortName, type Booking, type DeclineReason } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
@@ -32,14 +33,7 @@ export default async function OwnerRegister({ searchParams }: { searchParams: Pr
   return (
     <>
 
-      <form className="owner-find" role="search" action="/owner/register">
-        <label htmlFor="find">Find a booking by ref, name, email or contact</label>
-        <div>
-          <input id="find" name="q" type="search" defaultValue={q} autoComplete="off" spellCheck={false} />
-          <button className="btn" type="submit">Find</button>
-          {params.month && <input type="hidden" name="month" value={month.key} />}
-        </div>
-      </form>
+      <FindBox q={q} month={params.month ? month.key : undefined} />
 
       {!store ? (
         <p className="owner-note">No booking store is set up on this site, so there is nothing to show. The README explains how to connect Supabase.</p>

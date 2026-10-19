@@ -85,7 +85,7 @@ When the book cannot reach the bookings (Supabase down, a key changed), it shows
 - occupancy per room kind: nights sold divided by the number of rooms of that kind times the days in the month
 - how many requests for arrivals that month were declined, by reason
 
-The search box (`?q=`) looks for a ref, guest name, email or contact across every month, newest request first, and shows at most 50.
+The search box (`?q=`) looks for a ref, guest name, email or contact across every month, newest request first, and shows at most 50. It searches as the owner types, a moment after they stop, with no button to press: the box stays put and only the results change, with a lantern-red rule under the box while they load. Without JavaScript, Enter sends it.
 
 On your machine with nothing set, the password is `saeng-dev`. On a deployed site, set both of these (and in `.env.local` to change them locally), or the request book stays shut:
 
