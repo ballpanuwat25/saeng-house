@@ -337,10 +337,10 @@ main > .hero { z-index: 2; }
 /* the open tab sits on the header's rule, like the tab of the page the book is open at */
 .owner-tabs a { margin-bottom: -1px; padding-bottom: 12px; border-bottom: 2px solid transparent; font-family: var(--serif); font-size: clamp(1.35rem, 1.2rem + .5vw, 1.7rem); line-height: 1.1; color: var(--muted); text-decoration: none; transition: color .2s ease; }
 .owner-tabs a:hover { color: var(--ink); }
-.owner-tab-count { margin-left: 8px; font-family: var(--face); font-size: var(--s-small); color: var(--muted); font-variant-numeric: tabular-nums; vertical-align: .35em; }
-.owner-tab-count[data-late] { color: var(--lantern); font-weight: 500; }
-/* a request came in while the book was open: the count is stamped on again, like the seal */
-.owner-tab-count[data-new] { display: inline-block; color: var(--lantern); font-weight: 500; animation: count-in .5s cubic-bezier(.2, 1.4, .4, 1) both; }
+/* the requests waiting, as a lantern-red disc beside the tab: each one is still owed an answer */
+.owner-tab-count { display: inline-grid; place-items: center; min-width: 1.75em; height: 1.75em; margin-left: 8px; padding: 0 .45em; border-radius: 999px; background: var(--lantern); color: var(--lantern-ink); font-family: var(--face); font-size: .8rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; vertical-align: .45em; }
+/* a request came in while the book was open: the disc is stamped on again, like the seal */
+.owner-tab-count[data-new] { animation: count-in .5s cubic-bezier(.2, 1.4, .4, 1) both; }
 @keyframes count-in { from { opacity: 0; transform: scale(2.2); } 60% { opacity: 1; } to { opacity: 1; transform: scale(1); } }
 /* read by screen readers, not shown */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -456,7 +456,11 @@ html[data-turning] .owner > :not(.owner-top, .owner-tabs) { opacity: .5; transit
 .entry-age[data-late] { color: var(--lantern); font-weight: 500; }
 /* a request that arrived while the book was open (JustIn.tsx): named in red, its line washed red and fading */
 .entry-new { font-style: normal; font-size: var(--s-small); font-weight: 500; color: var(--lantern); }
-.entry:has(.entry-new) { animation: just-in 9s ease-out both; }
+.entry:has(.entry-new) { position: relative; }
+/* the wash runs the paper's full width, past the sheet's margins, and follows its rounded corners */
+.entry:has(.entry-new)::before { content: ""; position: absolute; inset: 0 calc(-1 * clamp(16px, 2.4vw, 30px)); pointer-events: none; animation: just-in 9s ease-out both; }
+.entry:first-child:has(.entry-new)::before { border-top-left-radius: 14px; border-top-right-radius: 14px; }
+.entry:last-child:has(.entry-new)::before { border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; }
 @keyframes just-in { from { background-color: rgba(196, 24, 43, .12); } to { background-color: rgba(196, 24, 43, 0); } }
 .entry-guest, .entry-stay { display: grid; align-content: start; gap: 2px; }
 .entry-guest a { overflow-wrap: anywhere; text-decoration-color: rgba(122, 100, 85, .5); text-underline-offset: 3px; }
@@ -561,5 +565,5 @@ html[data-turning] .owner > :not(.owner-top, .owner-tabs) { opacity: .5; transit
   .loader { transition: opacity .3s ease; }
   body, .btn, .photo img, .walk li button, .top, .clock { transition: none; }
   .seal, .map .route, .sign.lit, .sign.lit .neon span, .sign.lit .neon span:last-child { animation: none; stroke-dashoffset: 0; }
-  .owner-tab-count[data-new], .entry:has(.entry-new) { animation: none; }
+  .owner-tab-count[data-new], .entry:has(.entry-new)::before { animation: none; }
 }
