@@ -15,7 +15,7 @@ export const REASONS: Record<DeclineReason, string> = {
   other: 'Something else',
 };
 
-export type Tab = 'requests' | 'register';
+export type Tab = 'requests' | 'rooms' | 'register';
 
 export function BookTop({ tab }: { tab: Tab }) {
   return (
@@ -27,6 +27,7 @@ export function BookTop({ tab }: { tab: Tab }) {
       </form>
       <nav className="owner-tabs" aria-label="Request book">
         <Link href="/owner" aria-current={tab === 'requests' ? 'page' : undefined}>Requests</Link>
+        <Link href="/owner/rooms" aria-current={tab === 'rooms' ? 'page' : undefined}>Rooms</Link>
         <Link href="/owner/register" aria-current={tab === 'register' ? 'page' : undefined}>Register</Link>
       </nav>
     </header>

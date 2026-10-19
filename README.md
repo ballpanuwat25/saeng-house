@@ -56,7 +56,7 @@ The service key never reaches the browser: only the server routes in `src/app/ap
 
 ### The owner's request book
 
-The owner answers requests at `/owner`. The book has two tabs, both plain links.
+The owner answers requests at `/owner`. The book has three tabs, all plain links.
 
 **Requests** (`/owner`) has two sheets: requests waiting for an answer and confirmed stays still to come, nearest first. Neither is paged, because a stay leaves this tab on its checkout morning. Each request has two answers:
 
@@ -64,6 +64,8 @@ The owner answers requests at `/owner`. The book has two tabs, both plain links.
 - **Decline** asks why first: full that night, could not reach the guest, room closed for repairs, or something else (written out for the guest). It frees the room and emails the guest a note worded from the reason. When the house is full, the email lists the other room kinds still free for the same nights, each with a link back to the booking ticket.
 
 A request can only be answered once, so a second click never sends a second email.
+
+**Rooms** (`/owner/rooms`) is the room rack old front desks kept on the wall: a line for each of the 12 rooms, a column for each night, four weeks at a time from tonight (`?from=2026-11-01` for another start), with links to the four weeks either side. Each stay that holds a room is a strip across its nights, with the guest's surname: confirmed stays in ink, requests still waiting edged in lantern red. Guests book a kind of room rather than a numbered one, so the rack deals each kind's stays onto its lines itself, first free line by arrival. The nights each kind is full are listed above the rack. A strip links to the stay on the Requests or Register tab. On a phone the rack scrolls sideways inside the paper, with the room kinds pinned on the left.
 
 **Register** (`/owner/register`) keeps every stay a month at a time, so the page stays the same size after years of bookings. `?month=2026-11` opens a month (this month without it), with links to the months either side. It lists the stays that arrive that month and what became of each, and rules off the month's figures at the top of the sheet:
 
