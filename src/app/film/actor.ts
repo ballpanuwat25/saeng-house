@@ -26,7 +26,9 @@ const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
 
 // a CSS :hover cannot be set from a script, so the element under the drawn cursor gets this class and a
 // copy of the site's hover looks for the controls the tour touches. The film also hides the frame's
-// scrollbar and the dev server's badge, neither of which a visitor's screen would show
+// scrollbar and the dev server's badge, neither of which a visitor's screen would show, and the keyboard's
+// focus rings: the pointer events here are not the browser's own, so it takes every focus for a keyboard
+// one, where a hand with a mouse would only ever see the outline of the field being typed in
 const HOVER = 'film-hover';
 const HOVER_CSS = `
 .btn.${HOVER} { transform: translateY(-2px); background: #d6213a; }
@@ -41,6 +43,8 @@ const HOVER_CSS = `
 .cal-head button.${HOVER}:not(:disabled) { color: var(--lantern); }
 html, body, a, button, label { cursor: none !important; }
 html { scrollbar-width: none; }
+:focus-visible { outline: none !important; }
+input:not([type="radio"], [type="checkbox"]):focus, textarea:focus { outline: 2px solid var(--lantern) !important; outline-offset: 1px !important; }
 nextjs-portal { display: none !important; }
 `;
 
@@ -107,8 +111,14 @@ export function installActor(win: Window, { touch, slowActions }: Options) {
       step();
     });
 
-  // brings an element on screen, a third of the way down, when it is not already comfortably in view
+  // brings an element on screen, a third of the way down, when it is not already comfortably in view; one
+  // pinned to the window, like the book's tabs, is always in reach and never scrolled to
+  const pinned = (el: Element) => {
+    for (let e: Element | null = el; e; e = e.parentElement) if (['sticky', 'fixed'].includes(win.getComputedStyle(e).position)) return true;
+    return false;
+  };
   const reveal = async (el: Element) => {
+    if (pinned(el)) return;
     const r = el.getBoundingClientRect();
     if (r.top >= 60 && r.bottom <= win.innerHeight - 60) return;
     const y = win.scrollY + r.top - win.innerHeight / 3;
