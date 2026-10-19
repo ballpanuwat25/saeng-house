@@ -119,6 +119,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
                     <Link
                       key={b.ref}
                       href={entryOf(b, today)}
+                      prefetch={false}
                       className="strip"
                       data-waiting={b.status === 'requested' || undefined}
                       data-before={before || undefined}
