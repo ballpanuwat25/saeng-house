@@ -104,7 +104,8 @@ export default function Stage() {
   return (
     // the stage stays unseen until it knows its scale and its type has loaded, so the opening card never
     // shows at full size, or in a stand-in font, and then jumps
-    <div className="film" style={{ width: W, height: H, transform: `translate(-50%, -50%) scale(${fit ?? 1})`, visibility: fit !== null && typeIn ? undefined : 'hidden' }}>
+    <div className="film-fit">
+    <div className="film" style={{ width: W, height: H, zoom: fit ?? 1, visibility: fit !== null && typeIn ? undefined : 'hidden' }}>
       <figure className="film-desk">
         <div className="film-screen">
           {/* the desk's window is 1440 by 900, drawn at a little under full size to fit beside the phone */}
@@ -133,6 +134,7 @@ export default function Stage() {
       <Card on={take === 'setting' || take === 'title'} line="A guest books a room on a phone. The owner answers at the desk." note="A booking site for a small hotel in Talat Noi, Bangkok." />
       <Card on={take === 'ending' || take === 'done'} line="A booking ticket for the guest, a request book for the owner, and the emails between them." note="A fictional hotel in Talat Noi, Bangkok, made for a portfolio." />
       {take === 'failed' && <p className="film-problem">The take stopped: {problem}</p>}
+    </div>
     </div>
   );
 }

@@ -1,13 +1,16 @@
 /* The film stage (Stage.tsx): the site's dark ground, two plain frames with the ticket's paper shadow, and a
    caption under each in the serif. Sizes are in the video's own pixels; the stage scales as a whole. */
 html[data-film], html[data-film] body { overflow: hidden; background: var(--bg); }
-.film { position: fixed; left: 50%; top: 50%; transform-origin: 50% 50%; display: flex; align-items: flex-start; justify-content: center; gap: 80px; padding-top: 82px; background: var(--bg); }
+/* The stage and the desk's frame are sized with zoom, not a scale transform: Chrome draws a sticky bar inside
+   a transformed frame with a stray copy of its edge at the top of the window, which zoom does not do */
+.film-fit { position: fixed; inset: 0; display: grid; place-items: center; overflow: hidden; background: var(--bg); }
+.film { position: relative; flex: none; display: flex; align-items: flex-start; justify-content: center; gap: 80px; padding-top: 82px; background: var(--bg); }
 .film figure { margin: 0; }
 .film-screen { position: relative; overflow: hidden; background: var(--bg); box-shadow: 0 0 0 1px rgba(236, 235, 232, .07), 0 24px 40px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .2); }
 .film-desk .film-screen { width: 1368px; height: 855px; border-radius: 14px; }
 .film-phone .film-screen { width: 390px; height: 844px; border-radius: 34px; }
-.film-inner { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-.film-desk .film-inner { width: 1440px; height: 900px; transform: scale(.95); }
+.film-inner { position: absolute; left: 0; top: 0; }
+.film-desk .film-inner { width: 1440px; height: 900px; zoom: .95; }
 .film-phone .film-inner { width: 390px; height: 844px; }
 .film iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--bg); }
 .film-veil { position: absolute; inset: 0; background: var(--bg); opacity: 1; pointer-events: none; }
