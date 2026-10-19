@@ -37,7 +37,7 @@ generated with Google Gemini; the room sources are in `scripts/assets/rooms`.
 
 ## Booking
 
-The ticket checks which rooms are free for the chosen nights, takes the guest's name and email, saves the request and emails the guest that their room is held. The house has 5 Lattice, 4 Moon Window and 3 Roof rooms (`count` in `src/content/site.ts`); a request holds its room until the owner declines it.
+The arrival date is chosen on the house's own calendar (`src/components/DatePicker.tsx`) rather than the browser's, which looks different in every browser: cream ticket paper, the chosen day stamped in lantern red like the seal, past days shut, and the arrow keys, Page Up and Page Down to move. The owner's Rooms tab uses the same picker. The ticket checks which rooms are free for the chosen nights, takes the guest's name and email, saves the request and emails the guest that their room is held. The house has 5 Lattice, 4 Moon Window and 3 Roof rooms (`count` in `src/content/site.ts`); a request holds its room until the owner declines it.
 
 Where the bookings go depends on what is set up:
 
@@ -65,7 +65,7 @@ The owner answers requests at `/owner`. The book has three tabs, all plain links
 
 A request can only be answered once, so a second click never sends a second email.
 
-**Rooms** (`/owner/rooms`) is the room rack old front desks kept on the wall: a line for each of the 12 rooms, a column for each night, four weeks at a time from tonight (`?from=2026-11-01` for another start), with links to the four weeks either side. Each stay that holds a room is a strip across its nights, with the guest's surname: confirmed stays in ink, requests still waiting edged in lantern red. Guests book a kind of room rather than a numbered one, so the rack deals each kind's stays onto its lines itself, first free line by arrival. The nights each kind is full are listed above the rack. A strip links to the stay on the Requests or Register tab. On a phone the rack scrolls sideways inside the paper, with the room kinds pinned on the left.
+**Rooms** (`/owner/rooms`) is the room rack old front desks kept on the wall: a line for each of the 12 rooms, a column for each night, four weeks at a time from tonight (`?from=2026-11-01` for another start), with links to the four weeks either side. Each stay that holds a room is a strip across its nights, with the guest's surname: confirmed stays in ink, requests still waiting edged in lantern red. Guests book a kind of room rather than a numbered one, so the rack deals each kind's stays onto its lines itself, first free line by arrival. The nights each kind is full are listed above the rack. Hovering or focusing a strip brings up a note on the same ticket paper with the guest's full name, the ref, the room, the nights, the total and where the request stands, since a one-night strip only has room for a couple of letters; on a phone the first tap shows the note and the second opens the stay. A strip links to the stay on the Requests or Register tab, and the date picker beside the links starts the rack on any night. On a phone the rack scrolls sideways inside the paper, with the room kinds pinned on the left.
 
 **Register** (`/owner/register`) keeps every stay a month at a time, so the page stays the same size after years of bookings. `?month=2026-11` opens a month (this month without it), with links to the months either side. It lists the stays that arrive that month and what became of each, and rules off the month's figures at the top of the sheet:
 

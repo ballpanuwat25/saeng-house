@@ -6,8 +6,10 @@ import Link from 'next/link';
 import { hotel, rooms } from '@/content/site';
 import { addDays, bangkokToday, checkOutOf, HOLDING, roomOf, type Booking } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
-import { BookTop, day } from '@/app/owner/book';
+import { baht, BookTop, day } from '@/app/owner/book';
 import { rack } from '@/app/owner/rack';
+import RackJump from '@/app/owner/RackJump';
+import RackSlips, { type Slip } from '@/app/owner/RackSlips';
 
 export const metadata: Metadata = { title: `Rooms · ${hotel.name}`, robots: { index: false } };
 export const dynamic = 'force-dynamic';
@@ -42,7 +44,18 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
     );
   }
 
-  const shelves = rack(await store.stays({ from, until, status: HOLDING }), from, NIGHTS);
+  const stays = await store.stays({ from, until, status: HOLDING });
+  const shelves = rack(stays, from, NIGHTS);
+  const slips: Record<string, Slip> = Object.fromEntries(
+    stays.map((b) => [
+      b.ref,
+      {
+        ref: b.ref, name: b.guest.name, room: roomOf(b.roomId).name, total: baht(b.total), note: b.note, waiting: b.status === 'requested',
+        nights: `${day(b.checkIn)} to ${day(checkOutOf(b.checkIn, b.nights))}, ${b.nights} ${b.nights === 1 ? 'night' : 'nights'}`,
+        state: b.status === 'requested' ? 'Waiting for your answer' : checkOutOf(b.checkIn, b.nights) > today ? 'Confirmed' : 'Stayed',
+      },
+    ]),
+  );
   // the first line of each kind of room, after the row of dates
   const firstLine = shelves.reduce<number[]>((at, s, i) => [...at, i === 0 ? 2 : at[i - 1] + shelves[i - 1].lines], []);
   const lastRow = firstLine.at(-1)! + shelves.at(-1)!.lines;
@@ -60,6 +73,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
             <Link href={`/owner/rooms?from=${addDays(from, -NIGHTS)}`} rel="prev">‹ Four weeks earlier</Link>
             {from !== today && <Link href="/owner/rooms">From tonight</Link>}
             <Link href={`/owner/rooms?from=${until}`} rel="next">Four weeks later ›</Link>
+            <RackJump from={from} />
           </nav>
         </div>
 
@@ -75,7 +89,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
             <span className="rack-key">A red edge is a request still waiting for your answer.</span>
           </p>
 
-          <div className="rack-scroll" tabIndex={0} role="region" aria-label="Room rack, one line per room and one column per night">
+          <RackSlips slips={slips}>
             <div className="rack" style={{ '--nights': NIGHTS } as React.CSSProperties}>
               <span className="rack-corner" aria-hidden />
               {nights.map((n, i) => {
@@ -111,7 +125,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
                       data-before={before || undefined}
                       data-after={after || undefined}
                       style={{ gridColumn: `${start + 2} / span ${span}`, gridRow: firstLine[k] + line }}
-                      title={`${b.guest.name}, ${b.ref}`}
+                      data-ref={b.ref}
                       aria-label={`${b.guest.name}, ${room.name}, ${day(b.checkIn)} to ${day(checkOutOf(b.checkIn, b.nights))}${b.status === 'requested' ? ', waiting for an answer' : ''}`}
                     >
                       {surname(b.guest.name)}
@@ -120,7 +134,7 @@ export default async function OwnerRooms({ searchParams }: { searchParams: Promi
                 ];
               })}
             </div>
-          </div>
+          </RackSlips>
         </div>
       </section>
     </main>

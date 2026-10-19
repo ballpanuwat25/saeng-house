@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { booking, hotel, rooms, type Room } from '@/content/site';
+import DatePicker from '@/components/DatePicker';
 import type { Availability } from '@/lib/booking/model';
 
 // fired by "Book this room" in the rooms section so the ticket arrives with that room chosen
@@ -140,7 +141,7 @@ export default function BookingCard() {
             <div className="pair">
               <div className="field">
                 <label htmlFor="checkin">Arriving</label>
-                <input type="date" id="checkin" min={today} value={stay.checkIn} onChange={(e) => changeStay({ checkIn: e.target.value })} />
+                <DatePicker id="checkin" label="Arriving" min={today} value={stay.checkIn} onChange={(checkIn) => changeStay({ checkIn })} />
               </div>
               <div className="field">
                 <span className="lbl" id="n-lbl">Nights</span>
