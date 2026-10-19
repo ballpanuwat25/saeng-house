@@ -8,7 +8,7 @@ import { evening } from '@/content/site';
 import { onHeroReady } from '@/lib/hero-load';
 
 // Page-wide behaviour of the one-evening story: scroll moves the clock from 18:00 to 23:00 and darkens
-// the ground, an oxblood lamp follows the pointer below the hero, smooth scrolling and entrances.
+// the ground, smooth scrolling and entrances. The lamp that follows the pointer is Lamp.tsx.
 const DUSK = [28, 17, 13], NIGHT = [8, 5, 5];
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -53,7 +53,6 @@ export default function Evening() {
     const top = document.getElementById('top')!;
     const clock = document.getElementById('clock')!;
     const clockT = document.getElementById('clock-t')!;
-    const glow = document.getElementById('glow')!;
     const root = document.documentElement;
 
     const onScroll = () => {
@@ -72,36 +71,6 @@ export default function Evening() {
     addEventListener('scroll', onScroll, { passive: true });
     addEventListener('resize', onScroll);
     onScroll();
-
-    // below the hero: an oxblood lamp follows the pointer over the dark ground
-    const lamp = { x: innerWidth / 2, y: innerHeight / 2, tx: innerWidth / 2, ty: innerHeight / 2, moved: 0 };
-    const onPointer = (e: PointerEvent) => {
-      lamp.tx = e.clientX;
-      lamp.ty = e.clientY;
-      lamp.moved = performance.now();
-    };
-    addEventListener('pointermove', onPointer, { passive: true });
-    let raf = 0;
-    const tick = (now: number) => {
-      const show = hero.getBoundingClientRect().bottom < innerHeight * 0.5;
-      glow.classList.toggle('on', show);
-      if (show) {
-        // with no mouse at all (a touch screen) the lamp drifts on its own; once a pointer has moved it
-        // stays where the pointer is, even while the pointer rests
-        if (!lamp.moved && !reduce) {
-          const t = now / 1000;
-          lamp.tx = innerWidth * (0.5 + 0.32 * Math.sin(t * 0.23));
-          lamp.ty = innerHeight * (0.5 + 0.25 * Math.sin(t * 0.31 + 1));
-        }
-        const k = reduce ? 1 : 0.08;
-        lamp.x += (lamp.tx - lamp.x) * k;
-        lamp.y += (lamp.ty - lamp.y) * k;
-        glow.style.setProperty('--gx', `${lamp.x}px`);
-        glow.style.setProperty('--gy', `${lamp.y}px`);
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
 
     gsap.registerPlugin(ScrollTrigger);
     let lenis: Lenis | null = null;
@@ -155,9 +124,7 @@ export default function Evening() {
     return () => {
       removeEventListener('scroll', onScroll);
       removeEventListener('resize', onScroll);
-      removeEventListener('pointermove', onPointer);
       document.removeEventListener('click', onAnchor);
-      cancelAnimationFrame(raf);
       stopIntroWait();
       stopScrollWait();
       ctx.revert();

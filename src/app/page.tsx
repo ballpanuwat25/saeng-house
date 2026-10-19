@@ -7,6 +7,7 @@ import Walk from '@/components/Walk';
 import Book from '@/components/Book';
 import Footer from '@/components/Footer';
 import Evening from '@/components/Evening';
+import Lamp from '@/components/Lamp';
 import LanternLoader from '@/components/LanternLoader';
 
 export default function Home() {
@@ -14,7 +15,7 @@ export default function Home() {
     <>
       <LanternLoader />
       <Header />
-      <div className="glow" id="glow" aria-hidden="true" />
+      <Lamp below="hero" />
       <main id="home">
         <Hero />
         <Arrive />
