@@ -10,15 +10,16 @@ import { story } from '@/app/film/story';
 // watched on a smaller screen; the recording opens it in a 1920 by 1080 window, where it sits at full size.
 //
 // The state of the take is on <html data-film>: "setting" until the opening card's type has loaded,
-// "title" while that card is up and the frames load behind it, "playing", "ending" while the closing card
+// "title" while that card is up and the frames start loading behind it, "playing" from when it lifts onto
+// the site's lantern loaders, "ending" while the closing card
 // is up, then "done" or "failed", so whatever records it knows when to start and stop.
 
 type Take = 'setting' | 'title' | 'playing' | 'ending' | 'done' | 'failed';
 
 const W = 1920;
 const H = 1080;
-// the opening card stays up at least this long, and longer when the frames are slow to load
-const TITLE_MS = 2000;
+// the opening card stays up at least this long, and until both frames have their page
+const TITLE_MS = 1300;
 
 // a card over both frames, in the house's type: the opening one and the closing one
 function Card({ on, line, note }: { on: boolean; line: string; note: string }) {
@@ -64,19 +65,20 @@ export default function Stage() {
       // the home page does not read the book, so the reset and the two frames load side by side
       const deskLane = new Lane('desk', parts(desk));
       const phoneLane = new Lane('phone', parts(phone), hero.hint.touch);
-      await Promise.all([
-        fetch('/film/reset', { method: 'POST' }).then((r) => {
-          if (!r.ok) throw new Error(`the book did not reset (${r.status})`);
-        }),
-        deskLane.open('/', 0),
-        phoneLane.open('/', 0),
-      ]);
-      console.info(`[film] frames ready ${Math.round(performance.now() - titled)} ms after the title`);
+      const reset = fetch('/film/reset', { method: 'POST' }).then((r) => {
+        if (!r.ok) throw new Error(`the book did not reset (${r.status})`);
+      });
+      await Promise.all([deskLane.load('/', 0), phoneLane.load('/', 0)]);
+      await Promise.all([deskLane.unveil(0), phoneLane.unveil(0)]);
       await new Promise((r) => setTimeout(r, Math.max(0, TITLE_MS - (performance.now() - titled))));
       if (stopped) return;
-      // the card lifts off both frames at rest, a beat before anything moves
+      // the card lifts while the site's lantern loader lights both frames, which is the site's own opening;
+      // nothing moves until both have finished and the pages are at rest
+      document.documentElement.dataset.scene = 'lanterns';
       setTake('playing');
-      await sleep(1400);
+      await Promise.all([reset, deskLane.settle(), phoneLane.settle()]);
+      console.info(`[film] frames ready ${Math.round(performance.now() - titled)} ms after the title`);
+      await sleep(1100);
       await story(deskLane, phoneLane, (scene) => (document.documentElement.dataset.scene = scene));
       if (stopped) return;
       // the closing card comes up over both frames and holds long enough to read

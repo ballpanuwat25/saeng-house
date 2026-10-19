@@ -61,7 +61,7 @@ The owner answers requests at `/owner`. The book has three tabs, all plain links
 **Requests** (`/owner`) has two sheets: requests waiting for an answer and confirmed stays still to come, nearest first. Neither is paged, because a stay leaves this tab on its checkout morning. Each request has two answers:
 
 - **Confirm** marks it confirmed and emails the guest a confirmation.
-- **Decline** asks why first: full that night, could not reach the guest, room closed for repairs, or something else (written out for the guest). It frees the room and emails the guest a note worded from the reason. When the house is full, the email lists the other room kinds still free for the same nights, each with a link back to the booking ticket.
+- **Decline** asks why first, and while its panel is open Confirm steps aside, so the only red button left is the one that declines; "Don't decline" folds it away and brings Confirm back. The reasons: full that night, could not reach the guest, room closed for repairs, or something else (written out for the guest). It frees the room and emails the guest a note worded from the reason. When the house is full, the email lists the other room kinds still free for the same nights, each with a link back to the booking ticket.
 
 A request can only be answered once, so a second click never sends a second email. Each waiting request says how long it has waited, in lantern red once it is past the hour the guest's email promises. The Requests tab carries the number waiting, on every tab, in lantern red when any of them is late.
 
@@ -124,11 +124,11 @@ The reset throws away every booking in the database it points at, so give the de
 
 ### Film mode
 
-The portfolio video is recorded from a stage at `/film`: the desk on the left (a 1440 by 900 window drawn at 0.95) and a phone on the right (390 by 844), each a live copy of the site in a frame, on the site's dark ground in a 1920 by 1080 page. One script plays both frames in step (`src/app/film/story.ts`), about 71 seconds. An opening card with the house's name stays up while the book resets and both frames load behind it (about four to five seconds on the dev server, three on a production build, never under two), then:
+The portfolio video is recorded from a stage at `/film`: the desk on the left (a 1440 by 900 window drawn at 0.95) and a phone on the right (390 by 844), each a live copy of the site in a frame, on the site's dark ground in a 1920 by 1080 page. One script plays both frames in step (`src/app/film/story.ts`), about 71 seconds. An opening card with the house's name stays up until both frames have their page (at least 1.3 seconds), then lifts while the site's own lantern loader lights both, and the story starts once both pages are at rest:
 
 1. Both frames on the home page. A drawn cursor walks under the hero's lanterns and a finger drags across the phone's, then both scroll down together.
 2. On the phone the guest opens the ticket, picks a date, adds a night, picks a room, turns the ticket over, types a name and email and sends it; the seal stamps. On the desk the owner opens the demo book meanwhile.
-3. On the desk the owner moves to Rooms, where the count beside Requests goes up and the new strip carries its paper note, then back to Requests. There the owner opens Decline to show the reasons it asks for, folds it away without declining, and presses Confirm.
+3. On the desk the owner moves to Rooms, where the count beside Requests goes up and the new strip carries its paper note, then back to Requests. There the owner opens Decline to show the reasons it asks for, backs out with "Don't decline", and presses Confirm.
 4. The phone opens the confirmation email the guest would get; the desk turns to the Register's month figures. A closing card with the house's name comes up over both.
 
 The pace of the whole take is one number, `TEMPO` in `src/app/film/lane.ts`, which scales every pause, glide and scroll.
@@ -142,7 +142,7 @@ DEMO_MODE=1
 OWNER_SESSION_SECRET=<any string>
 ```
 
-then open `http://localhost:3000/film` in a window of 1920 by 1080 (a smaller window shows the whole stage scaled down). Leave Supabase out of `.env.local` so the takes use the file under `.data/`: the reset throws away every booking in whichever store the site points at. The page says where the take is on `<html>`: `data-film` is `setting` until the opening card's type has loaded, `title` while that card is up, `playing`, `ending` while the closing card is up, then `done` or `failed`, and `data-scene` names the moment (`title`, `opening`, `booking`, `calendar`, `sealed`, `owner`, `rack`, `declining`, `confirming`, `close`, `end`), so a recorder knows when to start and stop.
+then open `http://localhost:3000/film` in a window of 1920 by 1080 (a smaller window shows the whole stage scaled down). Leave Supabase out of `.env.local` so the takes use the file under `.data/`: the reset throws away every booking in whichever store the site points at. The page says where the take is on `<html>`: `data-film` is `setting` until the opening card's type has loaded, `title` while that card is up, `playing` from when it lifts, `ending` while the closing card is up, then `done` or `failed`, and `data-scene` names the moment (`title`, `lanterns`, `opening`, `booking`, `calendar`, `sealed`, `owner`, `rack`, `declining`, `confirming`, `close`, `end`), so a recorder knows when to start and stop.
 
 ## What's next
 

@@ -113,8 +113,8 @@ export async function story(desk: Lane, phone: Lane, mark: (scene: string) => vo
   await sleep(500);
   await desk.hover(`${entry} .entry-name`);
   await sleep(1400);
-  // the owner opens Decline to show what it asks for, the reasons the guest's email is worded from, then
-  // folds it away again and confirms instead
+  // the owner opens Decline to show what it asks for (Confirm steps aside while it is open), the reasons
+  // the guest's email is worded from, then backs out with "Don't decline" and confirms instead
   await desk.press(`${entry} .decline summary`);
   await desk.see(`${entry} .decline[open] fieldset`);
   mark('declining');
@@ -123,12 +123,14 @@ export async function story(desk: Lane, phone: Lane, mark: (scene: string) => vo
   await sleep(700);
   await desk.hover(`${entry} .decline fieldset label:nth-of-type(2)`, 600);
   await sleep(1500);
-  await desk.press(`${entry} .decline summary`);
+  await desk.hover(`${entry} .decline-back`, 700);
+  await sleep(400);
+  await desk.press(`${entry} .decline-back`);
+  await sleep(700);
+  await desk.hover(`${entry} .entry-act > form .btn`, 900);
   await sleep(600);
-  await desk.hover(`${entry} .entry-act form .btn`, 900);
-  await sleep(600);
-  await desk.press(`${entry} .entry-act form .btn`);
-  await desk.see(`${entry} .entry-act form .btn`, 'Confirming');
+  await desk.press(`${entry} .entry-act > form .btn`);
+  await desk.see(`${entry} .entry-act > form .btn`, 'Confirming');
   mark('confirming');
   await desk.see('.owner-note', 'confirmed');
   // the answer comes back to the same tab without moving the page, so the owner scrolls up to its line

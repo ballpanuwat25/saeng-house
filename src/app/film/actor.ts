@@ -35,6 +35,7 @@ const HOVER_CSS = `
 .date-pick.${HOVER} { background: rgba(42, 23, 18, .11); }
 .opt.${HOVER} { background: rgba(42, 23, 18, .1); }
 .decline fieldset label.${HOVER} { background: rgba(42, 23, 18, .1); }
+.decline-back.${HOVER} { color: var(--ink-dark); }
 .cal-week button.${HOVER}:not(:disabled) { background: rgba(42, 23, 18, .08); }
 .cal-head button.${HOVER}:not(:disabled) { color: var(--lantern); }
 html, body, a, button, label { cursor: none !important; }

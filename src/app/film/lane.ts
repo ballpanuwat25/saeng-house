@@ -64,8 +64,17 @@ export class Lane {
     });
   }
 
-  // loads a page into the frame behind its veil, puts the hands in, waits for the lantern loader to finish
+  // loads a page into the frame behind its veil, puts the hands in, waits for the lantern loader to finish,
+  // and lifts the veil
   async open(path: string, fade = 450) {
+    await this.load(path, fade);
+    await this.settle();
+    await wait(250);
+    await this.unveil(fade);
+  }
+
+  // the page in, behind the veil, with the hands put into it
+  async load(path: string, fade = 450) {
     const { frame, veil } = this.parts;
     veil.style.transition = `opacity ${fade}ms ease`;
     veil.style.opacity = '1';
@@ -75,11 +84,18 @@ export class Lane {
       frame.src = path;
     });
     installActor(frame.contentWindow!, { touch: this.touch, slowActions: this.touch ? 0 : 1300 });
+  }
+
+  // waits out the site's own lantern loader
+  async settle() {
     await this.ask({ cmd: 'wait', sel: '.loader', gone: true, ms: 30000 });
     // the phone is a touch screen, but the frame's browser has a mouse, so the hero's hint is put right
     if (this.hint) await this.ask({ cmd: 'text', sel: '.hero .hint', text: this.hint });
-    await wait(250);
-    veil.style.opacity = '0';
+  }
+
+  async unveil(fade = 450) {
+    this.parts.veil.style.transition = `opacity ${fade}ms ease`;
+    this.parts.veil.style.opacity = '0';
     await wait(fade);
   }
 
