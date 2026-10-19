@@ -52,5 +52,9 @@ export function tally(stays: Booking[], month: Month): Tally {
   return { nights: Object.values(sold).reduce((a, n) => a + n, 0), revenue: Math.round(revenue), occupancy, declined, why };
 }
 
+// the request that has waited longest first: the guest was promised an answer within the hour, so the
+// late ones lead, and a request that comes in joins the foot of the sheet instead of moving the ones above
+export const byWaited = (a: Booking, b: Booking) => a.createdAt.localeCompare(b.createdAt);
+
 // the nearest stay first, and two requests for the same day in the order they came in
 export const byArrival = (a: Booking, b: Booking) => a.checkIn.localeCompare(b.checkIn) || a.createdAt.localeCompare(b.createdAt);

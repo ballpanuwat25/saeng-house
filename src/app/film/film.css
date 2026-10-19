@@ -1,0 +1,29 @@
+/* The film stage (Stage.tsx): the site's dark ground, two plain frames with the ticket's paper shadow, and a
+   caption under each in the serif. Sizes are in the video's own pixels; the stage scales as a whole. */
+html[data-film], html[data-film] body { overflow: hidden; background: var(--bg); }
+.film { position: fixed; left: 50%; top: 50%; transform-origin: 50% 50%; display: flex; align-items: flex-start; justify-content: center; gap: 80px; padding-top: 82px; background: var(--bg); }
+.film figure { margin: 0; }
+.film-screen { position: relative; overflow: hidden; background: var(--bg); box-shadow: 0 0 0 1px rgba(236, 235, 232, .07), 0 24px 40px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .2); }
+.film-desk .film-screen { width: 1368px; height: 855px; border-radius: 14px; }
+.film-phone .film-screen { width: 390px; height: 844px; border-radius: 34px; }
+.film-inner { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.film-desk .film-inner { width: 1440px; height: 900px; transform: scale(.95); }
+.film-phone .film-inner { width: 390px; height: 844px; }
+.film iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--bg); }
+.film-veil { position: absolute; inset: 0; background: var(--bg); opacity: 1; pointer-events: none; }
+.film-cursor { position: absolute; left: -3px; top: -2px; pointer-events: none; will-change: transform; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .45)); }
+.film-cursor path { fill: #f6efe3; stroke: #1c110d; stroke-width: 1.3; stroke-linejoin: round; }
+.film-finger { position: absolute; left: 0; top: 0; opacity: 0; pointer-events: none; will-change: transform, opacity; }
+.film-finger::after { content: ""; position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(196, 24, 43, .9); background: rgba(196, 24, 43, .12); transform: scale(var(--ring, 1)); }
+.film figcaption { margin-top: 24px; font-family: var(--serif); font-size: 28px; line-height: 1.2; color: var(--muted); }
+.film-problem { position: absolute; left: 0; right: 0; bottom: 24px; margin: 0; text-align: center; font-size: 18px; color: var(--ember); }
+/* the opening and closing cards: the house's name in the serif over the dark ground, its wordmark in lantern red */
+.film-card { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 0; text-align: center; background: var(--bg); opacity: 0; pointer-events: none; transition: opacity 1.4s ease; }
+.film-card[data-on] { opacity: 1; }
+.film-card p { margin: 0; }
+.film-card-wm { font-family: var(--thai); font-size: 44px; font-weight: 500; line-height: 1; color: var(--lantern); }
+.film-card .film-card-name { margin-top: 18px; font-family: var(--serif); font-size: 132px; line-height: 1; letter-spacing: -0.015em; color: var(--ink); }
+.film-card .film-card-line { margin-top: 34px; max-width: 820px; text-wrap: balance; font-size: 28px; line-height: 1.45; color: var(--ink); }
+.film-card .film-card-note { margin-top: 22px; font-size: 19px; color: var(--muted); }
+/* the dev server's badge is not part of the site */
+nextjs-portal { display: none !important; }

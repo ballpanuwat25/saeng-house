@@ -8,7 +8,7 @@ import { bangkokToday, HOLDING, type Booking } from '@/lib/booking/model';
 import { bookingStore } from '@/lib/booking/store';
 import { Entry, type EntryKind } from '@/app/owner/book';
 import { AddBooking } from '@/app/owner/StayForms';
-import { byArrival } from '@/app/owner/ledger';
+import { byArrival, byWaited } from '@/app/owner/ledger';
 import { mailPath, type MailKind } from '@/lib/demo';
 
 export const metadata: Metadata = { title: `Request book · ${hotel.name}`, robots: { index: false } };
@@ -40,7 +40,7 @@ export default async function OwnerRequests({ searchParams }: { searchParams: Pr
   // a stay leaves this tab on its checkout morning
   const ahead = store ? (await store.stays({ from: today, status: HOLDING })).sort(byArrival) : null;
   const shelves: Record<keyof typeof SHEETS, Booking[]> | null = ahead && {
-    new: ahead.filter((b) => b.status === 'requested'),
+    new: ahead.filter((b) => b.status === 'requested').sort(byWaited),
     confirmed: ahead.filter((b) => b.status === 'confirmed'),
   };
 

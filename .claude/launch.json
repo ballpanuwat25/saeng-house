@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "-p", "3005"],
       "port": 3005
+    },
+    {
+      "name": "saeng-house-film",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "-p", "3007"],
+      "port": 3007
     }
   ]
 }

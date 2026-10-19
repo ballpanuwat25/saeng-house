@@ -461,7 +461,14 @@ html[data-turning] .owner > :not(.owner-top) { opacity: .5; transition-delay: .0
 .decline summary { list-style: none; color: var(--lantern); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; font-size: var(--s-small); font-weight: 500; }
 .decline summary::-webkit-details-marker { display: none; }
 .decline[open] { flex: 1 1 100%; }
-.decline[open] summary { margin-bottom: 12px; }
+.decline[open] summary { margin-bottom: 12px; color: var(--ink-dark); text-decoration: none; font-family: var(--serif); font-size: 1.35rem; font-weight: 400; line-height: 1.2; }
+.decline-open, .decline[open] .decline-shut { display: none; }
+.decline[open] .decline-open { display: inline; }
+/* Confirm beside an open Decline was one tap from the wrong answer, so it waits until Decline is folded away */
+.entry-act:has(> .decline[open]) > form { display: none; }
+.decline-go { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.decline-back { border: 0; padding: 0; background: none; color: var(--ink-soft); font: inherit; font-size: var(--s-small); font-weight: 500; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; transition: color .2s ease; }
+.decline-back:hover { color: var(--ink-dark); }
 .decline form { display: grid; gap: 14px; max-width: 560px; }
 .decline fieldset { margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .decline legend { padding: 0; margin-bottom: 8px; font-size: var(--s-small); color: var(--ink-soft); }
