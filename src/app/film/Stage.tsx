@@ -34,7 +34,9 @@ function Card({ on, line, note }: { on: boolean; line: string; note: string }) {
 }
 
 export default function Stage() {
-  const [fit, setFit] = useState(1);
+  // the scale that fits the stage to the window, unknown until the page runs in a browser
+  const [fit, setFit] = useState<number | null>(null);
+  const [typeIn, setTypeIn] = useState(false);
   const [take, setTake] = useState<Take>('setting');
   const [problem, setProblem] = useState('');
   const desk = { frame: useRef<HTMLIFrameElement>(null), hand: useRef<HTMLDivElement>(null), veil: useRef<HTMLDivElement>(null) };
@@ -44,6 +46,7 @@ export default function Stage() {
     const size = () => setFit(Math.min(innerWidth / W, innerHeight / H));
     size();
     addEventListener('resize', size);
+    void document.fonts.ready.then(() => setTypeIn(true));
     return () => removeEventListener('resize', size);
   }, []);
 
@@ -99,7 +102,9 @@ export default function Stage() {
   }, []);
 
   return (
-    <div className="film" style={{ width: W, height: H, transform: `translate(-50%, -50%) scale(${fit})` }}>
+    // the stage stays unseen until it knows its scale and its type has loaded, so the opening card never
+    // shows at full size, or in a stand-in font, and then jumps
+    <div className="film" style={{ width: W, height: H, transform: `translate(-50%, -50%) scale(${fit ?? 1})`, visibility: fit !== null && typeIn ? undefined : 'hidden' }}>
       <figure className="film-desk">
         <div className="film-screen">
           {/* the desk's window is 1440 by 900, drawn at a little under full size to fit beside the phone */}
