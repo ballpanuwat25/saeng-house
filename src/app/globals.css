@@ -332,8 +332,10 @@ main > .hero { z-index: 2; }
 .owner-top h1 { margin: 0; font-size: var(--s-head); line-height: 1; letter-spacing: -0.012em; }
 .owner-out { border: 0; padding: 0; background: none; color: var(--muted); font-size: var(--s-small); text-decoration: underline; text-underline-offset: 5px; text-decoration-color: rgba(242, 163, 94, .6); cursor: pointer; transition: color .2s ease; }
 .owner-out:hover { color: var(--ember); }
-/* the tabs stay at the top of the window down a long sheet, so the owner can move on from the foot of it */
-.owner-tabs { position: sticky; top: 0; z-index: 30; display: flex; gap: clamp(24px, 4vw, 44px); padding-top: 14px; background: var(--bg); border-bottom: 1px solid rgba(236, 235, 232, .14); }
+/* the tabs stay at the top of the window down a long sheet, so the owner can move on from the foot of it.
+   Stuck, they reach a little above the window's edge, so on a scaled screen (125% on Windows, or the film's
+   frames) no row of the sheet scrolling underneath shows through above them */
+.owner-tabs { position: sticky; top: -4px; z-index: 30; display: flex; gap: clamp(24px, 4vw, 44px); padding-top: 18px; margin-top: -4px; background: var(--bg); border-bottom: 1px solid rgba(236, 235, 232, .14); }
 /* the open tab sits on the header's rule, like the tab of the page the book is open at */
 .owner-tabs a { margin-bottom: -1px; padding-bottom: 12px; border-bottom: 2px solid transparent; font-family: var(--serif); font-size: clamp(1.35rem, 1.2rem + .5vw, 1.7rem); line-height: 1.1; color: var(--muted); text-decoration: none; transition: color .2s ease; }
 .owner-tabs a:hover { color: var(--ink); }
@@ -545,7 +547,6 @@ html[data-turning] .owner > :not(.owner-top, .owner-tabs) { opacity: .5; transit
   .owner-top { grid-template-columns: 1fr auto; }
   .owner-top h1 { grid-column: 1 / -1; grid-row: 2; }
   .ledger, .tally { --rule: 0px; background-image: none; }
-  .owner-tabs { margin-top: 0; }
   .tally { padding-left: clamp(16px, 2.4vw, 30px); }
   .tally-head { position: static; flex-basis: 100%; }
   .rack { --kind: 6.25rem; --night: 2.1rem; }
