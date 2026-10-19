@@ -7,6 +7,8 @@ export type Room = {
   id: 'lattice' | 'moon' | 'roof';
   name: string;
   pricePerNight: number;
+  // how many rooms of this kind the house has; the twelve rooms are split across the three kinds
+  count: number;
   blurb: string;
   spec: string;
   photo: Photo;
@@ -69,6 +71,7 @@ export const rooms: Room[] = [
     id: 'lattice',
     name: 'The Lattice Room',
     pricePerNight: 4800,
+    count: 5,
     blurb: 'A full wall of carved teak lattice. At night a lamp behind it lays the pattern across the floorboards and the bed.',
     spec: '28 m² · king bed · second floor',
     photo: { src: '/images/room-lattice.jpg', width: 1200, height: 1500, alt: 'A low bed beside a wall of carved teak lattice, its shadow pattern across the floorboards, lamps lit at night' },
@@ -77,6 +80,7 @@ export const rooms: Room[] = [
     id: 'moon',
     name: 'The Moon Window',
     pricePerNight: 6900,
+    count: 4,
     blurb: 'A round window as wide as the bed, facing the river and the lights of the far bank. A red carpet, and the carved cabinets the warehouse always had.',
     spec: '36 m² · king bed · third floor',
     photo: { src: '/images/room-moon.jpg', width: 1200, height: 1500, alt: 'A bed under a paper lantern in front of a large round window onto the river at night, carved cabinets and a red carpet' },
@@ -85,6 +89,7 @@ export const rooms: Room[] = [
     id: 'roof',
     name: 'The Roof Room',
     pricePerNight: 9500,
+    count: 3,
     blurb: 'Old carved doors from a Teochew shrine behind the bed, and a terrace of your own on the roof, lanterns lit, the river beyond.',
     spec: '42 m² · king bed and sofa bed · fourth floor, private roof terrace',
     photo: { src: '/images/room-roof.jpg', width: 1200, height: 1500, alt: 'A bed against old carved shrine doors, timber doors open onto a lantern-lit roof terrace over the river' },
@@ -122,7 +127,16 @@ export const booking = {
   defaultNights: 2,
   daysAhead: 7,
   action: 'Hold this room',
-  sent: 'Request received. We confirm on LINE within the hour. (Demo: nothing was sent.)',
+  again: 'Hold another room',
+  // the second side of the ticket, where the guest says who they are
+  details: { title: 'Who is coming', name: 'Your name', email: 'Email', contact: 'LINE or phone', contactHint: 'optional', note: 'A note for us', back: 'Change the stay', send: 'Send the request' },
+  left: (n: number) => (n === 1 ? '1 left' : `${n} left`),
+  full: 'Full',
+  fullAction: 'Full on these nights',
+  sending: 'Sending…',
+  sent: (ref: string, email: string) => `Request ${ref} is in. We confirm by email to ${email} within the hour.`,
+  demo: 'Request received. (Demo: nothing was sent.)',
+  failed: 'The request did not go through. Please try again, or call us.',
 };
 
 // the evening the page tells, start to end; the clock in the header maps scroll onto it

@@ -214,6 +214,22 @@ html.is-loading { overflow: hidden; }
 .opt span:nth-of-type(1) { font-family: var(--serif); font-size: 1.2rem; line-height: 1.1; }
 .opt span:last-child { font-variant-numeric: tabular-nums; color: var(--ink-soft); font-size: var(--s-small); }
 .opt:has(input:checked) { background: rgba(196, 24, 43, .12); }
+.opt span:last-child em { font-style: normal; margin-right: 10px; color: var(--lantern); }
+.opt.full { opacity: .55; }
+.opt.full span:last-child em { color: var(--ink-soft); }
+/* the ticket's second side: who is coming */
+.who { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 12px; }
+.who[disabled] { opacity: .6; }
+.who-title { padding: 0; font-family: var(--serif); font-size: 1.6rem; line-height: 1.1; }
+.who-stay { margin: 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: var(--s-small); color: var(--ink-soft); }
+.who-back { border: 0; padding: 0; background: none; font: inherit; color: var(--lantern); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.field input:not([type="date"]):not([type="radio"]) { background: rgba(42, 23, 18, .07); color: var(--ink-dark); border: 0; border-radius: 10px; padding: 12px 14px; min-height: 48px; width: 100%; font-size: 1rem; }
+.field input:focus-visible { outline: 2px solid var(--lantern); outline-offset: 1px; }
+.field label small { color: var(--ink-soft); opacity: .8; font-size: .78rem; }
+/* a field people never see; bots fill it */
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.msg.bad { color: var(--lantern); }
+.ticket .btn:disabled { background: rgba(42, 23, 18, .25); color: var(--paper); cursor: not-allowed; transform: none; }
 .total { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-top: 8px; }
 .total b { font-family: var(--serif); font-weight: 400; font-size: 2.2rem; line-height: 1; font-variant-numeric: lining-nums; }
 .total span { color: var(--ink-soft); font-size: var(--s-small); }

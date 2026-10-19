@@ -48,3 +48,6 @@ next-env.d.ts
 
 # OpenStreetMap download for scripts/build-map.mjs
 /scripts/.cache/
+
+# bookings and outgoing emails kept locally when there is no Supabase or Resend (src/lib/booking)
+/.data/

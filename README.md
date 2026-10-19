@@ -35,6 +35,25 @@ Photo credits (all Unsplash License): Nicolas Spehler (lantern corridor), Thai N
 Shane Hebzynski (lantern balcony), Bradrey Nassel (Yaowarat). The three rooms and the hero lanterns were
 generated with Google Gemini; the room sources are in `scripts/assets/rooms`.
 
+## Booking
+
+The ticket checks which rooms are free for the chosen nights, takes the guest's name and email, saves the request and emails the guest that their room is held. The house has 5 Lattice, 4 Moon Window and 3 Roof rooms (`count` in `src/content/site.ts`); a request holds its room until the owner declines it.
+
+Where the bookings go depends on what is set up:
+
+- **Nothing set up, on your machine:** bookings go to `.data/bookings.json` and each email is written to `.data/outbox/` as a page to open in a browser. Delete `.data/` to start over.
+- **Nothing set up, on Vercel:** the ticket is a demo. It stamps the seal and sends nothing.
+- **Supabase and Resend set up:** bookings live in Supabase and emails are sent. Run `supabase/migrations/0001_bookings.sql` once in the Supabase SQL editor, then set these in Vercel (Project, Settings, Environment Variables) and in `.env.local` for your machine:
+
+```bash
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<service role key, from Project Settings, API>
+RESEND_API_KEY=<from resend.com>
+BOOKING_FROM="Saeng House <bookings@your-domain>"
+```
+
+The service key never reaches the browser: only the server routes in `src/app/api` use it. Until a domain is verified in Resend, it only delivers to your own address.
+
 ## What's next
 
 See [docs/IDEAS.md](docs/IDEAS.md) for the backlog: real booking, a demo mode for recording the Fastwork
