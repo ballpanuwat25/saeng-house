@@ -8,14 +8,21 @@ import { isDemo, isMailKind } from '@/lib/demo';
 
 export const dynamic = 'force-dynamic';
 
-const missing = () => new Response('Not found', { status: 404 });
+// A route handler cannot render not-found.tsx itself (notFound() here answers with an empty 404), and this
+// address is opened in a browser from the demo's ticket and book, so a ref that is not in the book gets the
+// site's own 404 page, fetched from the framework's /_not-found, and plain text only if that fails.
+async function missing(req: Request) {
+  const page = await fetch(new URL('/_not-found', req.url), { cache: 'no-store' }).catch(() => null);
+  if (!page) return new Response('Not found', { status: 404 });
+  return new Response(await page.text(), { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex' } });
+}
 
 export async function GET(req: Request, { params }: { params: Promise<{ ref: string; kind: string }> }) {
   const { ref, kind } = await params;
   const store = bookingStore();
-  if (!isDemo() || !store || !isMailKind(kind)) return missing();
+  if (!isDemo() || !store || !isMailKind(kind)) return missing(req);
   const b = (await store.search(ref, 5)).find((x) => x.ref === ref);
-  if (!b) return missing();
+  if (!b) return missing(req);
   const origin = new URL(req.url).origin;
 
   let mail;
@@ -25,7 +32,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ ref: str
   else if (kind === 'changed') mail = changedMail(b);
   else if (kind === 'cancelled') mail = cancelledMail(b);
   else if (b.decline) mail = declinedMail(b, b.decline, availability(await store.taken(b.checkIn, b.nights), b.checkIn, b.nights), origin);
-  else return missing();
+  else return missing(req);
 
   return new Response(mail.html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex' } });
 }
