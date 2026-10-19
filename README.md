@@ -122,6 +122,26 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://<the demo's domain>/api/dem
 
 The reset throws away every booking in the database it points at, so give the demo its own Supabase project.
 
+### Film mode
+
+The portfolio video is recorded from a stage at `/film`: the desk on the left (a 1440 by 900 window drawn at 0.95) and a phone on the right (390 by 844), each a live copy of the site in a frame, on the site's dark ground in a 1920 by 1080 page. One script plays both frames in step (`src/app/film/story.ts`), about 73 seconds:
+
+1. Both frames on the home page. A drawn cursor walks under the hero's lanterns and a finger drags across the phone's, then both scroll down together.
+2. On the phone the guest opens the ticket, picks a date, adds a night, picks a room, turns the ticket over, types a name and email and sends it; the seal stamps. On the desk the owner opens the demo book meanwhile.
+3. On the desk the owner moves to Rooms, where the count beside Requests goes up and the new strip carries its paper note, then back to Requests to press Confirm.
+4. The phone opens the confirmation email the guest would get; the desk turns to the Register's month figures.
+
+The stage drives each frame through a small script it puts into the frame once it has loaded (`src/app/film/actor.ts`): pointer events where the cursor or finger is, keys typed one at a time at a hand's pace, eased scrolls. None of it is in the site's own pages, and `/film` is a 404 unless the site runs the public demo and is either the dev server or has `FILM_MODE=1`. Each take starts by resetting the demo's book (`POST /film/reset`), so every take on a given day starts from the same bookings and plays the same way.
+
+To watch it, run the dev server with the demo on, for example with this in `.env.local`:
+
+```bash
+DEMO_MODE=1
+OWNER_SESSION_SECRET=<any string>
+```
+
+then open `http://localhost:3000/film` in a window of 1920 by 1080 (a smaller window shows the whole stage scaled down). Leave Supabase out of `.env.local` so the takes use the file under `.data/`: the reset throws away every booking in whichever store the site points at. The page says where the take is on `<html>`: `data-film` is `setting`, `playing`, then `done` or `failed`, and `data-scene` names the moment (`opening`, `booking`, `calendar`, `sealed`, `owner`, `rack`, `confirming`, `close`), so a recorder knows when to start and stop.
+
 ## What's next
 
 See [docs/IDEAS.md](docs/IDEAS.md) for the backlog: real booking, a demo mode for recording the Fastwork

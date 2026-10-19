@@ -1,0 +1,100 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { hero } from '@/content/site';
+import { Lane, sleep } from '@/app/film/lane';
+import { story } from '@/app/film/story';
+
+// The film stage: a 1920 by 1080 frame for the portfolio video, the desk on the left and the phone on the
+// right, each a live copy of the site in a frame of its own. It fits itself to the window so it can be
+// watched on a smaller screen; the recording opens it in a 1920 by 1080 window, where it sits at full size.
+//
+// The state of the take is on <html data-film>: "setting" while the book is reset and the frames load,
+// "playing", then "done" or "failed", so whatever records it knows when to start and stop.
+
+type Take = 'setting' | 'playing' | 'done' | 'failed';
+
+const W = 1920;
+const H = 1080;
+
+export default function Stage() {
+  const [fit, setFit] = useState(1);
+  const [take, setTake] = useState<Take>('setting');
+  const [problem, setProblem] = useState('');
+  const desk = { frame: useRef<HTMLIFrameElement>(null), hand: useRef<HTMLDivElement>(null), veil: useRef<HTMLDivElement>(null) };
+  const phone = { frame: useRef<HTMLIFrameElement>(null), hand: useRef<HTMLDivElement>(null), veil: useRef<HTMLDivElement>(null) };
+  const cover = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const size = () => setFit(Math.min(innerWidth / W, innerHeight / H));
+    size();
+    addEventListener('resize', size);
+    return () => removeEventListener('resize', size);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.film = take;
+  }, [take]);
+
+  // one take, from a fresh book: the same bookings as any other take today, and the guest's earlier
+  // requests forgotten so the demo's limit on requests never stops a run
+  useEffect(() => {
+    let stopped = false;
+    const parts = (p: typeof desk) => ({ frame: p.frame.current!, hand: p.hand.current!, veil: p.veil.current! });
+    (async () => {
+      const reset = await fetch('/film/reset', { method: 'POST' });
+      if (!reset.ok) throw new Error(`the book did not reset (${reset.status})`);
+      const deskLane = new Lane('desk', parts(desk));
+      const phoneLane = new Lane('phone', parts(phone), hero.hint.touch);
+      await Promise.all([deskLane.open('/', 0), phoneLane.open('/', 0)]);
+      if (stopped) return;
+      // the stage opens on both frames at rest, a beat before anything moves
+      cover.current!.style.opacity = '0';
+      setTake('playing');
+      await sleep(1400);
+      await story(deskLane, phoneLane, (scene) => (document.documentElement.dataset.scene = scene));
+      if (!stopped) setTake('done');
+    })().catch((err: Error) => {
+      console.error(err);
+      setProblem(err.message);
+      setTake('failed');
+    });
+    return () => {
+      stopped = true;
+    };
+    // the refs are stable; the take runs once per load of the stage
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="film" style={{ width: W, height: H, transform: `translate(-50%, -50%) scale(${fit})` }}>
+      <figure className="film-desk">
+        <div className="film-screen">
+          {/* the desk's window is 1440 by 900, drawn at a little under full size to fit beside the phone */}
+          <div className="film-inner">
+            <iframe ref={desk.frame} title="The site at a desk" tabIndex={-1} />
+            <div ref={desk.veil} className="film-veil" />
+            <div ref={desk.hand} className="film-cursor" aria-hidden>
+              <svg viewBox="0 0 24 24" width="26" height="26">
+                <path d="M3 2 L3 19.5 L7.6 15.4 L10.6 22.2 L13.6 20.9 L10.7 14.2 L17 14.2 Z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <figcaption>Owner, at the desk</figcaption>
+      </figure>
+      <figure className="film-phone">
+        <div className="film-screen">
+          <div className="film-inner">
+            <iframe ref={phone.frame} title="The site on a phone" tabIndex={-1} />
+            <div ref={phone.veil} className="film-veil" />
+            <div ref={phone.hand} className="film-finger" aria-hidden />
+          </div>
+        </div>
+        <figcaption>Guest, on a phone</figcaption>
+      </figure>
+      <div ref={cover} className="film-cover" />
+      {take === 'failed' && <p className="film-problem">The take stopped: {problem}</p>}
+    </div>
+  );
+}
