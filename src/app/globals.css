@@ -344,8 +344,9 @@ main > .hero { z-index: 2; }
 .owner-tabs a { margin-bottom: -1px; padding-bottom: 12px; border-bottom: 2px solid transparent; font-family: var(--serif); font-size: clamp(1.35rem, 1.2rem + .5vw, 1.7rem); line-height: 1.1; color: var(--muted); text-decoration: none; transition: color .2s ease; }
 .owner-tabs a:hover { color: var(--ink); }
 /* the requests waiting, as a lantern-red disc beside the tab: each one is still owed an answer */
-.owner-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.6rem; height: 1.6rem; margin-left: 8px; padding: 0 .4rem; border-radius: 999px; background: var(--lantern); color: var(--lantern-ink); font-family: var(--face); font-size: .72rem; font-weight: 600; line-height: 1; font-variant-numeric: proportional-nums; letter-spacing: .01em; vertical-align: .5em; }
-/* the figures are centred on their own height, not on the line's, which sat them off the disc's middle */
+.owner-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.6rem; height: 1.6rem; margin-left: 8px; padding: 0 calc(.4rem - 1px) 0 calc(.4rem + 1px); border-radius: 999px; background: var(--lantern); color: var(--lantern-ink); font-family: var(--face); font-size: .72rem; font-weight: 600; line-height: 1; font-variant-numeric: proportional-nums; letter-spacing: .01em; vertical-align: .5em; }
+/* the figures are centred on their own height, not on the line's, which sat them off the disc's middle; the
+   disc's padding leans a pixel right, since the figures' shapes sit a little left of their own middle */
 .owner-tab-n { text-box: trim-both cap alphabetic; }
 /* a request came in while the book was open: the disc is stamped on again, like the seal */
 .owner-tab-count[data-new] { animation: count-in .5s cubic-bezier(.2, 1.4, .4, 1) both; }
@@ -427,7 +428,7 @@ html[data-turning] .owner > :not(.owner-top, .owner-tabs) { opacity: .5; transit
 /* the room rack (src/app/owner/rooms): a line per room, a column per night, a strip of paper per stay. On a
    phone the rack scrolls sideways inside the paper and the room kinds stay pinned on the left */
 .rack-key { flex-basis: 100%; }
-.rack-scroll { overflow-x: auto; padding: 6px 0 20px; background: var(--paper); color: var(--ink-dark); border-radius: 0 0 14px 14px; overscroll-behavior-x: contain; }
+.rack-scroll { overflow-x: auto; padding: 0 0 20px; background: var(--paper); color: var(--ink-dark); border-radius: 0 0 14px 14px; overscroll-behavior-x: contain; }
 .rack-scroll:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
 /* the sideways scrollbar as a thin ink thread along the foot of the paper, in place of the system's grey
    bar with arrows: the standard properties for Chrome, Edge and Firefox, the webkit ones for Safari */
