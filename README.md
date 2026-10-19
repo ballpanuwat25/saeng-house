@@ -43,16 +43,16 @@ Where the bookings go depends on what is set up:
 
 - **Nothing set up, on your machine:** bookings go to `.data/bookings.json` and each email is written to `.data/outbox/` as a page to open in a browser. Delete `.data/` to start over.
 - **Nothing set up, on Vercel:** the ticket is a demo. It stamps the seal and sends nothing.
-- **Supabase and Resend set up:** bookings live in Supabase and emails are sent. Run `supabase/migrations/0001_bookings.sql` once in the Supabase SQL editor, then set these in Vercel (Project, Settings, Environment Variables) and in `.env.local` for your machine:
+- **Supabase and Resend set up:** bookings live in Supabase and emails are sent. Run the files in `supabase/migrations` once each, in order (`0001`, `0002`, `0003`), in the Supabase SQL editor, then set these in Vercel (Project, Settings, Environment Variables) and in `.env.local` for your machine:
 
 ```bash
 SUPABASE_URL=https://<project>.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<service role key, from Project Settings, API>
+SUPABASE_SERVICE_ROLE_KEY=<the secret key (sb_secret_...) or the legacy service_role key, from Project Settings, API Keys>
 RESEND_API_KEY=<from resend.com>
 BOOKING_FROM="Saeng House <bookings@your-domain>"
 ```
 
-The service key never reaches the browser: only the server routes in `src/app/api` and the owner's actions use it. Until a domain is verified in Resend, it only delivers to your own address.
+The site talks to Supabase's REST endpoint with `fetch`, so no Supabase package is needed. Use these two names exactly, not the `NEXT_PUBLIC_SUPABASE_URL` and publishable key from Supabase's Next.js guide: the table is closed to the publishable key by row-level security, so with it every booking is refused, and a `NEXT_PUBLIC_` name would send the secret key to every visitor's browser. The service key never reaches the browser: only the server routes in `src/app/api` and the owner's actions use it. Until a domain is verified in Resend, it only delivers to your own address.
 
 ### The owner's request book
 
