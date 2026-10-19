@@ -1,6 +1,6 @@
 'use client';
 
-// The owner's two forms that pick a stay: adding a booking taken by phone, on LINE or at the door, and
+// The owner's two forms that pick a stay: adding a booking taken by phone, on LINE or as a walk-in, and
 // changing or cancelling a confirmed one. They keep what was typed when the house says no (a full night, a
 // missing name), so the owner fixes one field instead of starting over.
 import { startTransition, useActionState, useState } from 'react';
@@ -63,7 +63,7 @@ export function AddBooking({ today }: { today: string }) {
   const [state, act, pending] = useActionState(addBooking, null);
   return (
     <details className="owner-add" open={state !== null}>
-      <summary>Add a booking taken by phone, on LINE or at the door</summary>
+      <summary>Add a booking taken by phone, on LINE or as a walk-in</summary>
       <form onSubmit={submitTo(act)} className="stay-form">
         <StayFields id="add" start={{ roomId: rooms[0].id, checkIn: today, nights: bookingCopy.defaultNights }} today={today} />
         <div className="stay-guest">

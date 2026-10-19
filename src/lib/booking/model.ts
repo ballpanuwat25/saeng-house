@@ -80,7 +80,7 @@ export function parseRoomStay(input: { roomId?: unknown; checkIn?: unknown; nigh
   return { ok: true, value: { roomId: input.roomId, ...stay.value } };
 }
 
-// a booking the owner takes by phone, on LINE or at the door. The email may be left out, since a guest on
+// a booking the owner takes by phone, on LINE or as a walk-in. The email may be left out, since a guest on
 // the phone may not give one, but there has to be some way to reach them.
 export function parseOwnerBooking(input: Record<string, unknown>): Parsed<BookingRequest> {
   const stay = parseRoomStay(input);

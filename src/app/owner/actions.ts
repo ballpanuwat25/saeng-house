@@ -106,7 +106,7 @@ export async function changeStay(_: FormState, form: FormData): Promise<FormStat
   return null;
 }
 
-// a booking taken by phone, on LINE or at the door: saved the way a guest's request is, under the same
+// a booking taken by phone, on LINE or as a walk-in: saved the way a guest's request is, under the same
 // check that the nights are free, then confirmed at once
 export async function addBooking(_: FormState, form: FormData): Promise<FormState> {
   const store = await storeForOwner();
