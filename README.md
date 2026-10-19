@@ -144,6 +144,16 @@ OWNER_SESSION_SECRET=<any string>
 
 then open `http://localhost:3000/film` in a window of 1920 by 1080 (a smaller window shows the whole stage scaled down). Leave Supabase out of `.env.local` so the takes use the file under `.data/`: the reset throws away every booking in whichever store the site points at. The page says where the take is on `<html>`: `data-film` is `setting` until the opening card's type has loaded, `title` while that card is up, `playing` from when it lifts, `ending` while the closing card is up, then `done` or `failed`, and `data-scene` names the moment (`title`, `lanterns`, `opening`, `booking`, `calendar`, `sealed`, `owner`, `arrived`, `rack`, `focused`, `declining`, `confirming`, `close`, `kept`, `end`), so a recorder knows when to start and stop.
 
+To record it, build the site and start it in demo mode with `FILM_MODE=1` (a production build loads faster and plays more smoothly than the dev server), then run the recorder, which needs Chrome and ffmpeg:
+
+```bash
+npm run build
+FILM_MODE=1 npx next start -p 3008
+node scripts/record-film.mjs http://localhost:3008/film design/_scratch/saeng-house-film.mp4
+```
+
+It plays one take in headless Chrome at 1920 by 1080 and writes an MP4 at 30 fps with no sound, from the opening card to a second after the closing card. Chrome sends a frame only when the page changes, so each video frame shows the newest one at its moment, and the still stretches last as long as they did. `design/_scratch` is not committed.
+
 ## What's next
 
 See [docs/IDEAS.md](docs/IDEAS.md) for the backlog: real booking, a demo mode for recording the Fastwork
