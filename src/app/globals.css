@@ -377,7 +377,15 @@ main > .hero { z-index: 2; }
 .rack-key { flex-basis: 100%; }
 .rack-scroll { overflow-x: auto; padding: 6px 0 20px; background: var(--paper); color: var(--ink-dark); border-radius: 0 0 14px 14px; overscroll-behavior-x: contain; }
 .rack-scroll:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
-.rack { --kind: 8.5rem; display: grid; min-width: calc(var(--kind) + var(--nights) * 2rem + clamp(16px, 2.4vw, 30px)); grid-template-columns: var(--kind) repeat(var(--nights), minmax(2rem, 1fr)); grid-template-rows: 3.6rem; grid-auto-rows: 2.6rem; padding-right: clamp(16px, 2.4vw, 30px); }
+/* the sideways scrollbar as a thin ink thread along the foot of the paper, in place of the system's grey
+   bar with arrows: the standard properties for Chrome, Edge and Firefox, the webkit ones for Safari */
+.rack-scroll { scrollbar-width: thin; scrollbar-color: rgba(42, 23, 18, .4) transparent; }
+.rack-scroll:hover { scrollbar-color: rgba(42, 23, 18, .65) transparent; }
+.rack-scroll::-webkit-scrollbar { height: 8px; }
+.rack-scroll::-webkit-scrollbar-track { margin-inline: 14px; background: transparent; }
+.rack-scroll::-webkit-scrollbar-thumb { border: 2px solid var(--paper); border-radius: 8px; background: rgba(42, 23, 18, .4); }
+.rack-scroll::-webkit-scrollbar-thumb:hover { background: rgba(42, 23, 18, .65); }
+.rack { --kind: 8.5rem; display: grid; --night: 1.7rem; min-width: calc(var(--kind) + var(--nights) * var(--night) + clamp(16px, 2.4vw, 30px)); grid-template-columns: var(--kind) repeat(var(--nights), minmax(var(--night), 1fr)); grid-template-rows: 3.6rem; grid-auto-rows: 2.6rem; padding-right: clamp(16px, 2.4vw, 30px); }
 .rack-corner, .rack-kind { grid-column: 1; position: sticky; left: 0; z-index: 3; background: var(--paper); border-right: 1px solid rgba(196, 24, 43, .32); }
 .rack-corner { grid-row: 1; }
 .rack-kind { margin: 0; padding: 10px 12px 0 clamp(16px, 2.4vw, 30px); display: grid; align-content: start; gap: 2px; border-bottom: 1.5px solid rgba(42, 23, 18, .55); font-family: var(--serif); font-size: 1.35rem; line-height: 1.1; }
@@ -444,7 +452,7 @@ main > .hero { z-index: 2; }
   .owner-tabs { margin-top: 0; }
   .tally { padding-left: clamp(16px, 2.4vw, 30px); }
   .tally-head { position: static; flex-basis: 100%; }
-  .rack { --kind: 6.25rem; }
+  .rack { --kind: 6.25rem; --night: 2.1rem; }
   .rack-kind { font-size: 1.1rem; padding-right: 8px; }
   .entry { grid-template-columns: minmax(0, 1fr) auto; row-gap: 12px; }
   .entry-ref { grid-column: 1 / -1; grid-row: auto; display: flex; justify-content: space-between; }
