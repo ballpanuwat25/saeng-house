@@ -203,9 +203,9 @@ html.is-loading:has(.loader) { overflow: hidden; }
 .field { display: grid; gap: 8px; }
 .field label, .field .lbl { font-size: var(--s-small); color: var(--ink-soft); }
 /* the date picker (src/components/DatePicker.tsx): the field, then the calendar on a scrap of the ticket's paper */
-.pick { display: flex; align-items: center; width: 100%; min-height: 48px; padding: 12px 14px; border: 0; border-radius: 10px; background: rgba(42, 23, 18, .07); color: var(--ink-dark); font: inherit; font-size: 1rem; text-align: left; cursor: pointer; transition: background-color .2s ease; }
-.pick:hover { background: rgba(42, 23, 18, .11); }
-.pick:focus-visible { outline: 2px solid var(--lantern); outline-offset: 1px; }
+.date-pick { display: flex; align-items: center; width: 100%; min-height: 48px; padding: 12px 14px; border: 0; border-radius: 10px; background: rgba(42, 23, 18, .07); color: var(--ink-dark); font: inherit; font-size: 1rem; text-align: left; cursor: pointer; transition: background-color .2s ease; }
+.date-pick:hover { background: rgba(42, 23, 18, .11); }
+.date-pick:focus-visible { outline: 2px solid var(--lantern); outline-offset: 1px; }
 .cal { --paper: #efe4d0; --ink-dark: #2a1712; --ink-soft: #7a6455; position: fixed; z-index: 60; width: min(316px, calc(100vw - 32px)); padding: 12px 12px 14px; border-radius: 12px; background: var(--paper); color: var(--ink-dark); color-scheme: light; box-shadow: 0 18px 40px rgba(0, 0, 0, .45), 0 2px 6px rgba(0, 0, 0, .2); }
 .cal-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; margin-bottom: 6px; padding-bottom: 8px; background: repeating-linear-gradient(90deg, rgba(42, 23, 18, .35) 0 7px, transparent 7px 13px) 0 100% / 100% 1.5px no-repeat; }
 .cal-head p { margin: 0; text-align: center; font-family: var(--serif); font-size: 1.35rem; line-height: 1; }
@@ -236,6 +236,10 @@ html.is-loading:has(.loader) { overflow: hidden; }
 .opt span:last-child em { font-style: normal; margin-right: 10px; color: var(--lantern); }
 .opt.full { opacity: .55; }
 .opt.full span:last-child em { color: var(--ink-soft); }
+/* the ticket's two sides share one grid cell, so the ticket is as tall as its taller side whichever is up */
+.ticket-sides { display: grid; }
+.ticket-side { grid-area: 1 / 1; min-width: 0; display: grid; gap: 14px; align-content: start; }
+.ticket-side[inert] { visibility: hidden; }
 /* the ticket's second side: who is coming */
 .who { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 12px; }
 .who[disabled] { opacity: .6; }
@@ -372,9 +376,9 @@ main > .hero { z-index: 2; }
 /* the start night as a blank on a form: the date written in the serif on a dotted line, which turns lantern
    red under the pointer */
 .rack-jump { display: inline-flex; align-items: baseline; gap: 10px; font-size: var(--s-small); color: var(--muted); }
-.rack-jump .pick { width: auto; min-width: 8.5rem; min-height: 44px; align-items: flex-end; padding: 0 4px 6px; border-radius: 0; background: none; border-bottom: 2px dotted rgba(236, 235, 232, .5); color: var(--ink); font-family: var(--serif); font-size: 1.35rem; line-height: 1; transition: border-color .2s ease, color .2s ease; }
-.rack-jump .pick:hover, .rack-jump .pick[aria-expanded="true"] { background: none; border-bottom-color: var(--lantern); }
-.rack-jump .pick:focus-visible { outline-color: var(--ember); outline-offset: 3px; }
+.rack-jump .date-pick { width: auto; min-width: 8.5rem; min-height: 44px; align-items: flex-end; padding: 0 4px 6px; border-radius: 0; background: none; border-bottom: 2px dotted rgba(236, 235, 232, .5); color: var(--ink); font-family: var(--serif); font-size: 1.35rem; line-height: 1; transition: border-color .2s ease, color .2s ease; }
+.rack-jump .date-pick:hover, .rack-jump .date-pick[aria-expanded="true"] { background: none; border-bottom-color: var(--lantern); }
+.rack-jump .date-pick:focus-visible { outline-color: var(--ember); outline-offset: 3px; }
 /* the room rack (src/app/owner/rooms): a line per room, a column per night, a strip of paper per stay. On a
    phone the rack scrolls sideways inside the paper and the room kinds stay pinned on the left */
 .rack-key { flex-basis: 100%; }

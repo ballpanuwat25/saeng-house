@@ -69,8 +69,10 @@ export default function BookingCard() {
     };
   }, [stay.checkIn, stay.nights, asked]);
 
+  // the side being turned away is hidden but stays on the page, so the focus follows onto the side now up
   useEffect(() => {
     if (step.side === 'guest' && !('sending' in step)) nameField.current?.focus();
+    else if (step.side === 'stay' && document.activeElement?.closest('.who')) document.getElementById('checkin')?.focus();
   }, [step]);
 
   const changeStay = (patch: Partial<Stay>) => {
@@ -136,8 +138,10 @@ export default function BookingCard() {
           <span>No. {step.side === 'done' && 'ref' in step ? step.ref : serial}</span>
         </div>
 
-        {step.side !== 'guest' ? (
-          <>
+        {/* both sides of the ticket always sit in the same space, the one not in use hidden, so turning the
+            ticket over never changes its height and the section and its photo behind it stay still */}
+        <div className="ticket-sides">
+          <div className="ticket-side" inert={step.side === 'guest'}>
             <div className="pair">
               <div className="field">
                 <label htmlFor="checkin">Arriving</label>
@@ -170,9 +174,8 @@ export default function BookingCard() {
                 })}
               </div>
             </div>
-          </>
-        ) : (
-          <fieldset className="who" disabled={sending}>
+          </div>
+          <fieldset className="who ticket-side" disabled={sending} inert={step.side !== 'guest'}>
             <legend className="who-title">{booking.details.title}</legend>
             <p className="who-stay">
               {room.name} · {span}
@@ -202,7 +205,7 @@ export default function BookingCard() {
             </div>
             <input id="bk-website" name="website" className="trap" tabIndex={-1} autoComplete="off" aria-hidden="true" />
           </fieldset>
-        )}
+        </div>
       </div>
       <div className="ticket-stub">
         <div className="total">
