@@ -1,13 +1,16 @@
 // Records the film stage (/film) to an MP4 at 1920x1080 and 60 fps, for the portfolio video.
-// Headless Chrome sends a screencast frame whenever the page changes, stamped with the wall clock; the take
-// starts when the opening card is up (data-film="title") and ends a second after "done". Each output frame
-// k then shows the newest screencast frame at or before k/60 seconds into the take, so the clip runs in
-// real time through the still stretches too, where Chrome sends nothing. Needs Chrome and ffmpeg.
-// Run it against a production build in demo mode, which loads faster and plays more smoothly than the dev
-// server (README, "Film mode"):
+// Recording a page as it plays drops and repeats frames whenever Chrome is busy, which shows as a stutter
+// in a scroll. So the recorder plays the take on a clock of its own instead: a script put into every frame
+// before the page runs takes over its timers, animation frames, performance.now and Date.now, which pass
+// through to the real ones until the opening card is up (data-film="title"). From then on the recorder
+// moves the clock 1/60 s at a time, brings CSS animations and transitions to the same moment, lets the
+// page's messages and network answers settle, and takes a screenshot. Every frame is exactly one step after
+// the last, however long Chrome takes to draw it, and the take ends a second after "done". It runs about
+// five times slower than the film itself. Needs Chrome and ffmpeg.
+// Run it against a production build in demo mode (README, "Film mode"):
 //   node scripts/record-film.mjs [http://localhost:3008/film] [design/_scratch/saeng-house-film.mp4]
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, linkSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -15,6 +18,109 @@ const url = process.argv[2] ?? 'http://localhost:3008/film';
 const out = path.resolve(process.argv[3] ?? 'design/_scratch/saeng-house-film.mp4');
 const CHROME = ['C:/Program Files/Google/Chrome/Application/chrome.exe', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome'].find(existsSync);
 const FPS = 60;
+const STEP = 1000 / FPS;
+
+// the clock each frame of the page runs on; the stage's own window holds it and its frames share it
+const SHIM = `(() => {
+  let host = window;
+  try { if (window.top && window.top.__vt) host = window.top; } catch {}
+  if (host === window && window.__vt) return;
+  const real = {
+    setTimeout: window.setTimeout.bind(window), clearTimeout: window.clearTimeout.bind(window),
+    setInterval: window.setInterval.bind(window), clearInterval: window.clearInterval.bind(window),
+    raf: window.requestAnimationFrame.bind(window), caf: window.cancelAnimationFrame.bind(window),
+    perfNow: performance.now.bind(performance), dateNow: Date.now.bind(Date),
+  };
+  let clock = host.__vt;
+  if (!clock) {
+    clock = host.__vt = { on: false, now: 0, seq: 1e9, timers: new Map(), rafs: new Map(), wins: new Set(), dateBase: 0,
+      frames: [], realOf: new Map() };
+  }
+  clock.wins.add(window);
+  // this frame's own performance.now origin, fixed when the clock first runs for it
+  let perfBase = null, vtBase = 0;
+  const perfNow = () => {
+    if (!clock.on) return real.perfNow();
+    if (perfBase === null) { perfBase = real.perfNow(); vtBase = clock.now; }
+    return perfBase + (clock.now - vtBase);
+  };
+  clock.realOf.set(window, real);
+  const W = window;
+  W.__vtPerfNow = perfNow;
+  performance.now = perfNow;
+  const RealDate = Date;
+  Date.now = () => (clock.on ? clock.dateBase + clock.now : real.dateNow());
+  W.setTimeout = (fn, ms = 0, ...args) => {
+    if (!clock.on) return real.setTimeout(fn, ms, ...args);
+    const id = ++clock.seq;
+    clock.timers.set(id, { at: clock.now + Math.max(0, Number(ms) || 0), fn, args, win: W, every: 0 });
+    return id;
+  };
+  W.setInterval = (fn, ms = 0, ...args) => {
+    if (!clock.on) return real.setInterval(fn, ms, ...args);
+    const id = ++clock.seq;
+    const every = Math.max(1, Number(ms) || 0);
+    clock.timers.set(id, { at: clock.now + every, fn, args, win: W, every });
+    return id;
+  };
+  W.clearTimeout = W.clearInterval = (id) => { if (clock.timers.has(id)) clock.timers.delete(id); else { real.clearTimeout(id); real.clearInterval(id); } };
+  W.requestAnimationFrame = (cb) => {
+    if (!clock.on) return real.raf(cb);
+    const id = ++clock.seq;
+    clock.rafs.set(id, { cb, win: W });
+    return id;
+  };
+  W.cancelAnimationFrame = (id) => { if (clock.rafs.has(id)) clock.rafs.delete(id); else real.caf(id); };
+  // a smooth scroll by the browser runs on the real clock; on the film's clock it is eased here instead
+  const smooth = (top) => {
+    const from = W.scrollY, to = Math.max(0, Math.min(top, W.document.documentElement.scrollHeight - W.innerHeight));
+    const start = perfNow(), ms = 500;
+    const step = () => { const t = Math.min(1, (perfNow() - start) / ms); const e = t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+      W.scrollTo({ top: from + (to - from) * e, behavior: 'instant' }); if (t < 1) W.requestAnimationFrame(step); };
+    step();
+  };
+  const realIntoView = W.Element.prototype.scrollIntoView;
+  W.Element.prototype.scrollIntoView = function (o) {
+    if (!clock.on || !o || typeof o !== 'object' || o.behavior !== 'smooth') return realIntoView.call(this, o);
+    const r = this.getBoundingClientRect();
+    const y = W.scrollY + (o.block === 'center' ? r.top + r.height / 2 - W.innerHeight / 2 : r.top);
+    smooth(y);
+  };
+  if (host === window) {
+    const anims = new WeakMap();
+    const framesOf = () => { const out = []; const walk = (w) => { out.push(w); for (let i = 0; i < w.frames.length; i++) { try { walk(w.frames[i]); } catch {} } }; walk(window); return out; };
+    clock.start = () => { clock.dateBase = real.dateNow(); clock.on = true; };
+    clock.syncCss = () => {
+      for (const w of framesOf()) {
+        let list = [];
+        try { list = w.document.getAnimations(); } catch { continue; }
+        for (const a of list) {
+          let seen = anims.get(a);
+          if (!seen) { try { a.pause(); } catch {} seen = { at: clock.now, from: Number(a.currentTime) || 0 }; anims.set(a, seen); }
+          try { a.currentTime = seen.from + (clock.now - seen.at) * (a.playbackRate || 1); } catch {}
+        }
+      }
+    };
+    clock.advance = (ms) => {
+      const target = clock.now + ms;
+      for (let guard = 0; guard < 5000; guard++) {
+        let next = null;
+        for (const [id, t] of clock.timers) if (t.at <= target && (!next || t.at < next[1].at)) next = [id, t];
+        if (!next) break;
+        const [id, t] = next;
+        clock.now = Math.max(clock.now, t.at);
+        if (t.every) t.at += t.every; else clock.timers.delete(id);
+        try { t.fn(...t.args); } catch (e) { console.error(e); }
+      }
+      clock.now = target;
+      const due = [...clock.rafs.values()];
+      clock.rafs.clear();
+      for (const r of due) { try { r.cb(r.win.__vtPerfNow ? r.win.__vtPerfNow() : clock.now); } catch (e) { console.error(e); } }
+      clock.syncCss();
+    };
+  }
+})();`;
+
 const work = mkdtempSync(path.join(tmpdir(), 'saeng-film-'));
 const frames = path.join(work, 'frames');
 mkdirSync(frames);
@@ -38,80 +144,54 @@ const ws = new WebSocket(targets.find((t) => t.type === 'page').webSocketDebugge
 await new Promise((r) => ws.addEventListener('open', r, { once: true }));
 let id = 0;
 const pending = new Map();
-const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
-
-const shots = [];
-let recording = false;
 ws.addEventListener('message', (e) => {
   const m = JSON.parse(e.data);
   if (m.id && pending.has(m.id)) {
     pending.get(m.id)(m);
     pending.delete(m.id);
-  } else if (m.method === 'Page.screencastFrame') {
-    send('Page.screencastFrameAck', { sessionId: m.params.sessionId });
-    if (!recording) return;
-    const file = path.join(frames, `${String(shots.length).padStart(5, '0')}.jpg`);
-    writeFileSync(file, Buffer.from(m.params.data, 'base64'));
-    shots.push({ file, t: m.params.metadata.timestamp });
   }
 });
-const state = async () => (await send('Runtime.evaluate', { returnByValue: true, expression: `({ film: document.documentElement.dataset.film, problem: document.querySelector('.film-problem')?.textContent })` })).result?.result?.value;
+const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
+const run = async (expression, awaitPromise = false) => (await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise })).result?.result?.value;
+const state = () => run(`({ film: document.documentElement.dataset.film, problem: document.querySelector('.film-problem')?.textContent })`);
 
 await send('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
 await send('Emulation.setFocusEmulationEnabled', { enabled: true });
 await send('Page.enable');
+await send('Page.addScriptToEvaluateOnNewDocument', { source: SHIM });
 await send('Page.navigate', { url });
-// a screencast started before the page has committed sends nothing, so it starts a moment after
-await sleep(250);
-await send('Page.startScreencast', { format: 'jpeg', quality: 85, maxWidth: 1920, maxHeight: 1080, everyNthFrame: 1 });
+for (let i = 0; i < 400 && (await state())?.film !== 'title'; i++) await sleep(25);
+await run('window.__vt.start()');
 
-let start = 0;
 const began = Date.now();
+let k = 0;
+let doneAt = -1;
 for (;;) {
-  const s = await state();
-  if (s?.film === 'title' && !recording) {
-    recording = true;
-    start = Date.now() / 1000;
+  await run(`window.__vt.advance(${STEP})`);
+  // messages between the frames, promises and network answers settle on the real event loop
+  await run(`new Promise((r) => { const ch = new MessageChannel(); ch.port1.onmessage = () => r(1); ch.port2.postMessage(0); })`, true);
+  await run('window.__vt.syncCss()');
+  const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 90 });
+  writeFileSync(path.join(frames, `${String(k).padStart(5, '0')}.jpg`), Buffer.from(shot.result.data, 'base64'));
+  k++;
+  if (k % 30 === 0) {
+    const s = await state();
+    if (s?.film === 'failed') throw new Error(`the take failed: ${s.problem}`);
+    if (s?.film === 'done' && doneAt < 0) doneAt = k;
+    if (k % 600 === 0) console.log(`${k / FPS} s of film recorded in ${Math.round((Date.now() - began) / 1000)} s`);
   }
-  if (s?.film === 'failed') throw new Error(`the take failed: ${s.problem}`);
-  if (s?.film === 'done') break;
-  if (Date.now() - began > 240_000) throw new Error('the take did not finish in four minutes');
-  await sleep(50);
+  if (doneAt >= 0 && k >= doneAt + FPS) break;
+  if (k > FPS * 240) throw new Error('the take did not finish in four minutes of film');
 }
-await sleep(1200);
-const end = Date.now() / 1000;
-recording = false;
-await send('Page.stopScreencast');
 ws.close();
 chrome.kill();
-if (!shots.length) throw new Error('Chrome sent no frames');
 
-// frame k of the video is the newest screencast frame at k/60 s into the take; hard links, not copies
-const seq = path.join(work, 'seq');
-mkdirSync(seq);
-const total = Math.round((end - start) * FPS);
-// a frame shown twice in a row while things are moving is a stutter; while the page is still it is not
-let j = 0;
-let last = -1;
-let moving = 0;
-let repeats = 0;
-for (let k = 0; k < total; k++) {
-  const t = start + k / FPS;
-  while (j + 1 < shots.length && shots[j + 1].t <= t) j++;
-  linkSync(shots[j].file, path.join(seq, `${String(k).padStart(5, '0')}.jpg`));
-  const inMotion = j + 1 < shots.length && shots[j + 1].t - shots[j].t < 0.1;
-  if (inMotion) {
-    moving++;
-    if (j === last) repeats++;
-  }
-  last = j;
-}
 // Chrome's frames are full-range JPEG; players expect the TV range, so it is converted on the way
 const ff = spawnSync('ffmpeg', [
-  '-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(seq, '%05d.jpg'),
+  '-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(frames, '%05d.jpg'),
   '-vf', 'scale=in_range=pc:out_range=tv,format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-crf', '16',
   '-color_range', 'tv', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-movflags', '+faststart', out,
 ], { stdio: 'inherit' });
 rmSync(work, { recursive: true, force: true });
 if (ff.status !== 0) throw new Error('ffmpeg failed');
-console.log(`wrote ${out}: ${total} frames, ${(total / FPS).toFixed(1)} s, from ${shots.length} screencast frames; ${((repeats / Math.max(1, moving)) * 100).toFixed(1)}% of moving frames repeat the one before`);
+console.log(`wrote ${out}: ${k} frames, ${(k / FPS).toFixed(1)} s`);
