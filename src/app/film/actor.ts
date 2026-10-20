@@ -100,13 +100,23 @@ export function installActor(win: Window, { touch, slowActions }: Options) {
       const max = doc.documentElement.scrollHeight - win.innerHeight;
       const to = Math.max(0, Math.min(max, target));
       const start = performance.now();
-      // a timer rather than animation frames: in headless Chrome a frame's animation frames once stopped
-      // for half a minute after a tab change in the owner's book, and the scroll with them
+      // each step on an animation frame, so the scroll moves once per screen refresh and never judders; a
+      // timer stands in if the frames stop coming, as they once did for half a minute in a scaled frame,
+      // and the position comes from the clock either way, so the scroll ends on time
       const step = () => {
         const t = Math.min(1, (performance.now() - start) / ms);
         win.scrollTo({ left: 0, top: from + (to - from) * ease(t), behavior: 'instant' });
-        if (t < 1) win.setTimeout(step, 16);
-        else done();
+        if (t >= 1) return done();
+        let stepped = false;
+        const frame = win.requestAnimationFrame(() => {
+          stepped = true;
+          step();
+        });
+        win.setTimeout(() => {
+          if (stepped) return;
+          win.cancelAnimationFrame(frame);
+          step();
+        }, 100);
       };
       step();
     });

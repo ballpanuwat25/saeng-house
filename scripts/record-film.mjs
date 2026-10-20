@@ -1,7 +1,7 @@
-// Records the film stage (/film) to an MP4 at 1920x1080 and 30 fps, for the portfolio video.
+// Records the film stage (/film) to an MP4 at 1920x1080 and 60 fps, for the portfolio video.
 // Headless Chrome sends a screencast frame whenever the page changes, stamped with the wall clock; the take
 // starts when the opening card is up (data-film="title") and ends a second after "done". Each output frame
-// k then shows the newest screencast frame at or before k/30 seconds into the take, so the clip runs in
+// k then shows the newest screencast frame at or before k/60 seconds into the take, so the clip runs in
 // real time through the still stretches too, where Chrome sends nothing. Needs Chrome and ffmpeg.
 // Run it against a production build in demo mode, which loads faster and plays more smoothly than the dev
 // server (README, "Film mode"):
@@ -14,7 +14,7 @@ import path from 'node:path';
 const url = process.argv[2] ?? 'http://localhost:3008/film';
 const out = path.resolve(process.argv[3] ?? 'design/_scratch/saeng-house-film.mp4');
 const CHROME = ['C:/Program Files/Google/Chrome/Application/chrome.exe', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome'].find(existsSync);
-const FPS = 30;
+const FPS = 60;
 const work = mkdtempSync(path.join(tmpdir(), 'saeng-film-'));
 const frames = path.join(work, 'frames');
 mkdirSync(frames);
@@ -63,7 +63,7 @@ await send('Page.enable');
 await send('Page.navigate', { url });
 // a screencast started before the page has committed sends nothing, so it starts a moment after
 await sleep(250);
-await send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: 1920, maxHeight: 1080, everyNthFrame: 1 });
+await send('Page.startScreencast', { format: 'jpeg', quality: 85, maxWidth: 1920, maxHeight: 1080, everyNthFrame: 1 });
 
 let start = 0;
 const began = Date.now();
@@ -86,15 +86,25 @@ ws.close();
 chrome.kill();
 if (!shots.length) throw new Error('Chrome sent no frames');
 
-// frame k of the video is the newest screencast frame at k/30 s into the take; hard links, not copies
+// frame k of the video is the newest screencast frame at k/60 s into the take; hard links, not copies
 const seq = path.join(work, 'seq');
 mkdirSync(seq);
 const total = Math.round((end - start) * FPS);
+// a frame shown twice in a row while things are moving is a stutter; while the page is still it is not
 let j = 0;
+let last = -1;
+let moving = 0;
+let repeats = 0;
 for (let k = 0; k < total; k++) {
   const t = start + k / FPS;
   while (j + 1 < shots.length && shots[j + 1].t <= t) j++;
   linkSync(shots[j].file, path.join(seq, `${String(k).padStart(5, '0')}.jpg`));
+  const inMotion = j + 1 < shots.length && shots[j + 1].t - shots[j].t < 0.1;
+  if (inMotion) {
+    moving++;
+    if (j === last) repeats++;
+  }
+  last = j;
 }
 // Chrome's frames are full-range JPEG; players expect the TV range, so it is converted on the way
 const ff = spawnSync('ffmpeg', [
@@ -104,4 +114,4 @@ const ff = spawnSync('ffmpeg', [
 ], { stdio: 'inherit' });
 rmSync(work, { recursive: true, force: true });
 if (ff.status !== 0) throw new Error('ffmpeg failed');
-console.log(`wrote ${out}: ${total} frames, ${(total / FPS).toFixed(1)} s, from ${shots.length} screencast frames`);
+console.log(`wrote ${out}: ${total} frames, ${(total / FPS).toFixed(1)} s, from ${shots.length} screencast frames; ${((repeats / Math.max(1, moving)) * 100).toFixed(1)}% of moving frames repeat the one before`);

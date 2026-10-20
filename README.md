@@ -152,7 +152,7 @@ FILM_MODE=1 npx next start -p 3008
 node scripts/record-film.mjs http://localhost:3008/film design/_scratch/saeng-house-film.mp4
 ```
 
-It plays one take in headless Chrome at 1920 by 1080 and writes an MP4 at 30 fps with no sound, from the opening card to a second after the closing card. Chrome sends a frame only when the page changes, so each video frame shows the newest one at its moment, and the still stretches last as long as they did. `design/_scratch` is not committed.
+It plays one take in headless Chrome at 1920 by 1080 and writes an MP4 at 60 fps with no sound, from the opening card to a second after the closing card. Chrome sends a frame only when the page changes, so each video frame shows the newest one at its moment, and the still stretches last as long as they did. Chrome hands over frames at about 60 a second with some jitter, so around a tenth of the moving frames repeat the one before; the recorder reports the share. `design/_scratch` is not committed.
 
 ## What's next
 
